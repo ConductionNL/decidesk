@@ -2979,7 +2979,7 @@
 						"lifecycle": "started",
 						"steps": [
 							{
-								"stepType": "swearing-in",
+								"stepType": "installation",
 								"title": "Beëdiging vastleggen",
 								"status": "open",
 								"mandatory": true,
@@ -3041,7 +3041,7 @@
 						"installationMeeting": "raadsvergadering-2025-01-15",
 						"steps": [
 							{
-								"stepType": "swearing-in",
+								"stepType": "installation",
 								"title": "Beëdiging vastleggen",
 								"status": "completed",
 								"mandatory": true,
@@ -3114,7 +3114,7 @@
 						"installationMeeting": "raadsvergadering-2025-01-15",
 						"steps": [
 							{
-								"stepType": "swearing-in",
+								"stepType": "installation",
 								"title": "Beëdiging vastleggen",
 								"status": "completed",
 								"mandatory": true,

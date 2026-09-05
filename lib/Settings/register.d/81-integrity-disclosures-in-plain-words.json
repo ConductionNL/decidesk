@@ -71,7 +71,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"decidesk-integriteit"
+									"decidiq-integrity"
 								]
 							}
 						],
@@ -93,7 +93,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"decidesk-integriteit"
+									"decidiq-integrity"
 								]
 							}
 						],
@@ -314,7 +314,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"decidesk-integriteit"
+									"decidiq-integrity"
 								]
 							}
 						],
@@ -470,7 +470,7 @@
 						"title": "Integrity notification group",
 						"type": "string",
 						"description": "The NC group receiving this body's integrity notifications (mapped to burgemeester, voorzitter, or compliance officer as configured per body). Optional. Note (design D3 / Risk 3): the x-openregister-notifications dialect cannot currently read this per-body value from the related policy object, so the notification triggers use one literal integrity group with per-body routing via group membership until a policy-object lookup is verified against OR.",
-						"example": "decidesk-burgemeester"
+						"example": "decidiq-chair"
 					}
 				}
 			},
