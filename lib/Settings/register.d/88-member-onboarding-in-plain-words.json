@@ -1,5 +1,5 @@
 {
-	"_note": "member-onboarding-in-plain-words — a traject is a pathway, and joining or leaving a governance body is a pathway every organisation walks. The-last-two-dutch-names claimed decidiq shipped no Dutch-named schema outside the Woo plumbing; these two were still here, and their descriptions were written for a griffie and a raadswisseling. Renamed to MemberOnboarding and MemberOffboarding, with the Dutch property beëdigingsType and the two swearing-in names renamed with them, and three council vocabularies freed to be free text.",
+	"_note": "member-onboarding-in-plain-words — a traject is a pathway, and joining or leaving a governance body is a pathway every organisation walks. The-last-two-dutch-names claimed decidiq shipped no Dutch-named schema outside the Woo plumbing; these two were still here, and their descriptions were written for a griffie and a raadswisseling. Renamed to MemberOnboarding and MemberOffboarding, with the Dutch property beëdigingsType and the two swearing-in names renamed with them, and three council vocabularies freed to be free text. Updated by plain-words-for-groups-and-the-installation-step: the notification recipient group is now decidiq-secretariat, and the swearing-in step type is now installation.",
 	"_spec": "openspec/changes/member-onboarding-in-plain-words/specs/member-onboarding-in-plain-words/spec.md",
 	"components": {
 		"schemas": {
@@ -77,7 +77,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}
@@ -86,7 +86,7 @@
 							"nl": "Nieuw onboardingtraject gestart voor {{person}}",
 							"en": "New onboarding started for {{person}}"
 						},
-						"_note": "Created notification to the griffie group (REQ-MOB-010). The dialect has no recipient kind that targets the {{person}}'s account directly; object-acl(read) + the griffie/decidesk-members groups is the closest declarative approximation — verify against OR's notification rule engine at import; never an imperative dispatch (notification-dialect gate)."
+						"_note": "Created notification to the secretariat group (REQ-MOB-010). The dialect has no recipient kind that targets the {{person}}'s account directly; object-acl(read) plus decidiq-secretariat and decidesk-members is the closest declarative approximation, and it is never an imperative send."
 					},
 					"onboardingStepDueSoon": {
 						"trigger": {
@@ -111,7 +111,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}
@@ -145,7 +145,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}
@@ -216,7 +216,7 @@
 									"type": "string",
 									"description": "What kind of step this is. `custom` is a step the organisation defined itself.",
 									"enum": [
-										"swearing-in",
+										"installation",
 										"account-linking",
 										"assign-groups",
 										"induction-pack",
@@ -224,7 +224,7 @@
 										"political-group-assignment",
 										"custom"
 									],
-									"example": "swearing-in"
+									"example": "installation"
 								},
 								"title": {
 									"title": "Title",
@@ -418,7 +418,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}
@@ -427,7 +427,7 @@
 							"nl": "Nieuw offboardingtraject gestart voor {{person}}",
 							"en": "New offboarding started for {{person}}"
 						},
-						"_note": "Created notification to the griffie group (REQ-MOB-010). object-acl(read) + griffie/decidesk-members is the closest declarative approximation to 'the griffie group'; never an imperative dispatch (notification-dialect gate)."
+						"_note": "Created notification to the secretariat group (REQ-MOB-010). object-acl(read) plus decidiq-secretariat and decidesk-members is the closest declarative approximation, and it is never an imperative send."
 					},
 					"offboardingStepDueSoon": {
 						"trigger": {
@@ -452,7 +452,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}
@@ -486,7 +486,7 @@
 							{
 								"kind": "groups",
 								"groups": [
-									"griffie",
+									"decidiq-secretariat",
 									"decidesk-members"
 								]
 							}

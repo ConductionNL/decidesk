@@ -384,6 +384,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Decidiq\Migration\MigrateMemberOnboarding</step>
             <!--
+                plain-words-for-groups-and-the-installation-step: swearing-in is a council's
+                ceremony; a board signs a deed instead. The stepType enum now says installation, so
+                stored steps have to follow or they hold a value the schema no longer offers. NOT in
+                RenameDutchDecidiqValues, which exists for exactly this: that step rewrites by
+                DATABASE COLUMN, and stepType is not a column, it sits inside the steps array of an
+                object payload. Adding it there would have planned nothing and reported success.
+            -->
+            <step>OCA\Decidiq\Migration\RenameSwearingInStepType</step>
+            <!--
                 model-debt-cleanup-code: both steps below run AFTER InitializeSettings so they
                 read the NEW $ref declarations (Participant -> Membership/Person retargets,
                 model-debt-cleanup-schema fragment 67) to know what a valid target type looks
@@ -433,6 +442,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 rollback posture as the other rename legs. Idempotent.
             -->
             <step>OCA\Decidiq\Repair\MigrateAdminGroup</step>
+            <!--
+                plain-words-for-groups-and-the-installation-step: griffie is a Dutch council's clerk
+                office and decidesk-integriteit is that word in Dutch under the old app id. Both were
+                recipient groups on schema notifications. Memberships are COPIED onto
+                decidiq-secretariat and decidiq-integrity; the old groups are never deleted or
+                emptied, so an admin with automation pointing at one keeps a working group.
+            -->
+            <step>OCA\Decidiq\Repair\MigrateGovernanceGroupNames</step>
         </post-migration>
         <install>
             <!--
@@ -528,6 +545,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 group is provisioned (empty) by the register import instead.
             -->
             <step>OCA\Decidiq\Repair\MigrateAdminGroup</step>
+            <!--
+                plain-words-for-groups-and-the-installation-step: griffie is a Dutch council's clerk
+                office and decidesk-integriteit is that word in Dutch under the old app id. Both were
+                recipient groups on schema notifications. Memberships are COPIED onto
+                decidiq-secretariat and decidiq-integrity; the old groups are never deleted or
+                emptied, so an admin with automation pointing at one keeps a working group.
+            -->
+            <step>OCA\Decidiq\Repair\MigrateGovernanceGroupNames</step>
         </install>
     </repair-steps>
 
