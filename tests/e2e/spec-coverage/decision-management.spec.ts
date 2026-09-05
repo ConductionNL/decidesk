@@ -211,12 +211,28 @@ test('voting results tab renders on decision detail', async ({ page }) => {
 	const rounds = page.getByTestId('decision-voting-round')
 	const noMotion = page.getByTestId('decision-voting-none')
 	const table = tab.locator('table')
-	expect(
-		(await rounds.count()) > 0
-			|| (await noMotion.count()) > 0
-			|| (await table.count()) > 0,
-		'Voting tab must render rounds, the votes table, or the no-motion notice',
-	).toBe(true)
+
+	// POLL, do not count once. `waitForSelector` above resolves on the tab
+	// SHELL, which renders before its contents: the header and the count are
+	// synchronous, the rounds and the notice arrive with the fetch. Counting
+	// immediately after the shell appears reads zero of all three and reports
+	// "renders nothing" for a tab that renders correctly a moment later.
+	//
+	// This only started failing once the suite was seeded. With no decision to
+	// open, the test skipped, so the race had never once been exercised.
+	await expect
+		.poll(
+			async () =>
+				(await rounds.count())
+				+ (await noMotion.count())
+				+ (await table.count()),
+			{
+				message:
+					'Voting tab must render rounds, the votes table, or the no-motion notice',
+				timeout: 15_000,
+			},
+		)
+		.toBeGreaterThan(0)
 })
 
 // @e2e openspec/specs/decision-management/spec.md#view-the-complete-history-of-a-decision
