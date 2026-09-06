@@ -83,10 +83,22 @@ test('Members tab lists body members and offers the Change role action', async (
 	// Role assignment: when the body has at least one member, the row
 	// actions expose "Change role" opening the role dialog with the role
 	// enum select.
+	// ⚠️ AN EMPTY MEMBERS TABLE STILL RENDERS ONE `tbody tr`. CnObjectList's
+	// empty state is a row — "No members linked to this body yet." — carrying
+	// zero buttons, so `rows.count() > 0` is true with no members at all. The
+	// row-actions click below then waits for a button that does not exist until
+	// the test times out.
+	//
+	// Measured, because the first reading was wrong: this is what reddened the
+	// development push that first executed this test, and it is NOT a budget
+	// problem. Under test.slow() it failed the same way at 60s, on the same
+	// locator. Filtering to rows that actually carry a button is the fix; a
+	// bigger timeout only makes it fail more slowly.
 	const rows = tabRoot.locator('tbody tr')
-	if ((await rows.count()) > 0) {
-		await rows.first().hover()
-		const actions = rows.first().getByRole('button').last()
+	const memberRows = rows.filter({ has: page.getByRole('button') })
+	if ((await memberRows.count()) > 0) {
+		await memberRows.first().hover()
+		const actions = memberRows.first().getByRole('button').last()
 		await actions.click()
 		const changeRole = page
 			.getByRole('menuitem', { name: 'Change role' })
@@ -105,6 +117,15 @@ test('Members tab lists body members and offers the Change role action', async (
 			).toBeVisible()
 			await dialog.locator('[data-testid="member-role-cancel"]').click()
 		}
+	} else {
+		// No members to act on, so assert the empty state rather than falling
+		// through silently. A conditional whose false branch asserts nothing
+		// passes identically whether the widget works or renders nothing at all,
+		// which is how this test could have gone green without ever proving the
+		// members table exists.
+		await expect(
+			tabRoot.locator('[data-testid="cn-object-list-empty"]'),
+		).toBeVisible()
 	}
 })
 
