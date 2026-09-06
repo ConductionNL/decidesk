@@ -16,33 +16,10 @@
 					"title": "Which kind of organisation is this for?",
 					"configKey": "example_profile",
 					"required": false,
-					"body": "Pick the organisation this app runs for and you get a worked example of it: bodies, meetings, decisions and templates that fit. Installing the app plants nothing on its own, so this is the only step that adds data. Choose \"None\" on a production install.",
-					"options": [
-						{
-							"value": "none",
-							"label": "None, I will set this up myself"
-						},
-						{
-							"value": "municipality",
-							"label": "Municipality"
-						},
-						{
-							"value": "association",
-							"label": "Association or VvE"
-						},
-						{
-							"value": "corporate",
-							"label": "Company board"
-						},
-						{
-							"value": "works-council",
-							"label": "Works council"
-						},
-						{
-							"value": "generated",
-							"label": "Every schema, generated values"
-						}
-					]
+					"body": "Pick the organisation this app runs for. You get a worked example of it: bodies, meetings, decisions and templates that fit. Pick several if you want to compare them. Installing the app plants nothing on its own, so this step is the only one that adds data. Choose \"None\" on a production install.",
+					"display": "cards",
+					"optionsSource": "profiles",
+					"multiple": true
 				},
 				{
 					"id": "load-example-set",
@@ -50,7 +27,7 @@
 					"action": "load-example-set",
 					"title": "Load the example data",
 					"required": false,
-					"body": "Loads the set you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards."
+					"body": "Loads the sets you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards."
 				},
 				{
 					"id": "done",
@@ -63,9 +40,6 @@
 	"dependencies": [
 		"openregister"
 	],
-	"nav": {
-		"includePersonalSettings": false
-	},
 	"walkthrough": {
 		"enabled": true,
 		"version": 1,
@@ -83,6 +57,40 @@
 					{ "id": "see-flows", "sinceVersion": "2.1.0", "placement": "right", "optional": true, "allowManualNext": true, "title": "Where the automation lives", "body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.", "task": "Open Flows in the menu", "target": {"kind": "nav-item", "ref": "Flows"}, "advanceOn": {"type": "route-match", "route": "Flows"}} ,
 					{ "id": "done", "sinceVersion": "0.3.5", "placement": "center", "title": "Your first meeting is scheduled", "body": "Decisions, Tasks and Commitments, your Organisation and shared Registers are one click away in the menu. The documentation covers the rest.", "task": "Open the documentation to keep going", "target": { "kind": "nav-item", "ref": "Documentation" }, "advanceOn": { "type": "manual" } }
 				]
+			}
+		]
+	},
+	"store": {
+		"_note": "Decidiq's store exchanges CONFIGURATION, not rows. A configuration set carries the registers, schemas, objects, views, flows, sources and mappings that make one way of governing work together, which is what someone means by a default gemeente. `types` selects that path (store-over-federated-config); an app declaring none keeps the remote objects API. `builtIn` names the four example sets already in lib/Settings/profiles/, so the page states what decidiq ships rather than rendering blank without a registry. There is deliberately no `installable` allowlist: a set exists to introduce schemas the instance does not have yet, so a list of schemas decidiq already owns would refuse exactly the sets worth installing. The trust boundary for a bundle is its publisher, enforced by the engine's source allowlist and trusted-key check.",
+		"types": [
+			"openregister.configset",
+			"openregister.flows"
+		],
+		"localRegister": "decidiq",
+		"builtIn": [
+			{
+				"slug": "municipality",
+				"title": "Municipality",
+				"description": "A council with committees and factions. Motions, commitments, information letters and a regulations register.",
+				"kind": "openregister.configset"
+			},
+			{
+				"slug": "association",
+				"title": "Association or VvE",
+				"description": "A members' meeting with a board. House rules, weighted votes, audit statements and annual accounts.",
+				"kind": "openregister.configset"
+			},
+			{
+				"slug": "corporate",
+				"title": "Company board",
+				"description": "A supervisory board, an executive board and a management team. Terms, conflicts of interest and evaluations.",
+				"kind": "openregister.configset"
+			},
+			{
+				"slug": "works-council",
+				"title": "Works council",
+				"description": "A works council inside a company. Advice requests, consent requests and staff consultation.",
+				"kind": "openregister.configset"
 			}
 		]
 	},
@@ -160,6 +168,22 @@
 			"order": 90
 		},
 		{
+			"id": "ReportsMenu",
+			"label": "Reports",
+			"icon": "ChartBoxOutline",
+			"route": "Reports",
+			"section": "footer",
+			"order": 95
+		},
+		{
+			"id": "StoreMenu",
+			"label": "Store",
+			"icon": "StoreOutline",
+			"route": "Store",
+			"section": "footer",
+			"order": 92
+		},
+		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "MapMarkerPath",
@@ -206,11 +230,11 @@
 						"title": "Open action items"
 					},
 					{
-						"id": "open-toezeggingen-overdue",
+						"id": "open-commitments-overdue",
 						"type": "stat",
 						"title": "Commitments over deadline",
 						"_note": "REQ-007 / design D6. Counts non-terminal toezeggingen (lifecycle open/in-uitvoering) whose deadline is past, and deep-links to the Toezeggingen index pre-filtered to the same non-terminal set. LIVE-VERIFIED 2026-07-18 (OR aggregation limitation): the stat-widget count endpoint (/api/objects/aggregations) honors ONLY scalar-equality filters (filter[lifecycle]=scheduled works). Multi-value filters do NOT work: a bare array (filter[lifecycle][]=…) is IGNORED (raw schema count 3), and the documented `in` operator (filter[lifecycle][in][]=…) returns 0. The @now relative token is unresolved. Root cause is in OpenRegister's AggregationRunner filter→SQL path (actively under change by a parallel session). The `in` form kept here is the documented-correct declarative intent (AggregationQuery supports scalar-eq + in/notIn/gt/gte/lt/lte/ne) and will yield 2 once OR handles multi-value; until then this KPI reads 0. Exact deadline<now overdue cut lives on the pre-filtered index via the search endpoint. Interim options if a non-zero KPI is required before the OR fix: single scalar filter {lifecycle:open} (partial), or a materialized boolean field filtered by equality. A layout entry is appended at the bottom band of config.layout; final top-row placement is a UI-validation call.",
-						"content": { "label": "Commitments over deadline", "icon": "AlertOutline", "valueColor": "#c7860c", "route": { "name": "Toezeggingen", "query": { "lifecycle": ["open", "in-uitvoering"] } }, "format": { "style": "number" }, "source": { "register": "decidiq", "schema": "toezegging", "metric": "count", "filter": { "lifecycle": { "in": ["open", "in-uitvoering"] } } } }
+						"content": { "label": "Commitments over deadline", "icon": "AlertOutline", "variant": "warning", "route": { "name": "Commitments", "query": { "lifecycle": ["open", "in-uitvoering"] } }, "format": { "style": "number" }, "source": { "register": "decidiq", "schema": "governance-commitment", "metric": "count", "filter": { "lifecycle": { "in": ["open", "in-uitvoering"] } } } }
 					},
 					{
 						"_note": "openspec/specs/dashboard/spec.md REQ 'Upcoming Meetings Widget' requires body name and agenda-item count per row and a highlight for meetings inside 24h. A declarative object-list renders columns from one schema and can do none of that, so UpcomingMeetingsListWidget.vue was built for it — and then never referenced, leaving the component orphaned and the spec'd behaviour absent.",
@@ -376,7 +400,7 @@
 					{
 						"_note": "Moved down from gridY=14 to make room for the spec'd Row 5 (minutes-in-review + governance-health, which together span all 12 columns at gridY=14). This KPI is an addition from the toezeggingen change and is not part of the five-row v2 layout in openspec/specs/dashboard/spec.md, so it gets its own band below it rather than displacing a spec'd widget.",
 						"id": "12",
-						"widgetId": "open-toezeggingen-overdue",
+						"widgetId": "open-commitments-overdue",
 						"gridX": 0,
 						"gridY": 2,
 						"gridWidth": 3,
@@ -451,13 +475,13 @@
 					{ "id": "body-efficiency", "type": "custom", "component": "GovernanceBodyEfficiencyTab", "title": "Efficiency", "icon": "ChartBar" },
 					{ "id": "body-retention", "type": "custom", "component": "GovernanceBodyRetentionTab", "title": "Recording retention", "icon": "ShieldCheckOutline" },
 					{ "id": "body-evaluations", "type": "custom", "component": "GovernanceBodyEvaluationsTab", "title": "Self-evaluation", "icon": "ClipboardCheckOutline" },
-					{ "id": "body-retirement-schedule", "type": "object-list", "title": "Retirement schedule", "icon": "Timeline", "content": { "register": "decidiq", "schema": "rooster-van-aftreden", "filter": { "body": "@objectId" }, "sort": { "field": "generatedOn", "dir": "desc" }, "columns": [ { "key": "generatedOn", "label": "Generated at" }, { "key": "publicationDate", "label": "Published" } ], "limit": 5, "emptyText": "No retirement schedule generated for this body yet.", "rowRoute": "RoosterDetail" } },
-					{ "id": "body-term-rules", "type": "object-list", "title": "Term rules", "icon": "Cog", "content": { "register": "decidiq", "schema": "termijn-regeling", "filter": { "body": "@objectId" }, "sort": { "field": "role", "dir": "asc" }, "columns": [ { "key": "role", "label": "Role", "widget": "badge" }, { "key": "termDurationMonths", "label": "Term (months)" }, { "key": "maxConsecutivePeriods", "label": "Max consecutive terms" } ], "limit": 10, "allowCreate": false, "emptyText": "No term rule configured for this body yet.", "rowRoute": "TermijnRegelingDetail" } },
-					{ "id": "body-nevenfuncties", "type": "object-list", "title": "Other positions", "icon": "Briefcase", "content": { "register": "decidiq", "schema": "nevenfunctie", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "declaredAt", "dir": "desc" }, "columns": [ { "key": "person", "label": "Person", "widget": "link" }, { "key": "organisation", "label": "Organisation" }, { "key": "role", "label": "Function" }, { "key": "remunerated", "label": "Remunerated", "widget": "badge" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "emptyText": "No other positions declared for this body yet.", "rowRoute": "NevenfunctieDetail" } },
-					{ "id": "body-gifts", "type": "object-list", "title": "Gifts", "icon": "Package", "content": { "register": "decidiq", "schema": "geschenk", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "receivedOn", "dir": "desc" }, "columns": [ { "key": "recipient", "label": "Recipient", "widget": "link" }, { "key": "type", "label": "Type", "widget": "badge" }, { "key": "giver", "label": "Giver" }, { "key": "estimatedValue", "label": "Value (EUR)" }, { "key": "decision", "label": "Decision", "widget": "badge" } ], "limit": 10, "emptyText": "No gifts or invitations declared for this body yet.", "rowRoute": "GeschenkDetail" } },
+					{ "id": "body-position-holders", "type": "object-list", "title": "Position holders", "icon": "AccountGroup", "content": { "register": "decidiq", "schema": "position-hold", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "endDate", "dir": "asc" }, "columns": [ { "key": "membership", "label": "Member", "widget": "link" }, { "key": "position", "label": "Position" }, { "key": "termNumber", "label": "Term" }, { "key": "endDate", "label": "Until", "widget": "date" } ], "limit": 10, "allowCreate": false, "rowRoute": "PositionHoldDetail", "viewAllRoute": "PositionHolds", "viewAllQuery": { "governanceBody": "@objectId" }, "emptyText": "Nobody holds a position on this body yet." } },
+					{ "id": "body-positions", "type": "object-list", "title": "Positions", "icon": "AccountBoxOutline", "content": { "register": "decidiq", "schema": "position-type", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "order", "dir": "asc" }, "columns": [ { "key": "name", "label": "Position", "widget": "link" }, { "key": "seats", "label": "Seats" }, { "key": "termDurationMonths", "label": "Term (months)" }, { "key": "maxConsecutiveTerms", "label": "Max consecutive terms" } ], "limit": 10, "allowCreate": false, "rowRoute": "PositionTypeDetail", "viewAllRoute": "PositionTypes", "viewAllQuery": { "governanceBody": "@objectId" }, "emptyText": "No positions configured for this body yet." } },
+					{ "id": "body-ancillary-positions", "type": "object-list", "title": "Other positions", "icon": "Briefcase", "content": { "register": "decidiq", "schema": "ancillary-position", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "declaredAt", "dir": "desc" }, "columns": [ { "key": "person", "label": "Person", "widget": "link" }, { "key": "organisation", "label": "Organisation" }, { "key": "role", "label": "Function" }, { "key": "remunerated", "label": "Remunerated", "widget": "badge" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "emptyText": "No other positions declared for this body yet.", "rowRoute": "AncillaryPositionDetail" } },
+					{ "id": "body-gifts", "type": "object-list", "title": "Gifts", "icon": "Package", "content": { "register": "decidiq", "schema": "declared-gift", "filter": { "governanceBody": "@objectId" }, "sort": { "field": "receivedOn", "dir": "desc" }, "columns": [ { "key": "recipient", "label": "Recipient", "widget": "link" }, { "key": "type", "label": "Type", "widget": "badge" }, { "key": "giver", "label": "Giver" }, { "key": "estimatedValue", "label": "Value (EUR)" }, { "key": "decision", "label": "Decision", "widget": "badge" } ], "limit": 10, "emptyText": "No gifts or invitations declared for this body yet.", "rowRoute": "DeclaredGiftDetail" } },
 					{ "id": "body-participating-orgs", "type": "object-list", "title": "Participating organisations", "icon": "HandshakeOutline", "content": { "register": "decidiq", "schema": "body-participation", "filter": { "sharedBody": "@objectId" }, "sort": { "field": "accessionDate", "dir": "asc" }, "columns": [ { "key": "participant", "label": "Organisation", "widget": "link" }, { "key": "seats", "label": "Seats" }, { "key": "accessionDate", "label": "Accession date", "widget": "date" } ], "limit": 10, "emptyText": "No organisations participate in this shared body yet." } },
 					{ "id": "body-shared-participations", "type": "object-list", "title": "Shared-body participations", "icon": "LinkVariant", "content": { "register": "decidiq", "schema": "body-participation", "filter": { "participant": "@objectId" }, "sort": { "field": "accessionDate", "dir": "asc" }, "columns": [ { "key": "sharedBody", "label": "Shared body", "widget": "link" }, { "key": "seats", "label": "Seats" }, { "key": "accessionDate", "label": "Accession date", "widget": "date" } ], "limit": 10, "emptyText": "This body does not participate in any shared bodies yet." } },
-					{ "id": "body-zienswijze-rounds", "type": "object-list", "title": "Zienswijze rounds", "icon": "MessageTextOutline", "content": { "register": "decidiq", "schema": "zienswijzeronde", "filter": { "sharedBody": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title", "widget": "link" }, { "key": "subjectType", "label": "Subject", "widget": "badge" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "status", "label": "Status", "widget": "badge" } ], "limit": 10, "emptyText": "No zienswijzerondes for this shared body yet.", "rowRoute": "ZienswijzerondeDetail" } },
+					{ "id": "body-consultations", "type": "object-list", "title": "Consultations", "icon": "MessageTextOutline", "content": { "register": "decidiq", "schema": "governance-consultation", "filter": { "askingBody": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "subject", "label": "Subject", "widget": "link" }, { "key": "subjectType", "label": "Subject", "widget": "badge" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "emptyText": "No zienswijzerondes for this shared body yet.", "rowRoute": "GovernanceConsultationDetail" } },
 					{ "id": "body-factions", "type": "object-list", "title": "Factions", "icon": "ScaleBalance", "content": { "register": "decidiq", "schema": "governance-body", "filter": { "parentBody": "@objectId", "bodyType": "faction" }, "sort": { "field": "name", "dir": "asc" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "domain", "label": "Domain" } ], "limit": 10, "emptyText": "No factions registered under this body yet.", "rowRoute": "GovernanceBodyDetail" } }
 				],
 				"layout": [
@@ -469,13 +493,13 @@
 					{ "id": "6", "widgetId": "body-efficiency", "gridX": 6, "gridY": 15, "gridWidth": 6, "gridHeight": 5 },
 					{ "id": "7", "widgetId": "body-retention", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "body-evaluations", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 5 },
-					{ "id": "9", "widgetId": "body-retirement-schedule", "gridX": 0, "gridY": 29, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "body-term-rules", "gridX": 6, "gridY": 29, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "11", "widgetId": "body-nevenfuncties", "gridX": 0, "gridY": 33, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "body-position-holders", "gridX": 0, "gridY": 29, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "body-positions", "gridX": 6, "gridY": 29, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "body-ancillary-positions", "gridX": 0, "gridY": 33, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "12", "widgetId": "body-gifts", "gridX": 6, "gridY": 33, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "13", "widgetId": "body-participating-orgs", "gridX": 0, "gridY": 37, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "14", "widgetId": "body-shared-participations", "gridX": 6, "gridY": 37, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "15", "widgetId": "body-zienswijze-rounds", "gridX": 0, "gridY": 41, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "15", "widgetId": "body-consultations", "gridX": 0, "gridY": 41, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "16", "widgetId": "body-factions", "gridX": 6, "gridY": 41, "gridWidth": 6, "gridHeight": 4 }
 				],
 				"sidebar": {
@@ -541,7 +565,7 @@
 			"config": {
 				"register": "decidiq",
 				"schema": "meeting",
-				"_note": "Meeting — the operational hub of the app: the event that runs an agenda, gathers participants, produces minutes and decisions. Bespoke meeting-workspace layout: meeting fields split field-scoped (ADR-062 rule 3) into Planning (type, body, schedule, location, mode, chair, quorum, series, submission deadline — everything set BEFORE the meeting runs) 8-wide, and a thin Outcome strip below it (lifecycle, opened/closed timestamps, actual cost — everything only known AFTER/DURING the meeting) so neither widget clips or leaves dead cells; a Meeting stats KPI card and the live Participants roster stand right of both (who is expected/attending is the first thing a clerk checks); the ordered Agenda (agenda-item children keyed on `meeting`) sits full-width as the working document; Decisions taken and Minutes drafted render below as the meeting's outputs; a Documents leaf holds packets/attachments; the Votes aggregate and Publication actions render below the files (post-meeting outputs), with the lower-frequency Recurring series and Transcription surfaces at the bottom. No comms leaf on the body (the meeting schema declares no email/calendar/talk linkedType; calendar/Talk stay in the Integrations surface). Sidebar is audit-trail only. AUDIT FIX (visual-audit follow-ups): every `type:\"custom\"` widget on this page (participants/agenda/decisions/minutes/votes/publication/series/transcription) resolved to the CnDetailPage 'unavailable placeholder' because the page had no top-level `slots` map wiring `widget-<id>` to its registry component name (the ADR-062-rule pattern the manifest-v2 schema validator only enforces on `type:\"dashboard\"` pages) — that silent gap, not a data problem, produced the empty right column and the dead band above Documents; the `slots` block below fixes it. The new `meeting-stats` KPI card counts agenda items and action items via their real `meeting` FK property (verified in lib/Settings/decidesk_register.json); Decision carries NO `meeting` FK in the schema (only AgendaItem and ActionItem do) so a meeting-scoped Decisions count is not addable declaratively and is intentionally omitted. Participant likewise carries no `meeting` FK (only `governanceBody`) so no participants object-list collection is added — the existing MeetingParticipantsTab custom widget (now rendering, since it's wired via `slots`) covers the roster via its own `meetings`-array-based fetch. meeting-facet-composition adds 5 more meeting-scoped facets below the existing 12, closing the gap where wave-1 (ia-six-clusters) relocated oral-questions/interpellations/proxy-authorizations/kascommissie/routed-documents into the Meetings nav cluster without composing them onto this workspace: oral questions (mondelinge-vraag.targetMeeting) and proxy authorizations (proxy-authorization.meeting) are plain object-list widgets with add-in-context; interpellations (interpellatieverzoek.behandeldIn) is object-list, browse-only (the request is filed before a meeting is chosen — see openspec/changes/meeting-facet-composition/design.md Decision 2); kascommissie verklaringen needs a thin wrapper (MeetingKascommissieTab) because no manifest primitive gates a widget's visibility on organisatie_modus; routed incoming documents needs a thin wrapper (MeetingRoutedDocumentsTab) because it is a two-hop join (Meeting's own AgendaItems, then raadsinformatiebrief/ingekomen-stuk referencing those AgendaItems) no single declarative `filter` can express. THIS PAGE IS EDITED DIRECTLY, NOT via a manifest.d fragment (design.md Decision 1) — a fragment declaring `MeetingDetail` would REPLACE the page's widgets/layout wholesale (`mergePages` is by-id, not a deep merge), silently dropping every widget documented in this note.",
+				"_note": "Meeting — the operational hub of the app: the event that runs an agenda, gathers participants, produces minutes and decisions. Bespoke meeting-workspace layout: meeting fields split field-scoped (ADR-062 rule 3) into Planning (type, body, schedule, location, mode, chair, quorum, series, submission deadline — everything set BEFORE the meeting runs) 8-wide, and a thin Outcome strip below it (lifecycle, opened/closed timestamps, actual cost — everything only known AFTER/DURING the meeting) so neither widget clips or leaves dead cells; a Meeting stats KPI card and the live Participants roster stand right of both (who is expected/attending is the first thing a clerk checks); the ordered Agenda (agenda-item children keyed on `meeting`) sits full-width as the working document; Decisions taken and Minutes drafted render below as the meeting's outputs; a Documents leaf holds packets/attachments; the Votes aggregate and Publication actions render below the files (post-meeting outputs), with the lower-frequency Recurring series and Transcription surfaces at the bottom. No comms leaf on the body (the meeting schema declares no email/calendar/talk linkedType; calendar/Talk stay in the Integrations surface). Sidebar is audit-trail only. AUDIT FIX (visual-audit follow-ups): every `type:\"custom\"` widget on this page (participants/agenda/decisions/minutes/votes/publication/series/transcription) resolved to the CnDetailPage 'unavailable placeholder' because the page had no top-level `slots` map wiring `widget-<id>` to its registry component name (the ADR-062-rule pattern the manifest-v2 schema validator only enforces on `type:\"dashboard\"` pages) — that silent gap, not a data problem, produced the empty right column and the dead band above Documents; the `slots` block below fixes it. The new `meeting-stats` KPI card counts agenda items and action items via their real `meeting` FK property (verified in lib/Settings/decidesk_register.json); Decision carries NO `meeting` FK in the schema (only AgendaItem and ActionItem do) so a meeting-scoped Decisions count is not addable declaratively and is intentionally omitted. Participant likewise carries no `meeting` FK (only `governanceBody`) so no participants object-list collection is added — the existing MeetingParticipantsTab custom widget (now rendering, since it's wired via `slots`) covers the roster via its own `meetings`-array-based fetch. meeting-facet-composition adds 5 more meeting-scoped facets below the existing 12, closing the gap where wave-1 (ia-six-clusters) relocated oral-questions/interpellations/proxy-authorizations/kascommissie/routed-documents into the Meetings nav cluster without composing them onto this workspace: proxy authorizations (proxy-authorization.meeting) is a plain object-list widget with add-in-context; the oral-questions and interpellations facets that sat beside it were REMOVED by questions-as-agenda-items, which collapsed both schemas into agenda-item — those items now appear in the Agenda widget above, where the Type column names the configurable kind, so a per-kind facet here would list the same rows twice and would have to hardcode a seeded type uuid to do it; kascommissie verklaringen needs a thin wrapper (MeetingAuditStatementTab) because no manifest primitive gates a widget's visibility on organisatie_modus; routed incoming documents needs a thin wrapper (MeetingRoutedDocumentsTab) because it is a two-hop join (Meeting's own AgendaItems, then raadsinformatiebrief/ingekomen-stuk referencing those AgendaItems) no single declarative `filter` can express. THIS PAGE IS EDITED DIRECTLY, NOT via a manifest.d fragment (design.md Decision 1) — a fragment declaring `MeetingDetail` would REPLACE the page's widgets/layout wholesale (`mergePages` is by-id, not a deep merge), silently dropping every widget documented in this note.",
 				"widgets": [
 					{ "id": "meeting-planning", "type": "data", "title": "Planning", "icon": "Calendar", "content": { "columns": 2, "include": ["title", "type", "meetingType", "governanceBody", "scheduledDate", "endDate", "location", "meetingMode", "virtualLocation", "eventAttendanceMode", "chair", "quorumRequired", "isPublic", "series", "seriesPattern", "submissionDeadline"] } },
 					{ "id": "meeting-outcome", "type": "data", "title": "Outcome", "icon": "CheckCircleOutline", "content": { "columns": 2, "include": ["lifecycle", "openedAt", "closedAt", "meetingCost"], "overrides": { "lifecycle": { "editable": false }, "openedAt": { "editable": false }, "closedAt": { "editable": false } } } },
@@ -556,10 +580,8 @@
 					{ "id": "meeting-publication", "type": "custom", "component": "AgendaPublicationTab", "title": "Publication", "icon": "Web" },
 					{ "id": "meeting-series", "type": "custom", "component": "MeetingSeriesTab", "title": "Series", "icon": "Timeline" },
 					{ "id": "meeting-transcription", "type": "custom", "component": "MeetingTranscriptionTab", "title": "Transcription", "icon": "BookOpenVariant" },
-					{ "id": "meeting-vragenuur", "type": "object-list", "title": "Oral questions", "icon": "MessageTextOutline", "content": { "register": "decidiq", "schema": "mondelinge-vraag", "filter": { "targetMeeting": "@objectId" }, "sort": { "field": "sortOrder", "dir": "asc" }, "columns": [ { "key": "questionNumber", "label": "Number" }, { "key": "subject", "label": "Subject" }, { "key": "politicalGroup", "label": "Fraction" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 25, "allowCreate": true, "viewAllRoute": "MondelingeVragen", "viewAllQuery": { "targetMeeting": "@objectId" }, "rowRoute": "MondelingeVraagDetail", "emptyText": "No oral questions submitted for this meeting yet." } },
-					{ "id": "meeting-interpellations", "type": "object-list", "title": "Interpellations", "icon": "Gavel", "content": { "register": "decidiq", "schema": "interpellatieverzoek", "filter": { "behandeldIn": "@objectId" }, "sort": { "field": "requestNumber", "dir": "asc" }, "columns": [ { "key": "requestNumber", "label": "Number" }, { "key": "subject", "label": "Subject" }, { "key": "politicalGroup", "label": "Fraction" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 25, "allowCreate": false, "viewAllRoute": "Interpellaties", "viewAllQuery": { "behandeldIn": "@objectId" }, "rowRoute": "InterpellatieverzoekDetail", "emptyText": "No interpellation requests scheduled for this meeting." } },
 					{ "id": "meeting-proxy-authorizations", "type": "object-list", "title": "Proxy authorizations", "icon": "AccountBoxOutline", "content": { "register": "decidiq", "schema": "proxy-authorization", "filter": { "meeting": "@objectId" }, "sort": { "field": "signedAt", "dir": "desc" }, "columns": [ { "key": "signatureStatus", "label": "Signature", "widget": "badge" }, { "key": "countersignStatus", "label": "Countersign", "widget": "badge" }, { "key": "signedAt", "label": "Signed" } ], "limit": 25, "allowCreate": true, "viewAllRoute": "ProxyAuthorizations", "viewAllQuery": { "meeting": "@objectId" }, "rowRoute": "ProxyAuthorizationDetail", "emptyText": "No proxy authorizations registered for this meeting yet." } },
-					{ "id": "meeting-kascommissie", "type": "custom", "component": "MeetingKascommissieTab", "title": "Kascommissie", "icon": "ClipboardCheckOutline" },
+					{ "id": "meeting-audit-statements", "type": "custom", "component": "MeetingAuditStatementTab", "title": "Audit statements", "icon": "ClipboardCheckOutline" },
 					{ "id": "meeting-routed-documents", "type": "custom", "component": "MeetingRoutedDocumentsTab", "title": "Incoming documents", "icon": "Email" }
 				],
 				"layout": [
@@ -576,11 +598,9 @@
 					{ "id": "9", "widgetId": "meeting-publication", "gridX": 6, "gridY": 27, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "10", "widgetId": "meeting-series", "gridX": 0, "gridY": 31, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "11", "widgetId": "meeting-transcription", "gridX": 6, "gridY": 31, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "15", "widgetId": "meeting-vragenuur", "gridX": 0, "gridY": 35, "gridWidth": 6, "gridHeight": 5 },
-					{ "id": "16", "widgetId": "meeting-interpellations", "gridX": 6, "gridY": 35, "gridWidth": 6, "gridHeight": 5 },
-					{ "id": "17", "widgetId": "meeting-proxy-authorizations", "gridX": 0, "gridY": 40, "gridWidth": 6, "gridHeight": 5 },
-					{ "id": "18", "widgetId": "meeting-kascommissie", "gridX": 6, "gridY": 40, "gridWidth": 6, "gridHeight": 5 },
-					{ "id": "19", "widgetId": "meeting-routed-documents", "gridX": 0, "gridY": 45, "gridWidth": 12, "gridHeight": 5 }
+					{ "id": "17", "widgetId": "meeting-proxy-authorizations", "gridX": 0, "gridY": 35, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "18", "widgetId": "meeting-audit-statements", "gridX": 6, "gridY": 35, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "19", "widgetId": "meeting-routed-documents", "gridX": 0, "gridY": 40, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -600,7 +620,7 @@
 				"widget-meeting-publication": "AgendaPublicationTab",
 				"widget-meeting-series": "MeetingSeriesTab",
 				"widget-meeting-transcription": "MeetingTranscriptionTab",
-				"widget-meeting-kascommissie": "MeetingKascommissieTab",
+				"widget-meeting-audit-statements": "MeetingAuditStatementTab",
 				"widget-meeting-routed-documents": "MeetingRoutedDocumentsTab"
 			}
 		},
@@ -640,6 +660,9 @@
 			"route": "/decisions/:id/integrations",
 			"type": "detail",
 			"title": "Decision integrations",
+			"slots": {
+				"form-dialog": "DecisionFormDialog"
+			},
 			"config": {
 				"register": "decidiq",
 				"schema": "decision",
@@ -831,6 +854,8 @@
 			"route": "/motions",
 			"type": "index",
 			"title": "Motions",
+			"slots": { "form-dialog": "DecisionFormDialog" },
+			"_note": "decision-types-as-configuration: the built-in create/edit dialog reads properties.decisionType.enum from the stored schema, which is deliberately empty since #1099 (the decision_types app config is the only authority), so its type picker rendered 'No results'. DecisionFormDialog is the same CnFormDialog over the same schema, with the vocabulary fetched from GET /api/v1/decision-types through the shared decisionLink.js helpers (#1104) and spliced in client-side. The note stays a SIBLING of slots: CnPageRenderer resolves every slots entry as a registry name and warns on one it cannot find.",
 			"config": {
 				"register": "decidiq",
 				"schema": "decision",
@@ -874,7 +899,9 @@
 			"id": "MotionDetail",
 			"route": "/motions/:id",
 			"type": "detail",
+			"_note": "decision-types-as-configuration: same wiring and same reason as DecisionDetail. This page renders the Decision schema too, so its built-in Edit dialog showed an empty decisionType picker until the form-dialog slot (nextcloud-vue#944) let DecisionFormDialog splice the registry vocabulary in.",
 			"slots": {
+				"form-dialog": "DecisionFormDialog",
 				"widget-motion-amendments": "MotionAmendmentsTab",
 				"widget-motion-votes": "MotionVotesTab",
 				"widget-motion-amendment-order": "MotionAmendmentOrderTab",
@@ -958,7 +985,9 @@
 				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			},
+			"_note": "decision-types-as-configuration: same wiring and same reason as DecisionDetail. This page renders the Decision schema too, so its built-in Edit dialog showed an empty decisionType picker until the form-dialog slot (nextcloud-vue#944) let DecisionFormDialog splice the registry vocabulary in.",
 			"slots": {
+				"form-dialog": "DecisionFormDialog",
 				"widget-amend-diff": "AmendmentDiffTab",
 				"widget-amend-parent": "AmendmentParentMotionTab"
 			}
@@ -1030,6 +1059,8 @@
 			"route": "/decisions",
 			"type": "index",
 			"title": "Decisions",
+			"slots": { "form-dialog": "DecisionFormDialog" },
+			"_note": "Same wiring as the Motions page, and for the same reason: the stored decision schema carries no decisionType enum since #1099, so the built-in dialog's type picker rendered 'No results'. DecisionFormDialog feeds the picker from the decision_types registry via the shared decisionLink.js helpers (#1104).",
 			"config": {
 				"register": "decidiq",
 				"schema": "decision",
@@ -1127,7 +1158,9 @@
 			"id": "DecisionDetail",
 			"route": "/decisions/:id",
 			"type": "detail",
+			"_note": "decision-types-as-configuration: this detail page's built-in Edit dialog renders the same Decision schema the index pages do, and #1099 deliberately emptied properties.decisionType.enum (the decision_types app config is the only authority), so its type picker offered nothing and the required field blocked the save. #1109 fixed the two index pages through CnIndexPage's form-dialog slot; CnDetailPage grew the same slot with the same scope in nextcloud-vue#944, so the same DecisionFormDialog is wired here rather than a second copy of the vocabulary logic. The note stays a SIBLING of slots: CnPageRenderer resolves every slots entry as a registry name and warns on one it cannot find.",
 			"slots": {
+				"form-dialog": "DecisionFormDialog",
 				"widget-decision-lifecycle": "DecisionLifecycleTab",
 				"widget-decision-actions": "ActionItemsSurface",
 				"widget-decision-related": "RelatedDecisionsTab",
@@ -1139,7 +1172,7 @@
 			"config": {
 				"register": "decidiq",
 				"schema": "decision",
-				"_note": "Decision — the core governance dossier (title, text, outcome, decision date, legal basis, lifecycle, publication state, effectiveStatus). The 42-field decision schema is split field-scoped (ADR-062 rule 3) into Content (title/text/proposedText/fullText/background/proposer/co-signers/resolution — WHAT was decided) and Governance (decisionDate/outcome/publication/lifecycle/enactedAt/voting mechanics/adoption+effective dates — the process STATE the dossier is in); fields already shown by dedicated tabs (amends/supersedes/repeals/route/offer/order/product, sourceApp/subject*/externalReference system fields) stay excluded from both. Bespoke dossier layout: Content leads 8-wide with the Lifecycle state machine (DecisionLifecycleTab — the guarded transition buttons that advance the decision) right, because moving a decision through its states is the primary action; Governance sits below Content with a Documents leaf beside it; the Action items it spawns (ActionItemsSurface — the Deck-board projection of children keyed on `decision`, ADR-019/ADR-002) render full-width, then Related decisions (RelatedDecisionsTab — the supersedes/repeals graph driving the computed effectiveStatus banner) and Route share a row, followed by the lower-frequency Voting results and Publication surfaces. Email linking lives on the dedicated DecisionIntegrations surface (schema declares no comms linkedType). Sidebar is audit-trail only. decision-facet-composition adds 8 reverse-lookup `object-list` widgets below the existing 9, grouped in 3 rows by domain (consultations: public/member/WOR; opinions+participation: advisory opinions/zienswijzerondes/zienswijzen; outcomes: commitments/confidentiality) so opening a decision surfaces everything that already references it via `decision`/`relatedDecision`/`relatedMotion`/`targetDecision` on six sibling schemas, closing the reverse-lookup gap `constituency-consultation`'s own manifest fragment deferred. Confidentiality is read-only (`allowCreate:false` — geheimhouding is imposed through the geheimhoudingenregister's own flow, not from here).",
+				"_note": "Decision — the core governance dossier (title, text, outcome, decision date, legal basis, lifecycle, publication state, effectiveStatus). The 42-field decision schema is split field-scoped (ADR-062 rule 3) into Content (title/text/proposedText/fullText/background/proposer/co-signers/resolution — WHAT was decided) and Governance (decisionDate/outcome/publication/lifecycle/enactedAt/voting mechanics/adoption+effective dates — the process STATE the dossier is in); fields already shown by dedicated tabs (amends/supersedes/repeals/route/offer/order/product, sourceApp/subject*/externalReference system fields) stay excluded from both. Bespoke dossier layout: Content leads 8-wide with the Lifecycle state machine (DecisionLifecycleTab — the guarded transition buttons that advance the decision) right, because moving a decision through its states is the primary action; Governance sits below Content with a Documents leaf beside it; the Action items it spawns (ActionItemsSurface — the Deck-board projection of children keyed on `decision`, ADR-019/ADR-002) render full-width, then Related decisions (RelatedDecisionsTab — the supersedes/repeals graph driving the computed effectiveStatus banner) and Route share a row, followed by the lower-frequency Voting results and Publication surfaces. Email linking lives on the dedicated DecisionIntegrations surface (schema declares no comms linkedType). Sidebar is audit-trail only. decision-facet-composition adds 8 reverse-lookup `object-list` widgets below the existing 9, grouped in 3 rows by domain (consultations: public/member/WOR; opinions+participation: advisory opinions/zienswijzerondes/zienswijzen; outcomes: commitments/confidentiality) so opening a decision surfaces everything that already references it via `decision`/`relatedDecision`/`relatedMotion`/`targetDecision` on six sibling schemas, closing the reverse-lookup gap `constituency-consultation`'s own manifest fragment deferred. Confidentiality is read-only (`allowCreate:false` — a restriction is imposed through the confidentiality register's own flow, not from here).",
 				"widgets": [
 					{ "id": "decision-content", "type": "data", "title": "Content", "icon": "NoteTextOutline", "content": { "columns": 2, "include": ["decisionType", "title", "text", "proposedText", "fullText", "background", "motionType", "proposer", "coSigners", "resolutionNumber", "resolutionType", "legalBasis", "targetBody", "targetPosts", "targetRole", "candidates", "nominatingParty", "appointedMemberships"] } },
 					{ "id": "decision-governance", "type": "data", "title": "Governance", "icon": "ScaleBalance", "content": { "columns": 2, "include": ["decisionDate", "outcome", "isPublished", "publishedAt", "lifecycle", "enactedAt", "submittedAt", "citizenVotingAllowed", "citizenVotingMethod", "votingOrder", "voteType", "voteThreshold", "adoptionDate", "effectiveDate"], "overrides": { "publishedAt": { "editable": false }, "lifecycle": { "editable": false }, "enactedAt": { "editable": false }, "submittedAt": { "editable": false } } } },
@@ -1151,13 +1184,11 @@
 					{ "id": "decision-voting", "type": "custom", "component": "DecisionVotingTab", "title": "Voting results", "icon": "CheckCircleOutline" },
 					{ "id": "decision-publication", "type": "custom", "component": "DecisionPublicationTab", "title": "Publication", "icon": "Web" },
 					{ "id": "decision-public-consultations", "type": "object-list", "title": "Public consultations", "icon": "Earth", "content": { "register": "decidiq", "schema": "public-consultation", "filter": { "decision": "@objectId" }, "sort": { "field": "submissionDeadline", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title", "widget": "link" }, { "key": "consultationType", "label": "Type", "widget": "badge" }, { "key": "status", "label": "Status", "widget": "badge" }, { "key": "submissionDeadline", "label": "Deadline", "widget": "date" } ], "limit": 10, "viewAllRoute": "Consultations", "viewAllQuery": { "decision": "@objectId" }, "emptyText": "No public consultations reference this decision yet.", "rowRoute": "ConsultationDetail" } },
-					{ "id": "decision-member-consultations", "type": "object-list", "title": "Member consultations", "icon": "AccountGroup", "content": { "register": "decidiq", "schema": "member-consultation", "filter": { "decision": "@objectId" }, "sort": { "field": "closesAt", "dir": "desc" }, "columns": [ { "key": "question", "label": "Question", "widget": "link" }, { "key": "audienceType", "label": "Audience", "widget": "badge" }, { "key": "closesAt", "label": "Closes", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Raadplegingen", "viewAllQuery": { "decision": "@objectId" }, "emptyText": "No member consultations reference this decision yet.", "rowRoute": "RaadplegingDetail" } },
-					{ "id": "decision-wor-consultations", "type": "object-list", "title": "Works council (WOR)", "icon": "HandshakeOutline", "content": { "register": "decidiq", "schema": "consultation-request", "filter": { "relatedDecision": "@objectId" }, "sort": { "field": "receivedDate", "dir": "desc" }, "columns": [ { "key": "subject", "label": "Subject", "widget": "link" }, { "key": "type", "label": "Type", "widget": "badge" }, { "key": "receivedDate", "label": "Received", "widget": "date" }, { "key": "requestedResponseDate", "label": "Requested response", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "WorTrajecten", "viewAllQuery": { "relatedDecision": "@objectId" }, "emptyText": "No works-council consultation requests reference this decision yet.", "rowRoute": "WorTrajectDetail" } },
-					{ "id": "decision-advisory-opinions", "type": "object-list", "title": "Advisory opinions", "icon": "Lightbulb", "content": { "register": "decidiq", "schema": "advice-request", "filter": { "relatedDecision": "@objectId" }, "sort": { "field": "sentDate", "dir": "desc" }, "columns": [ { "key": "subject", "label": "Subject", "widget": "link" }, { "key": "advisoryBody", "label": "Advisory body" }, { "key": "requestedByDate", "label": "Requested by", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Adviesaanvragen", "viewAllQuery": { "relatedDecision": "@objectId" }, "emptyText": "No advisory-opinion requests reference this decision yet.", "rowRoute": "AdviesaanvraagDetail" } },
-					{ "id": "decision-zienswijzerondes", "type": "object-list", "title": "Zienswijzerondes", "icon": "MessageTextOutline", "content": { "register": "decidiq", "schema": "zienswijzeronde", "filter": { "decision": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "title", "label": "Title", "widget": "link" }, { "key": "subjectType", "label": "Subject", "widget": "badge" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "status", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Zienswijzerondes", "viewAllQuery": { "decision": "@objectId" }, "emptyText": "This decision is not a shared body's vaststellingsbesluit for any zienswijzeronde.", "rowRoute": "ZienswijzerondeDetail" } },
-					{ "id": "decision-zienswijzen", "type": "object-list", "title": "Zienswijzen", "icon": "FileSign", "content": { "register": "decidiq", "schema": "zienswijze", "filter": { "decision": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "ronde", "label": "Ronde", "widget": "link" }, { "key": "participant", "label": "Participant" }, { "key": "position", "label": "Standpunt", "widget": "badge" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "status", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Zienswijzen", "viewAllQuery": { "decision": "@objectId" }, "emptyText": "No zienswijzen adopted this decision as their raadsbesluit yet.", "rowRoute": "ZienswijzerondeDetail" } },
-					{ "id": "decision-toezeggingen", "type": "object-list", "title": "Commitments", "icon": "ClipboardCheckOutline", "content": { "register": "decidiq", "schema": "toezegging", "filter": { "relatedMotion": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "text", "label": "Commitment", "widget": "link" }, { "key": "madeBy", "label": "Made by" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Toezeggingen", "viewAllQuery": { "relatedMotion": "@objectId" }, "emptyText": "This motion has produced no commitments yet.", "rowRoute": "ToezeggingDetail" } },
-					{ "id": "decision-geheimhouding", "type": "object-list", "title": "Confidentiality", "icon": "ShieldCheckOutline", "content": { "register": "decidiq", "schema": "geheimhouding", "filter": { "targetDecision": "@objectId" }, "sort": { "field": "imposedAt", "dir": "desc" }, "columns": [ { "key": "ground", "label": "Ground", "widget": "link" }, { "key": "lifecycle", "label": "Status", "widget": "badge" }, { "key": "ratificationDeadline", "label": "Ratification deadline", "widget": "date" } ], "limit": 10, "allowCreate": false, "viewAllRoute": "Geheimhoudingen", "viewAllQuery": { "targetDecision": "@objectId" }, "emptyText": "This decision has no confidentiality restriction.", "rowRoute": "GeheimhoudingDetail" } }
+					{ "id": "decision-consultations", "type": "object-list", "title": "Consultations", "icon": "CommentQuestionOutline", "content": { "register": "decidiq", "schema": "governance-consultation", "filter": { "relatedDecision": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "subject", "label": "Subject", "widget": "link" }, { "key": "subjectType", "label": "Kind", "widget": "badge" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "allowCreate": false, "rowRoute": "GovernanceConsultationDetail", "viewAllRoute": "GovernanceConsultations", "viewAllQuery": { "relatedDecision": "@objectId" }, "emptyText": "No consultations were held on this decision." } },
+					{ "id": "decision-wor-consultations", "type": "object-list", "title": "Works council (WOR)", "icon": "HandshakeOutline", "content": { "register": "decidiq", "schema": "consultation-request", "filter": { "relatedDecision": "@objectId" }, "sort": { "field": "receivedDate", "dir": "desc" }, "columns": [ { "key": "subject", "label": "Subject", "widget": "link" }, { "key": "type", "label": "Type", "widget": "badge" }, { "key": "receivedDate", "label": "Received", "widget": "date" }, { "key": "requestedResponseDate", "label": "Requested response", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "WorksCouncilConsultations", "viewAllQuery": { "relatedDecision": "@objectId" }, "emptyText": "No works-council consultation requests reference this decision yet.", "rowRoute": "WorksCouncilConsultationDetail" } },
+					{ "id": "decision-consultation-responses", "type": "object-list", "title": "Consultation responses", "icon": "CommentCheckOutline", "content": { "register": "decidiq", "schema": "governance-consultation-response", "filter": { "relatedDecision": "@objectId" }, "sort": { "field": "submittedAt", "dir": "desc" }, "columns": [ { "key": "position", "label": "Position", "widget": "badge" }, { "key": "text", "label": "Response" }, { "key": "processing", "label": "Processing", "widget": "badge" }, { "key": "status", "label": "Status", "widget": "badge" } ], "limit": 10, "allowCreate": false, "viewAllRoute": "GovernanceConsultationResponses", "viewAllQuery": { "relatedDecision": "@objectId" }, "emptyText": "No responses were recorded for this decision." } },
+					{ "id": "decision-commitments", "type": "object-list", "title": "Commitments", "icon": "ClipboardCheckOutline", "content": { "register": "decidiq", "schema": "governance-commitment", "filter": { "relatedMotion": "@objectId" }, "sort": { "field": "deadline", "dir": "desc" }, "columns": [ { "key": "text", "label": "Commitment", "widget": "link" }, { "key": "madeBy", "label": "Made by" }, { "key": "deadline", "label": "Deadline", "widget": "date" }, { "key": "lifecycle", "label": "Status", "widget": "badge" } ], "limit": 10, "viewAllRoute": "Commitments", "viewAllQuery": { "relatedMotion": "@objectId" }, "emptyText": "This motion has produced no commitments yet.", "rowRoute": "CommitmentDetail" } },
+					{ "id": "decision-confidentiality", "type": "object-list", "title": "Confidentiality", "icon": "ShieldCheckOutline", "content": { "register": "decidiq", "schema": "confidentiality-restriction", "filter": { "targetDecision": "@objectId" }, "sort": { "field": "imposedAt", "dir": "desc" }, "columns": [ { "key": "ground", "label": "Ground", "widget": "link" }, { "key": "lifecycle", "label": "Status", "widget": "badge" }, { "key": "ratificationDeadline", "label": "Ratification deadline", "widget": "date" } ], "limit": 10, "allowCreate": false, "viewAllRoute": "ConfidentialityRestrictions", "viewAllQuery": { "targetDecision": "@objectId" }, "emptyText": "This decision has no confidentiality restriction.", "rowRoute": "ConfidentialityRestrictionDetail" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "decision-content", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
@@ -1170,13 +1201,11 @@
 					{ "id": "8", "widgetId": "decision-voting", "gridX": 0, "gridY": 24, "gridWidth": 6, "gridHeight": 5 },
 					{ "id": "9", "widgetId": "decision-publication", "gridX": 6, "gridY": 24, "gridWidth": 6, "gridHeight": 5 },
 					{ "id": "10", "widgetId": "decision-public-consultations", "gridX": 0, "gridY": 29, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "11", "widgetId": "decision-member-consultations", "gridX": 4, "gridY": 29, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "11", "widgetId": "decision-consultations", "gridX": 4, "gridY": 29, "gridWidth": 4, "gridHeight": 5 },
 					{ "id": "12", "widgetId": "decision-wor-consultations", "gridX": 8, "gridY": 29, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "13", "widgetId": "decision-advisory-opinions", "gridX": 0, "gridY": 34, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "14", "widgetId": "decision-zienswijzerondes", "gridX": 4, "gridY": 34, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "15", "widgetId": "decision-zienswijzen", "gridX": 8, "gridY": 34, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "16", "widgetId": "decision-toezeggingen", "gridX": 0, "gridY": 39, "gridWidth": 6, "gridHeight": 5 },
-					{ "id": "17", "widgetId": "decision-geheimhouding", "gridX": 6, "gridY": 39, "gridWidth": 6, "gridHeight": 5 }
+					{ "id": "15", "widgetId": "decision-consultation-responses", "gridX": 0, "gridY": 34, "gridWidth": 12, "gridHeight": 5 },
+					{ "id": "16", "widgetId": "decision-commitments", "gridX": 0, "gridY": 39, "gridWidth": 6, "gridHeight": 5 },
+					{ "id": "17", "widgetId": "decision-confidentiality", "gridX": 6, "gridY": 39, "gridWidth": 6, "gridHeight": 5 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -1271,6 +1300,772 @@
 			}
 		},
 		{
+			"id": "Reports",
+			"_note": "ADR-112 / ADR-114 Decision 3. Three new declarative type:dashboard pages plus Engagement, which already existed as an index over engagement-record and had NO menu entry — carding it gives an entry point rather than moving one. ⚠️ THE SCHEMA SLUG IS NOT THE SEED KEY: the seed keys are PascalCase (Decision, VotingRound) and the slugs are kebab-case (decision, voting-round). A widget naming the key renders an empty card and says nothing.",
+			"route": "/reports",
+			"type": "reports",
+			"title": "Reports",
+			"config": {
+				"description": "Pick a report to open it.",
+				"categories": {
+					"decisions": "Decisions and votes",
+					"meetings": "Meetings and people"
+				},
+				"cards": [
+					{
+						"id": "DecisionsReport",
+						"label": "Decisions",
+						"description": "What was decided, how it was framed, and what reached the public.",
+						"icon": "Gavel",
+						"category": "decisions",
+						"route": "DecisionsReport"
+					},
+					{
+						"id": "VotingReport",
+						"label": "Voting",
+						"description": "How rounds ended, and how the votes fell.",
+						"icon": "VoteOutline",
+						"category": "decisions",
+						"route": "VotingReport"
+					},
+					{
+						"id": "MeetingsReport",
+						"label": "Meetings and attendance",
+						"description": "Where meetings stand, how they are held, and who turned up.",
+						"icon": "CalendarCheckOutline",
+						"category": "meetings",
+						"route": "MeetingsReport"
+					},
+					{
+						"id": "Engagement",
+						"label": "Engagement",
+						"description": "Who spoke, for how long, and how engaged the room was.",
+						"icon": "AccountVoice",
+						"category": "meetings",
+						"route": "Engagement"
+					}
+				]
+			}
+		},
+		{
+			"id": "DecisionsReport",
+			"route": "/reports/decisions",
+			"type": "dashboard",
+			"title": "Decisions",
+			"_note": "Every filter is scalar equality, the only kind OpenRegister's aggregation endpoint can evaluate. A multi-value or relative-date filter is accepted and then silently not applied — which is how this app's own KPI cards came to show wrong numbers before they were rewritten as custom widgets.",
+			"config": {
+				"widgets": [
+					{
+						"id": "dec-adopted",
+						"title": "Adopted",
+						"type": "stat",
+						"content": {
+							"label": "Adopted",
+							"icon": "CheckCircleOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "decision",
+								"metric": "count",
+								"filter": {
+									"outcome": "adopted"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-rejected",
+						"title": "Rejected",
+						"type": "stat",
+						"content": {
+							"label": "Rejected",
+							"icon": "AlertOctagonOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "decision",
+								"metric": "count",
+								"filter": {
+									"outcome": "rejected"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-public",
+						"title": "Published publicly",
+						"type": "stat",
+						"content": {
+							"label": "Published publicly",
+							"icon": "BullhornOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "decision",
+								"metric": "count",
+								"filter": {
+									"isPublished": "public"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-by-outcome",
+						"title": "By outcome",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No decisions yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "decision",
+								"aggregate": {
+									"groupBy": "outcome",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-by-type",
+						"title": "By type",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No decisions yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "decision",
+								"aggregate": {
+									"groupBy": "decisionType",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-by-lifecycle",
+						"title": "By stage",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No decisions yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "decision",
+								"aggregate": {
+									"groupBy": "lifecycle",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "dec-recent",
+						"title": "Most recent",
+						"type": "object-table",
+						"content": {
+							"register": "decidiq",
+							"schema": "decision",
+							"filter": {},
+							"sort": {
+								"field": "decisionDate",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "No decisions yet",
+							"viewAllRoute": {
+								"name": "Decisions"
+							},
+							"viewAllLabel": "View all decisions",
+							"columns": [
+								{
+									"key": "decisionDate",
+									"label": "Date"
+								},
+								{
+									"key": "title",
+									"label": "Decision"
+								},
+								{
+									"key": "outcome",
+									"label": "Outcome"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "dec-adopted",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "dec-rejected",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "dec-public",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "dec-by-outcome",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "dec-by-type",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "dec-by-lifecycle",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "7",
+						"widgetId": "dec-recent",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "VotingReport",
+			"route": "/reports/voting",
+			"type": "dashboard",
+			"title": "Voting",
+			"_note": "voting-round holds the outcome of a round; vote holds one participant's choice. Both are on this page because the question a reader has is how the room voted, and answering it from either alone would be a half answer.",
+			"config": {
+				"widgets": [
+					{
+						"id": "vote-rounds",
+						"title": "Rounds held",
+						"type": "stat",
+						"content": {
+							"label": "Rounds held",
+							"icon": "VoteOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "voting-round",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "vote-adopted",
+						"title": "Rounds adopted",
+						"type": "stat",
+						"content": {
+							"label": "Rounds adopted",
+							"icon": "CheckCircleOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "voting-round",
+								"metric": "count",
+								"filter": {
+									"result": "adopted"
+								}
+							}
+						}
+					},
+					{
+						"id": "vote-tied",
+						"title": "Rounds tied",
+						"type": "stat",
+						"content": {
+							"label": "Rounds tied",
+							"icon": "AlertOutline",
+							"route": {
+								"name": "Decisions"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "voting-round",
+								"metric": "count",
+								"filter": {
+									"result": "tied"
+								}
+							}
+						}
+					},
+					{
+						"id": "vote-by-result",
+						"title": "By result",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No voting rounds yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "voting-round",
+								"aggregate": {
+									"groupBy": "result",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "vote-by-method",
+						"title": "By method",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No voting rounds yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "voting-round",
+								"aggregate": {
+									"groupBy": "votingMethod",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "vote-by-value",
+						"title": "How votes fell",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nobody has voted yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "vote",
+								"aggregate": {
+									"groupBy": "value",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "vote-recent",
+						"title": "Most recent rounds",
+						"type": "object-table",
+						"content": {
+							"register": "decidiq",
+							"schema": "voting-round",
+							"filter": {},
+							"sort": {
+								"field": "closedAt",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "No voting rounds yet",
+							"viewAllRoute": {
+								"name": "Decisions"
+							},
+							"viewAllLabel": "View all decisions",
+							"columns": [
+								{
+									"key": "closedAt",
+									"label": "Closed"
+								},
+								{
+									"key": "votingMethod",
+									"label": "Method"
+								},
+								{
+									"key": "result",
+									"label": "Result"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "vote-rounds",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "vote-adopted",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "vote-tied",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "vote-by-result",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "vote-by-method",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "vote-by-value",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "7",
+						"widgetId": "vote-recent",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "MeetingsReport",
+			"route": "/reports/meetings",
+			"type": "dashboard",
+			"title": "Meetings and attendance",
+			"config": {
+				"widgets": [
+					{
+						"id": "meet-scheduled",
+						"title": "Scheduled",
+						"type": "stat",
+						"content": {
+							"label": "Scheduled",
+							"icon": "CalendarClockOutline",
+							"route": {
+								"name": "Meetings"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "meeting",
+								"metric": "count",
+								"filter": {
+									"lifecycle": "scheduled"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-closed",
+						"title": "Closed",
+						"type": "stat",
+						"content": {
+							"label": "Closed",
+							"icon": "CalendarCheckOutline",
+							"route": {
+								"name": "Meetings"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "meeting",
+								"metric": "count",
+								"filter": {
+									"lifecycle": "closed"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-absent",
+						"title": "Recorded absences",
+						"type": "stat",
+						"content": {
+							"label": "Recorded absences",
+							"icon": "AccountMinusOutline",
+							"route": {
+								"name": "Meetings"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "decidiq",
+								"schema": "participant",
+								"metric": "count",
+								"filter": {
+									"attendanceStatus": "absent"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-by-lifecycle",
+						"title": "By stage",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No meetings yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "meeting",
+								"aggregate": {
+									"groupBy": "lifecycle",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-by-mode",
+						"title": "In person, digital or hybrid",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No meetings yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "meeting",
+								"aggregate": {
+									"groupBy": "meetingMode",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-by-attendance",
+						"title": "Attendance",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nobody has been recorded yet",
+							"dataSource": {
+								"register": "decidiq",
+								"schema": "participant",
+								"aggregate": {
+									"groupBy": "attendanceStatus",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "meet-recent",
+						"title": "Most recent",
+						"type": "object-table",
+						"content": {
+							"register": "decidiq",
+							"schema": "meeting",
+							"filter": {},
+							"sort": {
+								"field": "scheduledDate",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "No meetings yet",
+							"viewAllRoute": {
+								"name": "Meetings"
+							},
+							"viewAllLabel": "View all meetings",
+							"columns": [
+								{
+									"key": "scheduledDate",
+									"label": "Date"
+								},
+								{
+									"key": "title",
+									"label": "Meeting"
+								},
+								{
+									"key": "lifecycle",
+									"label": "Stage"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "meet-scheduled",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "meet-closed",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "meet-absent",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "meet-by-lifecycle",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "meet-by-mode",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "meet-by-attendance",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "7",
+						"widgetId": "meet-recent",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "Store",
+			"route": "/store",
+			"type": "store",
+			"title": "Store",
+			"config": {
+				"app": "decidiq",
+				"title": "Store",
+				"description": "Install governance configuration that other organisations have published: a council with its committees and factions, an association with its members' meeting, or the flows that move a decision through them."
+			}
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",
@@ -1290,7 +2085,7 @@
 		{
 			"id": "FlowDetail",
 			"route": "/flows/:id",
-			"type": "flow",
+			"type": "flow-detail",
 			"title": "Flow",
 			"config": { "app": "decidiq" },
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar so the canvas keeps full width."

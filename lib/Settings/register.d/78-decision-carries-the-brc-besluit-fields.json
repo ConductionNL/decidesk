@@ -1,0 +1,57 @@
+{
+	"_note": "the-decision-carries-the-brc-besluit-fields — two apps declared a `decision`, and a schema slug is global per organisation, so SchemaMapper::find() returned whichever row it reached first. They were not two copies of one record: this one is the governance decision (motions, voting, resolutions, amends/repeals/implements), and dossiq's was the VNG **Besluit** behind its BRC API — the standards-compliant Besluiten Registratie Component, wired into ZRC, WOO assessments and the bezwaar lifecycle. Folding them means this schema has to hold what the BRC serves. Five fields do that: deliveryDate, expiryDate, publicationDate, responsibleOrganisation and governingBody. The fifth was found by running the migration against a loaded instance: `governingBody` is the bestuursorgaan that TOOK the decision, and the only field here shaped like it, `targetBody`, is the body an appointment is made FOR and is a uuid. Mapping onto it would have been both a validation failure and the wrong meaning. `case` is deliberately NOT among them — cases and decisions are already linked, and adding a case reference here would be a second, competing link. dossiq keeps its BrcController; it serves from this register instead of its own.",
+	"_spec": "openspec/changes/the-decision-carries-the-brc-besluit-fields/specs/decision-management/spec.md",
+	"components": {
+		"schemas": {
+			"Decision": {
+				"version": "0.4.0",
+				"description": "A decision taken by a governance body, and the formal Besluit it produces. Carries the deliberation (how it was reached: motion, voting, adoption) and, since the-decision-carries-the-brc-besluit-fields, the four fields the VNG BRC serves that the governance model had no column for.",
+				"properties": {
+					"deliveryDate": {
+						"type": "string",
+						"format": "date",
+						"title": "Verzenddatum",
+						"title:en": "Delivery date",
+						"description": "De datum waarop het besluit is verzonden aan de belanghebbende. BRC `verzenddatum`.",
+						"description:en": "The date the decision was sent to the interested party. BRC `verzenddatum`.",
+						"facetable": true
+					},
+					"expiryDate": {
+						"type": "string",
+						"format": "date",
+						"title": "Vervaldatum",
+						"title:en": "Expiry date",
+						"description": "De datum waarop het besluit vervalt. Onderscheiden van `effectiveDate`, die zegt wanneer het ingaat. BRC `vervaldatum`.",
+						"description:en": "The date the decision expires. Distinct from `effectiveDate`, which says when it takes effect. BRC `vervaldatum`.",
+						"facetable": true
+					},
+					"publicationDate": {
+						"type": "string",
+						"format": "date",
+						"title": "Publicatiedatum",
+						"title:en": "Publication date",
+						"description": "De datum waarop het besluit is gepubliceerd. Onderscheiden van `publishedAt`, dat het moment van publiceren in dit systeem vastlegt; dit is de datum die het besluit zelf draagt. BRC `publicatiedatum`.",
+						"description:en": "The date the decision was published. Distinct from `publishedAt`, which records when this system published it; this is the date the decision itself carries. BRC `publicatiedatum`.",
+						"facetable": true
+					},
+					"responsibleOrganisation": {
+						"type": "string",
+						"title": "Verantwoordelijke organisatie",
+						"title:en": "Responsible organisation",
+						"description": "Het RSIN van de organisatie die verantwoordelijk is voor het besluit. Een RSIN en niet een `$ref`: de BRC identificeert de verantwoordelijke met dit nummer, en een verwijzing die alleen binnen deze instantie oplost zou het contract breken.",
+						"description:en": "The RSIN of the organisation responsible for the decision. An RSIN rather than a `$ref`: the BRC identifies the responsible party by this number, and a reference that only resolves inside this instance would break the contract.",
+						"facetable": true
+					},
+					"governingBody": {
+						"type": "string",
+						"title": "Bestuursorgaan",
+						"title:en": "Governing body",
+						"description": "Het bestuursorgaan dat het besluit heeft genomen, bijvoorbeeld het college of de raad. Onderscheiden van `responsibleOrganisation`, dat de verantwoordelijke organisatie als RSIN vastlegt, en van `targetBody`, dat bij een benoeming het orgaan aanwijst waarvoor benoemd wordt. BRC `bestuursorgaan`.",
+						"description:en": "The governing body that took the decision, for example the executive or the council. Distinct from `responsibleOrganisation`, which records the responsible organisation as an RSIN, and from `targetBody`, which names the body an appointment is made for. BRC `bestuursorgaan`.",
+						"facetable": true
+					}
+				}
+			}
+		}
+	}
+}

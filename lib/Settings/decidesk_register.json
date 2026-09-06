@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Decidiq Register",
-    "description": "Universal decision-making platform for governance bodies, associations, corporate boards, and operational meetings",
-    "version": "0.10.0"
+    "description": "Universal decision-making platform for governance bodies, associations, corporate boards, and operational meetings. v0.11.0 retires the `product` schema and the `Decision.product` relation that reached it. Pipelinq owns `product` for the fleet; decidiq, filinq and pipelinq all claimed the slug, and slugs are global on a shared OpenRegister. Nothing in decidiq read this copy. v0.12.0 adds `advice` and `bezwaar-decision` to Decision.decisionType. Dossiq delegates advice and objection decisions under those types, and the integration hub refuses any type outside this enum. v0.13.0 removes the Decision.decisionType enum entirely (decision-types-as-configuration): the vocabulary is now the decidiq decision_types app setting, seeded on install and enforced referentially by DecisionTypeRegistry, so adding a type is an admin action rather than a release.",
+    "version": "0.13.0"
   },
   "x-openregister": {
     "type": "application",
@@ -57,8 +57,8 @@
         "slug": "decidiq",
         "title": "Decidiq Register",
         "description": "Universal decision-making platform for governance bodies, associations, corporate boards, and operational meetings. Holds every governance body, meeting, agenda item, decision, vote, minutes, consultation and integrity object the app reads and writes.",
-        "version": "0.12.0",
-        "_authorizationNote": "REGISTER-LEVEL BASELINE, and it is a BEHAVIOUR CHANGE. Until this block existed, every decidesk schema without its own `authorization` block was read AND WRITE open to every authenticated user through OpenRegister's own /apps/openregister/api/objects/decidiq/<schema> API — the API the frontend uses directly under ADR-022, which no decidesk controller guard sits in front of. OpenRegister's PermissionHandler::hasGroupPermission() tests `empty($authorization)`, and PHP's empty() is true for null and [] alike, so an ABSENT block takes the same default-OPEN branch as an empty one; `enforce_default_closed` defaults to false and, even when enabled, closes only create/update/delete. Measured on this tree before the change: 93 schemas, 24 carrying a block (all read-only), this register row carrying none — so 69 schemas, including Decision, VotingRound, Vote, Participant and EngagementRecord, granted create/update/delete to any logged-in account. Same shape as docudesk#631, where a plain user overwrote another user's template. THE CASCADE IS WHY THIS SITS ON THE REGISTER ROW: PermissionHandler::resolveAuthorization() uses a schema's own block when it has one and falls back to the register's only when it does not, so this baseline reaches exactly the 69 unprotected schemas and changes nothing for the 24 that already declare their own (their public-read rules are untouched). WHAT EACH ACTION IS FOR: read and list name BOTH `authenticated` AND `public`, and create names `authenticated`, so no read goes dark and any member can still raise a decision, cast a vote or file a reaction — those flows are unchanged. `public` on the READ actions is not a widening: before this block existed the default-OPEN branch granted every action to every principal INCLUDING the anonymous one, so omitting `public` here would have CLOSED anonymous reads — a separate and much larger policy change than the write hole this block exists to fix, and one that would 403 every #[PublicPage] citizen-participation surface. CI proved it rather than theory: the first version of this block omitted `public` and all six PHPUnit legs failed with `User 'Anonymous' does not have permission to 'read' objects in schema 'Meeting'`. `public` appears on NO write action, so the anonymous fail-closed rule from openregister#1955 keeps denying anonymous create/update/delete exactly as it did before. update/delete are NOT granted to `authenticated`, which is the whole fix: OpenRegister bypasses the object OWNER unconditionally and SQL-side before any rule is consulted, and bypasses `admin` too, so the author of an object keeps full control of it and only OTHER users lose the ability to rewrite or destroy it. `decidesk-administrators` is the named Nextcloud group for a griffie/secretariat that must edit records it did not create; it is admin-provisioned, and on an instance where it does not exist this simply resolves to owner-plus-admin, which is fail-closed. EVERY ACTION IS WRITTEN OUT ON PURPOSE: once a block is non-empty, OpenRegister DENIES any action the block omits, so an omitted `list` or `create` here would silently break the app rather than secure it. Per-body actor authorization (chair / signatory scopes, x-decidesk-rbac-scopes above) is a separate layer and is unaffected — OpenRegister cannot template a group name per object, which is why that determination is made at the app boundary.",
+        "version": "0.13.0",
+        "_authorizationNote": "REGISTER-LEVEL BASELINE, and it is a BEHAVIOUR CHANGE. Until this block existed, every decidesk schema without its own `authorization` block was read AND WRITE open to every authenticated user through OpenRegister's own /apps/openregister/api/objects/decidiq/<schema> API — the API the frontend uses directly under ADR-022, which no decidesk controller guard sits in front of. OpenRegister's PermissionHandler::hasGroupPermission() tests `empty($authorization)`, and PHP's empty() is true for null and [] alike, so an ABSENT block takes the same default-OPEN branch as an empty one; `enforce_default_closed` defaults to false and, even when enabled, closes only create/update/delete. Measured on this tree before the change: 93 schemas, 24 carrying a block (all read-only), this register row carrying none — so 69 schemas, including Decision, VotingRound, Vote, Participant and EngagementRecord, granted create/update/delete to any logged-in account. Same shape as docudesk#631, where a plain user overwrote another user's template. THE CASCADE IS WHY THIS SITS ON THE REGISTER ROW: PermissionHandler::resolveAuthorization() uses a schema's own block when it has one and falls back to the register's only when it does not, so this baseline reaches exactly the 69 unprotected schemas and changes nothing for the 24 that already declare their own (their public-read rules are untouched). WHAT EACH ACTION IS FOR: read and list name BOTH `authenticated` AND `public`, and create names `authenticated`, so no read goes dark and any member can still raise a decision, cast a vote or file a reaction — those flows are unchanged. `public` on the READ actions is not a widening: before this block existed the default-OPEN branch granted every action to every principal INCLUDING the anonymous one, so omitting `public` here would have CLOSED anonymous reads — a separate and much larger policy change than the write hole this block exists to fix, and one that would 403 every #[PublicPage] citizen-participation surface. CI proved it rather than theory: the first version of this block omitted `public` and all six PHPUnit legs failed with `User 'Anonymous' does not have permission to 'read' objects in schema 'Meeting'`. `public` appears on NO write action, so the anonymous fail-closed rule from openregister#1955 keeps denying anonymous create/update/delete exactly as it did before. update/delete are NOT granted to `authenticated`, which is the whole fix: OpenRegister bypasses the object OWNER unconditionally and SQL-side before any rule is consulted, and bypasses `admin` too, so the author of an object keeps full control of it and only OTHER users lose the ability to rewrite or destroy it. `decidiq-administrators` is the named Nextcloud group for a griffie/secretariat that must edit records it did not create. It was first shipped as `decidesk-administrators` — the pre-rename app id — and OpenRegister's GroupProvisioner creates every group an authorization block names, so existing installs hold that old-id group with real memberships. BOTH names therefore stay in the arrays: dropping the old one would strip access from every member the moment this row re-imports, before the MigrateAdminGroup repair step has copied anyone (and on an install where the repair cannot add a member — an LDAP-backed read-only group backend — forever). MigrateAdminGroup copies members old-to-new; the old group is never deleted and never has members removed, matching the other rename legs. On an instance where neither group exists this resolves to owner-plus-admin, which is fail-closed. EVERY ACTION IS WRITTEN OUT ON PURPOSE: once a block is non-empty, OpenRegister DENIES any action the block omits, so an omitted `list` or `create` here would silently break the app rather than secure it. Per-body actor authorization (chair / signatory scopes, x-decidesk-rbac-scopes above) is a separate layer and is unaffected — OpenRegister cannot template a group name per object, which is why that determination is made at the app boundary.",
         "authorization": {
           "read": [
             "authenticated",
@@ -72,9 +72,11 @@
             "authenticated"
           ],
           "update": [
+            "decidiq-administrators",
             "decidesk-administrators"
           ],
           "delete": [
+            "decidiq-administrators",
             "decidesk-administrators"
           ]
         },
@@ -83,6 +85,8 @@
           "advice-request",
           "advies",
           "agenda-item",
+          "ancillary-position",
+          "authority-delegation",
           "bevoegdheidstoedeling",
           "board-evaluation",
           "board-proxy",
@@ -90,6 +94,8 @@
           "budget-proposal",
           "citizen-panel",
           "citizen-vote",
+          "confidentiality-ground",
+          "confidentiality-restriction",
           "conflict-of-interest",
           "consultation-reaction",
           "consultation-request",
@@ -98,6 +104,7 @@
           "cyclus-template",
           "decision",
           "decision-stage",
+          "declared-gift",
           "deliberation",
           "digital-document",
           "engagement-record",
@@ -107,6 +114,9 @@
           "geheimhouding-grond",
           "geschenk",
           "governance-body",
+          "governance-commitment",
+          "governance-consultation",
+          "governance-consultation-response",
           "governance-report",
           "governing-document",
           "governing-document-versie",
@@ -117,6 +127,8 @@
           "meeting",
           "member-consultation",
           "member-consultation-response",
+          "member-offboarding",
+          "member-onboarding",
           "membership",
           "minutes",
           "modelreglement-preset",
@@ -133,9 +145,12 @@
           "participatory-budget",
           "pc-cyclus",
           "person",
+          "planned-agenda-item",
+          "planning-cycle",
+          "planning-cycle-step",
+          "planning-cycle-template",
           "post",
           "process-template",
-          "product",
           "proxy-authorization",
           "public-consultation",
           "publication-payload",
@@ -170,7 +185,7 @@
         "icon": "AccountOutline",
         "version": "0.1.0",
         "title": "Person",
-        "description": "An individual person who participates in governance. Popolo: Person. Identity only — organisational role/relationship lives on Membership (ADR-001 §2). Replaces the flat Participant.",
+        "description": "An individual person who participates in governance. Popolo: Person. Identity only: organisational role/relationship lives on Membership (ADR-001 §2). Replaces the flat Participant.",
         "type": "object",
         "x-schema-org": "schema:Person",
         "x-openregister": {
@@ -321,7 +336,7 @@
         "icon": "AccountTieOutline",
         "version": "0.1.0",
         "title": "Membership",
-        "description": "Relationship between a person and an organization, including role and time bounds. Popolo: Membership. Replaces the role field on Participant — a person can have multiple memberships in different governance bodies.",
+        "description": "Relationship between a person and an organization, including role and time bounds. Popolo: Membership. Replaces the role field on Participant: a person can have multiple memberships in different governance bodies.",
         "type": "object",
         "x-openregister": {
           "schemaType": "org:Membership",
@@ -395,7 +410,7 @@
             "title": "External member",
             "type": "boolean",
             "default": false,
-            "description": "Whether this member sits from OUTSIDE the administrative organ — i.e. is not employed by it. Awb 7:13(2) requires this of the chair of an objection advisory committee. NOT the same question as `independenceStatus`, which encodes corporate-governance independence and cannot carry an employment relationship."
+            "description": "Whether this member sits from OUTSIDE the administrative organ: i.e. is not employed by it. Awb 7:13(2) requires this of the chair of an objection advisory committee. NOT the same question as `independenceStatus`, which encodes corporate-governance independence and cannot carry an employment relationship."
           },
           "otherPositions": {
             "title": "Other positions",
@@ -568,14 +583,14 @@
           "quorumRule": {
             "title": "Quorum rule",
             "type": "string",
-            "description": "How a quorum is CALCULATED (e.g. majority). Not how many members are required — that is `quorum`, which is a number. A calculation method cannot express a statutory minimum member count.",
+            "description": "How a quorum is CALCULATED (e.g. majority). Not how many members are required: that is `quorum`, which is a number. A calculation method cannot express a statutory minimum member count.",
             "example": "majority"
           },
           "quorum": {
             "title": "Quorum (members)",
             "type": "integer",
             "minimum": 2,
-            "description": "How MANY members are required for a valid sitting. Not how a quorum is calculated — that is `quorumRule`. Deliberately has NO default: an unset value means 'not specified', and a default of 0 would assert that no members are needed. Awb 7:13 objection advisory committees state this as a number."
+            "description": "How MANY members are required for a valid sitting. Not how a quorum is calculated: that is `quorumRule`. Deliberately has NO default: an unset value means 'not specified', and a default of 0 would assert that no members are needed. Awb 7:13 objection advisory committees state this as a number."
           },
           "active": {
             "title": "Active",
@@ -643,7 +658,7 @@
             "format": "uuid",
             "$ref": "governance-body",
             "nullable": true,
-            "description": "Reference to the parent GovernanceBody this body belongs to — used for factions (bodyType=faction) referencing their council, and generically available for other sub-body hierarchies. Optional."
+            "description": "Reference to the parent GovernanceBody this body belongs to: used for factions (bodyType=faction) referencing their council, and generically available for other sub-body hierarchies. Optional."
           }
         }
       },
@@ -741,7 +756,7 @@
         },
         "slug": "meeting",
         "icon": "CalendarAccountOutline",
-        "version": "0.6.0",
+        "version": "0.7.0",
         "title": "Meeting",
         "description": "A scheduled governance meeting with agenda, participants, and lifecycle",
         "type": "object",
@@ -760,6 +775,21 @@
           "lifecycle"
         ],
         "properties": {
+          "quorumPercentage": {
+            "type": "number",
+            "title": "Quorum Percentage",
+            "description": "Share of the governance body present at this meeting, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "quorumWith": {
+            "type": "boolean",
+            "title": "Quorum Met",
+            "description": "Whether the meeting met its quorum, true when no quorum is required. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "actionItemCompletionRate": {
+            "type": "number",
+            "title": "Action Item Completion Rate",
+            "description": "Share of this meeting's action items that are completed, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
           "title": {
             "title": "Title",
             "type": "string",
@@ -852,7 +882,7 @@
           "seriesPattern": {
             "title": "Recurrence pattern",
             "type": "object",
-            "description": "Recurrence pattern stored on the series template meeting (meeting-series REQ-MSR-001). Expanded into individual meeting instances by MeetingSeriesService.",
+            "description": "Recurrence pattern stored on the series template meeting (meeting-series). Expanded into individual meeting instances by MeetingSeriesService.",
             "properties": {
               "frequency": {
                 "title": "Frequency",
@@ -905,7 +935,7 @@
           },
           "virtualLocation": {
             "title": "Video-conference link",
-            "description": "Deprecated — use Location. Hidden from the form; retained for existing data.",
+            "description": "Deprecated: use Location. Hidden from the form; retained for existing data.",
             "type": "string",
             "format": "uri",
             "example": "https://meet.example.org/alv-2026",
@@ -923,7 +953,7 @@
           "isPublic": {
             "title": "Public",
             "type": "boolean",
-            "description": "Staff INTENT flag (publish-decisions-via-opencatalogi): marks that this meeting is intended for public visibility. It is a precondition for AGENDA publication eligibility (true + convocation sent), NOT itself a publication action — anonymous visibility happens only when staff explicitly publish the derived agenda payload via the public-publication flow. When true, the agenda (if published), recordings, and approved minutes become eligible for citizen visibility.",
+            "description": "Staff INTENT flag (publish-decisions-via-opencatalogi): marks that this meeting is intended for public visibility. It is a precondition for AGENDA publication eligibility (true + convocation sent), NOT itself a publication action: anonymous visibility happens only when staff explicitly publish the derived agenda payload via the public-publication flow. When true, the agenda (if published), recordings, and approved minutes become eligible for citizen visibility.",
             "default": false,
             "example": false
           },
@@ -937,18 +967,18 @@
             "title": "Opened at",
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp of the first 'open' lifecycle transition, stamped server-side by MeetingService (meeting-efficiency). Basis for the live cost calculator and duration analytics. NOT readOnly: OpenRegister reads readOnly as immutable-after-create and rejects the UPDATE for every writer, including MeetingService itself — a meeting is created before it is opened, so a readOnly stamp can never be written."
+            "description": "Timestamp of the first 'open' lifecycle transition, stamped server-side by MeetingService (meeting-efficiency). Basis for the live cost calculator and duration analytics. NOT readOnly: OpenRegister reads readOnly as immutable-after-create and rejects the UPDATE for every writer, including MeetingService itself, a meeting is created before it is opened, so a readOnly stamp can never be written."
           },
           "closedAt": {
             "title": "Closed at",
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp of the 'close' lifecycle transition, stamped server-side by MeetingService (meeting-efficiency). NOT readOnly — see openedAt: readOnly made every opened -> closed transition fail with 'Cannot modify readOnly property: closedAt' (422)."
+            "description": "Timestamp of the 'close' lifecycle transition, stamped server-side by MeetingService (meeting-efficiency). NOT readOnly: see openedAt: readOnly made every opened -> closed transition fail with 'Cannot modify readOnly property: closedAt' (422)."
           },
           "meetingCost": {
             "title": "Meeting cost",
             "type": "number",
-            "description": "Total meeting cost in EUR, computed server-side on close from elapsed time x attendee count x the governance body's hourlyRate (meeting-efficiency). Schema.org MonetaryAmount value. NOT readOnly — see openedAt: it is stamped on close, i.e. always after create."
+            "description": "Total meeting cost in EUR, computed server-side on close from elapsed time x attendee count x the governance body's hourlyRate (meeting-efficiency). Schema.org MonetaryAmount value. NOT readOnly: see openedAt: it is stamped on close, i.e. always after create."
           }
         },
         "x-openregister-aggregations": {
@@ -990,6 +1020,38 @@
             }
           }
         },
+        "x-openregister-aggregate-refs": {
+          "totalParticipantCount": {
+            "metric": "count",
+            "schema": "participant",
+            "filters": {
+              "governanceBody": "@self.governanceBody"
+            }
+          },
+          "presentParticipantCount": {
+            "metric": "count",
+            "schema": "participant",
+            "filters": {
+              "governanceBody": "@self.governanceBody",
+              "attendanceStatus": "present"
+            }
+          },
+          "actionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "meeting": "@self.id"
+            }
+          },
+          "completedActionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "meeting": "@self.id",
+              "taskStatus": "completed"
+            }
+          }
+        },
         "x-openregister-calculations": {
           "quorumPercentage": {
             "type": "number",
@@ -999,20 +1061,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "totalParticipantCount"
+                      "prop": "@aggregate.totalParticipantCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "presentParticipantCount"
+                          "prop": "@aggregate.presentParticipantCount"
                         },
                         {
-                          "prop": "totalParticipantCount"
+                          "prop": "@aggregate.totalParticipantCount"
                         }
                       ]
                     },
@@ -1039,7 +1101,7 @@
                 {
                   "gte": [
                     {
-                      "prop": "presentParticipantCount"
+                      "prop": "@aggregate.presentParticipantCount"
                     },
                     {
                       "prop": "quorumRequired"
@@ -1057,20 +1119,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "actionItemCount"
+                      "prop": "@aggregate.actionItemCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "completedActionItemCount"
+                          "prop": "@aggregate.completedActionItemCount"
                         },
                         {
-                          "prop": "actionItemCount"
+                          "prop": "@aggregate.actionItemCount"
                         }
                       ]
                     },
@@ -1081,7 +1143,8 @@
               ]
             }
           }
-        }
+        },
+        "x-decidesk-materialised-quorum-note": "Three materialised calculations here were discarded on every write and two of them are read in anger: MeetingTransitionGuard gates a transition on `quorumWith` and treats an absent value as false, and GovernanceHealthWidget filters out every meeting whose `quorumPercentage` is undefined, so the widget was always empty. Same mechanism as x-decidesk-routeComplete-note on Decision, in all three parts. MagicMapper::prepareObjectDataForTable() is a whitelist by omission over the DECLARED properties, so a materialised value with no property declaration is stored nowhere; the three are declared under properties now. CalculationPayloadBuilder::build() resolves only x-openregister-aggregate-refs and injects it as @aggregate.<name>, so the participant and action-item counts are declared there too and referenced that way, instead of as bare props that evaluated to null. And the operators are `*` and `/`: `mul` and `div` are not in CalculationEvaluator's table and threw Unknown operator, which the listener caught and swallowed. `quorumRequired` stays a bare prop because it is a real declared property."
       },
       "Participant": {
         "slug": "participant",
@@ -1173,7 +1236,7 @@
           "participantType": {
             "title": "Attendance mode",
             "type": "string",
-            "description": "Attendance mode for the current or most recent meeting — stamped on votes as castAs (remote-vote session annotation, voting-system spec).",
+            "description": "Attendance mode for the current or most recent meeting: stamped on votes as castAs (remote-vote session annotation, voting-system spec).",
             "enum": [
               "in-person",
               "remote"
@@ -1869,7 +1932,7 @@
         },
         "slug": "decision",
         "icon": "Gavel",
-        "version": "0.9.0",
+        "version": "0.12.0",
         "title": "Decision",
         "_authorizationNote": "decision declared no schema-level authorization block, so its read rule came from the decidesk register baseline rather than from anything this schema states. IntegrationController::getOutcome()'s docblock asserted that 'per-object read access is enforced by OpenRegister ObjectService RBAC'; that claim was unfounded precisely because this block was absent. This states the intended anonymous rule explicitly — only Decisions the app itself has published (isPublished === 'public') — leaving all others to authenticated callers, and mirrors ParticipatoryBudget / PublicConsultation / BoardEvaluation in this same file. Defence in depth only: the per-object controller guards added in signature-and-outcome-authorization-guard do not depend on it, and anonymous reads of this instance's object API return nothing regardless (measured 2026-08-20: schemas that DO grant 'public' read also return 0 anonymously). ONLY 'read' is declared: OpenRegister's action vocabulary is CRUD (create/read/update/delete) and CLOSED by default — 'list' is NOT an action, and adding it makes validateAuthorization() reject the schema, which the importer then silently SKIPS on an HTTP 200 'success'. Listing is governed by the read rule. create/update/delete are deliberately omitted — an omitted action is closed to everyone except the object owner and admin.",
         "authorization": {
@@ -1883,7 +1946,7 @@
             "authenticated"
           ]
         },
-        "description": "The universal governance-decision supertype (ADR-005). A single schema for every decision outcome — motion, amendment, resolution, contract, appointment, management point, policy and generic meeting outcome — distinguished by the required decisionType discriminator. Type-specific fields are folded in and revealed via progressive disclosure keyed on decisionType (ADR-006).",
+        "description": "The universal governance-decision supertype (ADR-005). A single schema for every decision outcome: motion, amendment, resolution, contract, appointment, management point, policy and generic meeting outcome, distinguished by the required decisionType discriminator. Type-specific fields are folded in and revealed via progressive disclosure keyed on decisionType (ADR-006).",
         "type": "object",
         "x-openregister": {
           "schemaType": "custom:Decision",
@@ -1900,22 +1963,15 @@
           "decisionType"
         ],
         "properties": {
+          "routeComplete": {
+            "type": "boolean",
+            "title": "Route Complete",
+            "description": "Whether every stage of this decision's route is decided or skipped. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq and never edited by hand."
+          },
           "decisionType": {
             "title": "Decision type",
             "type": "string",
-            "description": "Discriminator selecting the kind of governance decision (ADR-005). Drives progressive disclosure of the type-specific field groups in the form. Per-type required fields (e.g. proposer for motion; resolutionNumber + voteThreshold for resolution; the amends relation for amendment) are enforced in the form/spec, not in this JSON-schema required[].",
-            "enum": [
-              "motion",
-              "amendment",
-              "resolution",
-              "contract",
-              "contract-renewal",
-              "report-adoption",
-              "appointment",
-              "management-point",
-              "policy",
-              "meeting-outcome"
-            ],
+            "description": "Discriminator selecting the kind of governance decision (ADR-005). The vocabulary is configuration, not code (decision-types-as-configuration): valid values are the entries of the decidiq decision_types app setting, seeded on install by SeedDecisionTypes and enforced referentially by DecisionTypeRegistry at the write path. Deliberately NO enum here: a declared enum drifts from the store and recreates the four-homes parity problem this change removed. Drives progressive disclosure of the type-specific field groups in the form. Per-type required fields (e.g. proposer for motion; resolutionNumber + voteThreshold for resolution; the amends relation for amendment) are enforced in the form/spec, not in this JSON-schema required[].",
             "default": "meeting-outcome",
             "example": "motion"
           },
@@ -1934,12 +1990,12 @@
             "title": "Decision date",
             "type": "string",
             "format": "date-time",
-            "description": "When the decision was made. Absent while the decision is in flight (draft/proposed/deliberating/voting) and for a withdrawn decision; REQUIRED once the decision enters a terminal outcome state (decided/enacted/archived). See x-decidesk-terminal-completeness on this schema — the rule is enforced at the transition boundary, not in required[]."
+            "description": "When the decision was made. Absent while the decision is in flight (draft/proposed/deliberating/voting) and for a withdrawn decision; REQUIRED once the decision enters a terminal outcome state (decided/enacted/archived). See x-decidesk-terminal-completeness on this schema: the rule is enforced at the transition boundary, not in required[]."
           },
           "outcome": {
             "title": "Outcome",
             "type": "string",
-            "description": "Decision outcome — the voting result. Orthogonal to `lifecycle`: an in-flight motion has NO outcome (leave the property absent rather than writing a placeholder such as 'pending', which is not in this enum), and a withdrawn decision never acquires one. REQUIRED once the decision enters a terminal outcome state (decided/enacted/archived). See x-decidesk-terminal-completeness on this schema.",
+            "description": "Decision outcome: the voting result. Orthogonal to `lifecycle`: an in-flight motion has NO outcome (leave the property absent rather than writing a placeholder such as 'pending', which is not in this enum), and a withdrawn decision never acquires one. REQUIRED once the decision enters a terminal outcome state (decided/enacted/archived). See x-decidesk-terminal-completeness on this schema.",
             "enum": [
               "adopted",
               "rejected"
@@ -1949,7 +2005,7 @@
           "isPublished": {
             "title": "Publication state",
             "type": "string",
-            "description": "Publication state controlling citizen visibility. FLOW-OWNED (publish-decisions-via-opencatalogi): this field is a DERIVED OUTPUT of the public-publication flow — set to 'public' on publish, reset to 'internal' on withdraw — and is REJECTED when written directly through an OR object update outside that flow (PublicationEligibilityService::guardDirectPublicationWrite). 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
+            "description": "Publication state controlling citizen visibility. FLOW-OWNED (publish-decisions-via-opencatalogi): this field is a DERIVED OUTPUT of the public-publication flow, set to 'public' on publish, reset to 'internal' on withdraw, and is REJECTED when written directly through an OR object update outside that flow (PublicationEligibilityService:guardDirectPublicationWrite). 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
             "enum": [
               "internal",
               "public",
@@ -2133,7 +2189,7 @@
           "targetPosts": {
             "title": "Target posts",
             "type": "array",
-            "description": "Revealed when decisionType=appointment. Zero or more references to the formal Post(s) the appointment targets (folded and pluralized from the retired Voordracht schema's single `post` field — the product decision requires one or more Posts). Optional.",
+            "description": "Revealed when decisionType=appointment. Zero or more references to the formal Post(s) the appointment targets (folded and pluralized from the retired Voordracht schema's single `post` field: the product decision requires one or more Posts). Optional.",
             "items": {
               "type": "string",
               "format": "uuid",
@@ -2159,7 +2215,7 @@
           "candidates": {
             "title": "Candidates",
             "type": "array",
-            "description": "Revealed when decisionType=appointment. One or more structured candidates, each carrying either a Person reference or a free-text externalName for a not-yet-registered candidate (folded and translated from the retired Voordracht schema's `kandidaten` field). Required, minimum one entry, before an appointment decision can be proposed (enforced in the form, not in this JSON-schema required[] — matching the established per-type required-field pattern, e.g. motion's proposer).",
+            "description": "Revealed when decisionType=appointment. One or more structured candidates, each carrying either a Person reference or a free-text externalName for a not-yet-registered candidate (folded and translated from the retired Voordracht schema's `kandidaten` field). Required, minimum one entry, before an appointment decision can be proposed (enforced in the form, not in this JSON-schema required[]: matching the established per-type required-field pattern, e.g. motion's proposer).",
             "items": {
               "type": "object",
               "title": "Candidate",
@@ -2170,7 +2226,7 @@
                   "format": "uuid",
                   "nullable": true,
                   "$ref": "Person",
-                  "description": "Reference to the candidate's Person record. Empty for an external candidate not yet registered — then externalName carries the name."
+                  "description": "Reference to the candidate's Person record. Empty for an external candidate not yet registered: then externalName carries the name."
                 },
                 "externalName": {
                   "title": "External name",
@@ -2214,7 +2270,7 @@
                 "format": "uuid",
                 "nullable": true,
                 "x-relation-schema-field": "type",
-                "description": "Optional reference to a resolved object for the nominating party when one exists. Polymorphic: the sibling `type` names the target schema — person resolves against Person, politicalGroup/body against GovernanceBody — so a single $ref cannot express it without asserting one target for every row."
+                "description": "Optional reference to a resolved object for the nominating party when one exists. Polymorphic: the sibling `type` names the target schema, person resolves against Person, politicalGroup/body against GovernanceBody, so a single $ref cannot express it without asserting one target for every row."
               }
             }
           },
@@ -2222,7 +2278,7 @@
             "title": "Appointed memberships",
             "type": "array",
             "nullable": true,
-            "description": "Revealed when decisionType=appointment. Server-set, nullable list of Membership objects materialized when this appointment decision is adopted. Declared here so the appointment field group is complete in one place; populated by the imperative Membership-materialization service shipped in the dependent change appointment-decision-type-membership (ADR-031 lifecycle-guard exception) — this change ships no service code, so the field stays empty/absent until that dependent change lands.",
+            "description": "Revealed when decisionType=appointment. Server-set, nullable list of Membership objects materialized when this appointment decision is adopted. Declared here so the appointment field group is complete in one place; populated by the imperative Membership-materialization service shipped in the dependent change appointment-decision-type-membership (ADR-031 lifecycle-guard exception): this change ships no service code, so the field stays empty/absent until that dependent change lands.",
             "items": {
               "type": "string",
               "format": "uuid",
@@ -2239,44 +2295,44 @@
             "title": "Subject register",
             "type": "string",
             "nullable": true,
-            "description": "OpenRegister register of the originating object in the consuming app (provenance, REQ-DCDH-001)."
+            "description": "OpenRegister register of the originating object in the consuming app (provenance)."
           },
           "subjectSchema": {
             "title": "Subject schema",
             "type": "string",
             "nullable": true,
-            "description": "OpenRegister schema of the originating object (provenance, REQ-DCDH-001)."
+            "description": "OpenRegister schema of the originating object (provenance)."
           },
           "subjectId": {
             "title": "Subject",
             "type": "string",
             "nullable": true,
-            "description": "UUID of the originating object in the consuming app (the back-reference, REQ-DCDH-001)."
+            "description": "UUID of the originating object in the consuming app (the back-reference)."
           },
           "subjectLabel": {
             "title": "Subject label",
             "type": "string",
             "nullable": true,
-            "description": "Human-readable label for the originating object shown in Decidiq list/detail (e.g. 'Lease contract 2027 — pand X', REQ-DCDH-001)."
+            "description": "Human-readable label for the originating object shown in Decidiq list/detail (e.g. 'Lease contract 2027: pand X')."
           },
           "outcomeCallbackUrl": {
             "title": "Outcome callback URL",
             "type": "string",
             "nullable": true,
-            "description": "Optional registry-validated callback URL for push delivery of the outcome. Validated against the ADR-019 integration registry consumer entry — arbitrary URLs are rejected (anti-SSRF, REQ-DCDH-004)."
+            "description": "Optional registry-validated callback URL for push delivery of the outcome. Validated against the ADR-019 integration registry consumer entry: arbitrary URLs are rejected (anti-SSRF)."
           },
           "externalReference": {
             "title": "External reference",
             "type": "string",
             "nullable": true,
-            "description": "Consumer's own reference for idempotency and ledger linking. The create-decision endpoint is idempotent on (sourceApp, subjectRegister, subjectSchema, subjectId, externalReference) (REQ-DCDH-002)."
+            "description": "Consumer's own reference for idempotency and ledger linking. The create-decision endpoint is idempotent on (sourceApp, subjectRegister, subjectSchema, subjectId, externalReference)."
           },
           "amends": {
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
             "title": "Amends",
-            "description": "This decision modifies that decision. Used by decisionType=amendment to point at its parent motion decision (replaces the retired Amendment → Motion relation); more generally the legislative 'amends another decision' modification (Akoma Ntoso eId akn:amendment / ORI 'wijzigt'). Informational for effective-status purposes — an amended decision remains in force, just modified (design D1)."
+            "description": "This decision modifies that decision. Used by decisionType=amendment to point at its parent motion decision (replaces the retired Amendment → Motion relation); more generally the legislative 'amends another decision' modification (Akoma Ntoso eId akn:amendment / ORI 'wijzigt'). Informational for effective-status purposes: an amended decision remains in force, just modified (design D1)."
           },
           "offer": {
             "type": "array",
@@ -2297,16 +2353,6 @@
             },
             "title": "Orders",
             "description": "Contract attachment: purchase orders related to a decisionType=contract decision (ADR-005)."
-          },
-          "product": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "$ref": "Product"
-            },
-            "title": "Products",
-            "description": "Contract attachment: products/services related to a decisionType=contract decision (ADR-005)."
           },
           "route": {
             "type": "array",
@@ -2329,7 +2375,7 @@
               "$ref": "Decision"
             },
             "title": "Supersedes",
-            "description": "Decisions that this decision supersedes (replaces in their entirety) — array of Decision references. Effect-bearing: a decision targeted by a decided/enacted supersedes becomes effectiveStatus=superseded (design D1/D2). Maps to Akoma Ntoso akn:replacement / ORI 'vervangt' / schema.org supersededBy (inverse)."
+            "description": "Decisions that this decision supersedes (replaces in their entirety): array of Decision references. Effect-bearing: a decision targeted by a decided/enacted supersedes becomes effectiveStatus=superseded (design D1/D2). Maps to Akoma Ntoso akn:replacement / ORI 'vervangt' / schema.org supersededBy (inverse)."
           },
           "repeals": {
             "type": "array",
@@ -2339,7 +2385,7 @@
               "$ref": "Decision"
             },
             "title": "Repeals",
-            "description": "Decisions that this decision repeals (revokes / nullifies) — array of Decision references. Effect-bearing: a decision targeted by a decided/enacted repeals becomes effectiveStatus=repealed (precedence over superseded; design D1/D2). Maps to Akoma Ntoso akn:repeal / ORI 'trekt in'."
+            "description": "Decisions that this decision repeals (revokes / nullifies): array of Decision references. Effect-bearing: a decision targeted by a decided/enacted repeals becomes effectiveStatus=repealed (precedence over superseded; design D1/D2). Maps to Akoma Ntoso akn:repeal / ORI 'trekt in'."
           },
           "implements": {
             "type": "array",
@@ -2349,7 +2395,7 @@
               "$ref": "Decision"
             },
             "title": "Implements",
-            "description": "Decisions that this decision implements / gives effect to (e.g. an executive decision implementing a council framework) — array of Decision references. Informational; does not affect effective-status. Maps to Akoma Ntoso akn:implementation / ORI 'geeft uitvoering aan'."
+            "description": "Decisions that this decision implements / gives effect to (e.g. an executive decision implementing a council framework): array of Decision references. Informational; does not affect effective-status. Maps to Akoma Ntoso akn:implementation / ORI 'geeft uitvoering aan'."
           },
           "refersTo": {
             "type": "array",
@@ -2359,7 +2405,7 @@
               "$ref": "Decision"
             },
             "title": "Refers to",
-            "description": "Decisions this decision merely references / relates to without modifying — array of Decision references. Informational; does not affect effective-status. Maps to Akoma Ntoso akn:cites / ORI 'verwijst naar' / schema.org isRelatedTo."
+            "description": "Decisions this decision merely references / relates to without modifying: array of Decision references. Informational; does not affect effective-status. Maps to Akoma Ntoso akn:cites / ORI 'verwijst naar' / schema.org isRelatedTo."
           }
         },
         "x-openregister-lifecycle": {
@@ -2405,6 +2451,11 @@
               "to": "withdrawn"
             },
             {
+              "from": "deliberating",
+              "to": "decided",
+              "_note": "Decide-without-vote: DecisionTransitionGuard only permits this edge in domains whose policy sets allowDecideWithoutVote (operations, citizen); every other domain, and the default-deny fallback, rejects it before the save reaches OR."
+            },
+            {
               "from": "voting",
               "to": "decided"
             },
@@ -2421,11 +2472,15 @@
               "to": "withdrawn"
             },
             {
+              "from": "decided",
+              "to": "archived"
+            },
+            {
               "from": "enacted",
               "to": "archived"
             }
           ],
-          "_note": "Declarative guarded transition map (ADR-031). The proven 7-state flow draft → proposed → deliberating → voting → decided → enacted → archived is retained from decision-state-machine-v1; a terminal 'withdrawn' state is added, reachable from any non-terminal state before 'enacted' (design D2 + resolved deferred question). lifecycle is orthogonal to 'outcome' (voting result) and 'isPublished' (citizen visibility)."
+          "_note": "Declarative guarded transition map (ADR-031). The proven 7-state flow draft → proposed → deliberating → voting → decided → enacted → archived is retained from decision-state-machine-v1; a terminal 'withdrawn' state is added, reachable from any non-terminal state before 'enacted' (design D2 + resolved deferred question). lifecycle is orthogonal to 'outcome' (voting result) and 'isPublished' (citizen visibility). This map mirrors DecisionTransitionGuard::TRANSITIONS (the guard filters edges per governance domain on top of it; DecisionTransitionMatrixTest pins the parity): deliberating→decided is the guarded decide-without-vote edge, decided→archived archives a decision that was never enacted (a rejected outcome cannot enact)."
         },
         "x-openregister-aggregations": {
           "stageCount": {
@@ -2452,6 +2507,31 @@
             }
           }
         },
+        "x-openregister-aggregate-refs": {
+          "stageCount": {
+            "metric": "count",
+            "schema": "decision-stage",
+            "filters": {
+              "decision": "@self.id"
+            }
+          },
+          "decidedStageCount": {
+            "metric": "count",
+            "schema": "decision-stage",
+            "filters": {
+              "decision": "@self.id",
+              "status": "decided"
+            }
+          },
+          "skippedStageCount": {
+            "metric": "count",
+            "schema": "decision-stage",
+            "filters": {
+              "decision": "@self.id",
+              "status": "skipped"
+            }
+          }
+        },
         "x-openregister-calculations": {
           "routeComplete": {
             "type": "boolean",
@@ -2462,7 +2542,7 @@
                 {
                   "gt": [
                     {
-                      "prop": "stageCount"
+                      "prop": "@aggregate.stageCount"
                     },
                     0
                   ]
@@ -2470,46 +2550,26 @@
                 {
                   "gte": [
                     {
-                      "add": [
+                      "+": [
                         {
-                          "prop": "decidedStageCount"
+                          "prop": "@aggregate.decidedStageCount"
                         },
                         {
-                          "prop": "skippedStageCount"
+                          "prop": "@aggregate.skippedStageCount"
                         }
                       ]
                     },
                     {
-                      "prop": "stageCount"
+                      "prop": "@aggregate.stageCount"
                     }
                   ]
                 }
               ]
             }
-          },
-          "currentStage": {
-            "type": "string",
-            "materialise": true,
-            "description": "UUID of the first DecisionStage whose status is not 'decided' or 'skipped', ordered by sequence. Null when all stages are decided/skipped (route complete) or when no route is configured. Declarative per ADR-031 (D4).",
-            "expression": {
-              "firstRelated": {
-                "schema": "DecisionStage",
-                "filter": {
-                  "decision": "@self.id",
-                  "status": {
-                    "notIn": [
-                      "decided",
-                      "skipped"
-                    ]
-                  }
-                },
-                "orderBy": "sequence",
-                "orderDir": "asc",
-                "returnField": "id"
-              }
-            }
           }
         },
+        "x-decidesk-routeComplete-note": "routeComplete is materialise: true, so OpenRegister PERSISTS it on save rather than computing it on read: CalculationOnSaveListener patches it into the payload before persistence, and RenderObject::applyVirtualCalculations() skips it for exactly that reason. A materialised value only survives if the schema DECLARES the property, because MagicMapper::prepareObjectDataForTable() is a whitelist by omission over the declared properties, with no JSON blob column to fall back on. It was not declared, so it was discarded on every write, 60 times in one install. It is declared under properties now, and nothing in decidiq writes it: the listener is the only legitimate writer. Two things also had to change for the value to be right rather than merely stored. The counts are declared a second time under x-openregister-aggregate-refs, because CalculationPayloadBuilder::build() resolves ONLY that key and injects each result as @aggregate.<name>, while x-openregister-aggregations is the reporting annotation AggregationController serves. Referencing the reporting names as bare props made each one null, so `null > 0` was false, the `and` short-circuited, and routeComplete was false on every decision whatever its route. Note `filters` (plural) in aggregate-refs against `filter` (singular) in aggregations: AggregateReferenceResolver::resolveOne() reads spec['filters']. And the sum operator is `+`; `add` is not in CalculationEvaluator's table and would have thrown Unknown operator.",
+        "x-decidesk-currentStage-note": "currentStage WAS declared as a materialised calculation over a `firstRelated` operator. No such operator exists: CalculationEvaluator's match falls through to `throw new EvaluationException(Unknown operator)`, CalculationOnSaveListener caught it and carried on, and the field never materialised on any decision. This is the same wall x-decidesk-effectiveStatus-note describes below, and it takes the same answer: the evaluator has no relation-traversal operator, so the first unresolved stage is derived where the route is read, from the DecisionStage rows the route UI already loads. Restore a calculation here only once OpenRegister ships a relation operator, and reference the counts as @aggregate rather than bare props.",
         "x-decidesk-effectiveStatus-note": "DESIGN D2 — effectiveStatus is NOT a declarative calculation. OpenRegister's CalculationEvaluator (openregister/lib/Service/Calculation/CalculationEvaluator.php) supports only scalar/arithmetic/date operators (prop, and, or, eq/ne/lt/lte/gt/gte, +, -, *, /, %, concat, if, now, diffDays, formatDate, dateDiff) — it has NO inverse/reverse-relation operator. The inbound 'which decided/enacted decision supersedes/repeals this one' lookup cannot be expressed as a materialised calculation. Per design D2 fallback, effectiveStatus is derived CLIENT-SIDE in RelatedDecisionsTab.vue + DecisionRouteTab.vue: query decisions whose supersedes/repeals array contains this id, filter to lifecycle in {decided, enacted}, precedence repealed > superseded > lifecycle."
       },
       "DecisionStage": {
@@ -2517,7 +2577,7 @@
         "icon": "TransitConnectionVariant",
         "version": "0.2.0",
         "title": "DecisionStage",
-        "description": "One step in a Decision's route — an ordered stage owned by a named decision-maker (Person or GovernanceBody) with its own status lifecycle, outcome, and method. Implements the ambtelijk → politiek bridge described in ADR-005/ADR-006/ADR-031 (design D1). C5 (decision-methods) expands the method enum; C6 builds the route UI.",
+        "description": "One step in a Decision's route: an ordered stage owned by a named decision-maker (Person or GovernanceBody) with its own status lifecycle, outcome, and method. Implements the ambtelijk → politiek bridge described in ADR-005/ADR-006/ADR-031 (design D1). C5 (decision-methods) expands the method enum; C6 builds the route UI.",
         "type": "object",
         "x-openregister": {
           "schemaType": "custom:DecisionStage",
@@ -2550,7 +2610,7 @@
           "stageType": {
             "title": "Stage type",
             "type": "string",
-            "description": "Functional type of this stage — determines the role it plays in the route. `endorsement` is the parafering case: a sign-off that is not itself the decision.",
+            "description": "Functional type of this stage: determines the role it plays in the route. `endorsement` is the parafering case: a sign-off that is not itself the decision.",
             "enum": [
               "preparatory",
               "advisory",
@@ -2576,7 +2636,7 @@
           "outcome": {
             "title": "Outcome",
             "type": "string",
-            "description": "Decision outcome recorded when status=decided. Null when status is pending/active/skipped. `returned` is the sign-off case and behaves unlike the rest: it re-opens an EARLIER stage rather than ending this one, which is why `rejected` and `deferred` could not express it — both end a stage and neither reopens one.",
+            "description": "Decision outcome recorded when status=decided. Null when status is pending/active/skipped. `returned` is the sign-off case and behaves unlike the rest: it re-opens an EARLIER stage rather than ending this one, which is why `rejected` and `deferred` could not express it, both end a stage and neither reopens one.",
             "enum": [
               "for",
               "against",
@@ -2603,7 +2663,7 @@
           "method": {
             "title": "Method",
             "type": "string",
-            "description": "Method by which the stage is resolved. Coarse enum — the vote sub-variants (secret/personal/general) are configured on the linked VotingRound, not via additional method values (C5 decision-methods D1). The mechanism relation required by the active method MUST be populated: vote⇒votingRound, chair-register⇒registeredBy, signature⇒signedDocument; advice and manual require no mechanism relation (C5 D2 validation note). Defaults to manual.",
+            "description": "Method by which the stage is resolved. Coarse enum: the vote sub-variants (secret/personal/general) are configured on the linked VotingRound, not via additional method values (C5 decision-methods D1). The mechanism relation required by the active method MUST be populated: vote⇒votingRound, chair-register⇒registeredBy, signature⇒signedDocument; advice and manual require no mechanism relation (C5 D2 validation note). Defaults to manual.",
             "enum": [
               "manual",
               "vote",
@@ -2633,7 +2693,7 @@
           "note": {
             "title": "Note",
             "type": "string",
-            "description": "Free text recorded by the stage owner at decision time — e.g. reasoning, conditions, or dissenting remarks.",
+            "description": "Free text recorded by the stage owner at decision time: e.g. reasoning, conditions, or dissenting remarks.",
             "nullable": true,
             "example": "Unaniem advies uitgebracht na bespreking in commissie."
           },
@@ -2716,50 +2776,7 @@
           ],
           "_note": "Declarative guarded transition map (ADR-031 / design D4). Terminal states 'decided' and 'skipped' mirror the route-progress aggregation on Decision: a stage is resolved when it reaches either terminal state. The 'active' state marks the currentStage (derived declaratively on Decision via x-openregister-calculations)."
         },
-        "x-openregister-calculations": {
-          "outcome": {
-            "type": "string",
-            "materialise": false,
-            "description": "For method=vote: derives stage outcome from the linked VotingRound.result (adopted→adopted, rejected→rejected, tied→rejected, invalid→no outcome). Declarative per ADR-031 (C5 D4). For method=chair-register, advice, manual, and signature the outcome is set directly by the actor or EIDASSignatureService — no derivation.",
-            "expression": {
-              "if": [
-                {
-                  "eq": [
-                    {
-                      "prop": "method"
-                    },
-                    "vote"
-                  ]
-                },
-                {
-                  "switch": [
-                    {
-                      "prop": "votingRound.result"
-                    },
-                    [
-                      {
-                        "case": "adopted",
-                        "value": "adopted"
-                      },
-                      {
-                        "case": "rejected",
-                        "value": "rejected"
-                      },
-                      {
-                        "case": "tied",
-                        "value": "rejected"
-                      }
-                    ],
-                    null
-                  ]
-                },
-                {
-                  "prop": "outcome"
-                }
-              ]
-            }
-          }
-        }
+        "x-decidiq-outcome-note": "`outcome` is written by code, not derived by a calculation, and this schema deliberately declares no x-openregister-calculations. Three separate facts rule a calculation out. RenderObject::applyVirtualCalculations() assigns its result unconditionally, so a virtual calculation named after a stored property replaces that property on every read, and the only expression that would hand the stored value back ({\"prop\": \"outcome\"}) is a self-reference CalculationAnnotationValidator rejects as a cycle. CalculationOnSaveListener writes a materialised value whenever it differs from the stored one, null included, so materialise: true would clear every outcome an actor recorded. And the virtual read path builds its payload with @self only, never @ref or @aggregate, so a materialise: false calculation cannot read VotingRound.result across the votingRound relation at all. VotingRoundCloser::resolveDecisionStage() therefore records the vote outcome when the round closes: adopted to adopted, rejected and tied to rejected, invalid to no outcome. Every other method sets it directly: ApprovalRouteService for the route verbs, the chair for chair-register, EIDASSignatureService for signature."
       },
       "ActionItem": {
         "x-openregister-notifications": {
@@ -2945,7 +2962,7 @@
             "$ref": "Goal",
             "title": "Goal",
             "nullable": true,
-            "description": "Optional reference to the organisation Goal (organisation-goals change) this action item serves. Round-trips through ActionItemWriter's generic non-core `fields` blob exactly like `decision`/`meeting` (goal is not in toTaskData()'s coreKeys) — no PHP change (organisation-goals REQ-007, design D4). When set, this action item is counted in that Goal's declarative linkedActionItemCount/completedActionItemCount rollup."
+            "description": "Optional reference to the organisation Goal (organisation-goals change) this action item serves. Round-trips through ActionItemWriter's generic non-core `fields` blob exactly like `decision`/`meeting` (goal is not in toTaskData()'s coreKeys): no PHP change (organisation-goals REQ-007, design D4). When set, this action item is counted in that Goal's declarative linkedActionItemCount/completedActionItemCount rollup."
           }
         }
       },
@@ -3625,74 +3642,6 @@
           }
         }
       },
-      "Product": {
-        "slug": "product",
-        "icon": "PackageVariantClosed",
-        "version": "0.1.0",
-        "title": "Product",
-        "description": "Schema.org Product for product/service data",
-        "type": "object",
-        "x-schema-org": "schema:Product",
-        "x-openregister": {
-          "schemaType": "schema:Product",
-          "active": true,
-          "hardDelete": false,
-          "searchable": true,
-          "mailEnabled": false
-        },
-        "required": [
-          "name",
-          "unitPrice",
-          "currency"
-        ],
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string",
-            "description": "Product name",
-            "example": "Vergadermicrofoon Shure MX"
-          },
-          "sku": {
-            "title": "SKU",
-            "type": "string",
-            "description": "Stock keeping unit"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string",
-            "description": "Product description"
-          },
-          "category": {
-            "title": "Category",
-            "type": "string",
-            "description": "Product category",
-            "example": "AV Equipment"
-          },
-          "unitPrice": {
-            "title": "Unit price",
-            "type": "number",
-            "description": "Unit price",
-            "example": 450
-          },
-          "currency": {
-            "title": "Currency",
-            "type": "string",
-            "description": "ISO 4217 currency code",
-            "example": "EUR"
-          },
-          "unitCode": {
-            "title": "Unit of measure",
-            "type": "string",
-            "description": "Unit of measure (UN/CEFACT)"
-          },
-          "taxRate": {
-            "title": "Tax rate",
-            "type": "number",
-            "description": "Applicable tax rate percentage",
-            "example": 21
-          }
-        }
-      },
       "Report": {
         "slug": "report",
         "icon": "FileChartOutline",
@@ -3744,7 +3693,7 @@
         "icon": "AccountVoice",
         "version": "0.2.0",
         "title": "CitizenVote",
-        "description": "A vote cast by a citizen, either on a motion (citizenVotingAllowed) or — in citizen-participation advisory mode — on a validated BudgetProposal. Distinct from staff Vote entities tied to a VotingRound; advisory citizen tallies are kept strictly separate from statutory VotingRound tallies. Version 0.2.0 added the proposalId field + proposal relation and relaxed motionId from required (a vote targets EITHER a motion OR a proposal).",
+        "description": "A vote cast by a citizen, either on a motion (citizenVotingAllowed) or: in citizen-participation advisory mode, on a validated BudgetProposal. Distinct from staff Vote entities tied to a VotingRound; advisory citizen tallies are kept strictly separate from statutory VotingRound tallies. Version 0.2.0 added the proposalId field + proposal relation and relaxed motionId from required (a vote targets EITHER a motion OR a proposal).",
         "type": "object",
         "x-openregister": {
           "schemaType": "schema:VoteAction",
@@ -4187,7 +4136,7 @@
         "icon": "ForumOutline",
         "version": "0.3.1",
         "title": "PublicConsultation",
-        "description": "Supertype for every public-engagement round, distinguished by consultationType (citizen-participation | market-consultation | tender | idea-box | participatory-budget). One list + detail surface filtered by type, mirroring the Decision/decisionType supertype (ADR-005). ADR-006 addendum (consultation-discriminator, 2026-08-19): PublicConsultation remains the sole discriminated concept for the public/market-consultation family; MemberConsultation and ConsultationRequest are each independently exempted from folding into this schema as genuinely distinct concepts (measured field overlap 13%/10%, no shared public-authorization block, distinct x-schema-org types) — see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md. Version 0.3.0 (consultations-engagement-hub): added consultationType + additive optional type fields (tender, market, idea-box, participatory-budget) and broadened the status enum to the per-type union; states are declared in x-openregister-lifecycle. Version 0.2.0: renamed status value 'summarised' to 'results-published' and added anonymousReactionsAllowed + moderationPolicy. Legacy 'summarised' objects are normalised to 'results-published' on read by ParticipationLifecycleService; rows with no consultationType are treated as citizen-participation.",
+        "description": "Supertype for every public-engagement round, distinguished by consultationType (citizen-participation | market-consultation | tender | idea-box | participatory-budget). One list + detail surface filtered by type, mirroring the Decision/decisionType supertype (ADR-005). ADR-006 addendum (consultation-discriminator, 2026-08-19): PublicConsultation remains the sole discriminated concept for the public/market-consultation family; MemberConsultation and ConsultationRequest are each independently exempted from folding into this schema as genuinely distinct concepts (measured field overlap 13%/10%, no shared public-authorization block, distinct x-schema-org types), see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md. Version 0.3.0 (consultations-engagement-hub): added consultationType + additive optional type fields (tender, market, idea-box, participatory-budget) and broadened the status enum to the per-type union; states are declared in x-openregister-lifecycle. Version 0.2.0: renamed status value 'summarised' to 'results-published' and added anonymousReactionsAllowed + moderationPolicy. Legacy 'summarised' objects are normalised to 'results-published' on read by ParticipationLifecycleService; rows with no consultationType are treated as citizen-participation.",
         "type": "object",
         "x-openregister": {
           "schemaType": "schema:Event",
@@ -4901,7 +4850,7 @@
         "icon": "CommentAccountOutline",
         "version": "0.1.0",
         "title": "EngagementRecord",
-        "description": "A record of participant engagement during a meeting — speeches, questions raised, and topics suggested",
+        "description": "A record of participant engagement during a meeting: speeches, questions raised, and topics suggested",
         "type": "object",
         "x-openregister": {
           "schemaType": "custom:EngagementRecord",
@@ -4964,41 +4913,7 @@
             "description": "Governance-specific engagement score (0–100), computed in-app by EngagementService.calculateScore() and stored on each capture"
           }
         },
-        "x-openregister-calculations": {
-          "speechCount": {
-            "type": "integer",
-            "description": "Number of speech events (generic count fed to the analytics leaf)",
-            "expression": {
-              "size": [
-                {
-                  "prop": "speeches"
-                }
-              ]
-            }
-          },
-          "questionCount": {
-            "type": "integer",
-            "description": "Number of questions raised (generic count fed to the analytics leaf)",
-            "expression": {
-              "size": [
-                {
-                  "prop": "questionsRaised"
-                }
-              ]
-            }
-          },
-          "topicCount": {
-            "type": "integer",
-            "description": "Number of topics suggested (generic count fed to the analytics leaf)",
-            "expression": {
-              "size": [
-                {
-                  "prop": "topicsSuggested"
-                }
-              ]
-            }
-          }
-        }
+        "x-decidiq-engagement-counts-note": "speechCount, questionCount and topicCount are deliberately not declared as calculations. No operator counts the entries of an array: the vocabulary CalculationEvaluator implements has neither size nor length, and an aggregate-reference counts objects of another schema rather than entries in an inline array on this one. The code that knows the answer already has it: EngagementService::applyEvent() appends the entry and calculateScore() counts all three in the same call, storing the result in engagementScore. If a reader ever needs the counts on their own they belong here as declared integer properties written by that service, not as a calculation."
       },
       "ConflictOfInterest": {
         "slug": "conflict-of-interest",
@@ -5133,7 +5048,7 @@
         "icon": "BullhornOutline",
         "version": "0.1.0",
         "title": "PublicationRecord",
-        "description": "Bookkeeping record for a single public-publication action (publish-decisions-via-opencatalogi). Tracks which source governance object was published, the derived immutable payload object that received publicationDate, the OpenCatalogi catalog publication reference, and the withdraw/rectify lifecycle. Anonymous read of published data happens exclusively through OR's RBAC published-predicate (public-group authorization.read matching publicationDate <= $now) / OpenCatalogi — NOT through any app-local route. Maps schema:PublicationEvent.",
+        "description": "Bookkeeping record for a single public-publication action (publish-decisions-via-opencatalogi). Tracks which source governance object was published, the derived immutable payload object that received publicationDate, the OpenCatalogi catalog publication reference, and the withdraw/rectify lifecycle. Anonymous read of published data happens exclusively through OR's RBAC published-predicate (public-group authorization.read matching publicationDate <= $now) / OpenCatalogi. NOT through any app-local route. Maps schema:PublicationEvent.",
         "type": "object",
         "x-schema-org": "schema:PublicationEvent",
         "x-openregister": {
@@ -5234,7 +5149,7 @@
           "catalogRetractionStatus": {
             "title": "Catalog retraction status",
             "type": "string",
-            "description": "Tracks the OpenCatalogi retraction on withdraw. 'pending' means the local predicate was cleared but the catalog retraction call failed and must be retried — staff see the failure, never a false success.",
+            "description": "Tracks the OpenCatalogi retraction on withdraw. 'pending' means the local predicate was cleared but the catalog retraction call failed and must be retried: staff see the failure, never a false success.",
             "enum": [
               "none",
               "done",
@@ -5288,7 +5203,7 @@
         "icon": "FileDocumentOutline",
         "version": "0.1.0",
         "title": "PublicationPayload",
-        "description": "Derived, immutable public payload (publish-decisions-via-opencatalogi). Constructed ALLOW-LIST style by PublicationPayloadService — one polymorphic shape discriminated by oriType (Besluit / Vergadering / Verslag). Carries OpenRaadsinformatie-mapped fields alongside schema.org annotations so OpenCatalogi/OR public-API consumers receive ORI-compatible data without a bespoke harvester. By construction this schema contains NO UID fields, NO contact details, NO individual vote records, and NO voter identities — decision payloads carry vote TOTALS only, agenda payloads omit confidential items, minutes payloads render attendance per the body's policy. Anonymous visibility is governed by the OpenRegister RBAC published-predicate: the authorization.read rule grants the public group read access when publicationDate <= $now; publishing sets publicationDate on the payload instance, withdraw sets depublicationDate. The live source object is never published.",
+        "description": "Derived, immutable public payload (publish-decisions-via-opencatalogi). Constructed ALLOW-LIST style by PublicationPayloadService: one polymorphic shape discriminated by oriType (Besluit / Vergadering / Verslag). Carries OpenRaadsinformatie-mapped fields alongside schema.org annotations so OpenCatalogi/OR public-API consumers receive ORI-compatible data without a bespoke harvester. By construction this schema contains NO UID fields, NO contact details, NO individual vote records, and NO voter identities: decision payloads carry vote TOTALS only, agenda payloads omit confidential items, minutes payloads render attendance per the body's policy. Anonymous visibility is governed by the OpenRegister RBAC published-predicate: the authorization.read rule grants the public group read access when publicationDate <= $now; publishing sets publicationDate on the payload instance, withdraw sets depublicationDate. The live source object is never published.",
         "type": "object",
         "x-openregister": {
           "schemaType": "schema:CreativeWork",
@@ -5332,7 +5247,7 @@
           "oriType": {
             "title": "ORI type",
             "type": "string",
-            "description": "OpenRaadsinformatie record type — interprets the payload ORI-compatibly.",
+            "description": "OpenRaadsinformatie record type: interprets the payload ORI-compatibly.",
             "enum": [
               "Besluit",
               "Vergadering",
@@ -5392,7 +5307,7 @@
           "voteTotals": {
             "title": "Vote totals",
             "type": "object",
-            "description": "Aggregate vote tally ONLY — for/against/abstain counts. NEVER per-member votes or voter identities (Besluit).",
+            "description": "Aggregate vote tally ONLY: for/against/abstain counts. NEVER per-member votes or voter identities (Besluit).",
             "properties": {
               "for": {
                 "title": "Votes for",
@@ -5462,7 +5377,7 @@
           "attendance": {
             "title": "Attendance",
             "type": "object",
-            "description": "Attendance rendered per the body's policy (Verslag) — either aggregate counts or names of role-holders only, never NC UIDs or contact details.",
+            "description": "Attendance rendered per the body's policy (Verslag): either aggregate counts or names of role-holders only, never NC UIDs or contact details.",
             "properties": {
               "policy": {
                 "title": "Policy",
@@ -5656,7 +5571,7 @@
           "lifecycle": {
             "title": "Lifecycle",
             "type": "string",
-            "description": "Evaluation cycle lifecycle: draft (roster/template being set) -> open (members submit anonymous responses) -> closed (scoring runs, scoreSummary materialised) -> published (optional; aggregate enters the public window). Per REQ-EVAL-006 / consume-or-rbac-authorization, only the body's chair or secretary may write this property.",
+            "description": "Evaluation cycle lifecycle: draft (roster/template being set) -> open (members submit anonymous responses) -> closed (scoring runs, scoreSummary materialised) -> published (optional; aggregate enters the public window). Per consume-or-rbac-authorization, only the body's chair or secretary may write this property.",
             "enum": [
               "draft",
               "open",
@@ -5716,7 +5631,7 @@
           "invitedParticipantIds": {
             "title": "Invited participants (roster)",
             "type": "array",
-            "description": "Participant UUIDs invited to this cycle. Completion-tracking roster ONLY — never linked to EvaluationResponse content, so non-responders can be reminded without de-anonymising any answer.",
+            "description": "Participant UUIDs invited to this cycle. Completion-tracking roster ONLY: never linked to EvaluationResponse content, so non-responders can be reminded without de-anonymising any answer.",
             "items": {
               "type": "string"
             }
@@ -5724,7 +5639,7 @@
           "respondedParticipantIds": {
             "title": "Responded participants (completion)",
             "type": "array",
-            "description": "Participant UUIDs who have submitted a response. Set-membership only (has X responded, yes/no) — carries no link to which EvaluationResponse belongs to which member.",
+            "description": "Participant UUIDs who have submitted a response. Set-membership only (has X responded, yes/no): carries no link to which EvaluationResponse belongs to which member.",
             "items": {
               "type": "string"
             }
@@ -5742,7 +5657,7 @@
           "scoreSummary": {
             "title": "Score summary",
             "type": "string",
-            "description": "JSON-encoded governance-specific scoring result (BoardEvaluationScoreService, REQ-AN-LEAF-002): overallScore always present; dimensionScores and themes are set to null and suppressed=true when respondedCount is below minRespondentThreshold, so no breakdown ever exists to leak — even internally, even to an admin. This is the one field exposed publicly (via publicationDate) when the body opts to publish; raw EvaluationResponse objects are never published."
+            "description": "JSON-encoded governance-specific scoring result (BoardEvaluationScoreService, REQ-AN-LEAF-002): overallScore always present; dimensionScores and themes are set to null and suppressed=true when respondedCount is below minRespondentThreshold, so no breakdown ever exists to leak, even internally, even to an admin. This is the one field exposed publicly (via publicationDate) when the body opts to publish; raw EvaluationResponse objects are never published."
           },
           "publicationDate": {
             "title": "Publication date",
@@ -5785,7 +5700,7 @@
             "authenticated"
           ]
         },
-        "description": "One member's anonymous submission to a BoardEvaluation cycle (board-self-evaluation). Carries NO member relation and no participant identity anywhere in its content — anonymity is inherited from the existing secret-ballot mechanism (opaque HMAC dedup token only, same as VotingService's secret-round voterToken). Completion is tracked separately on BoardEvaluation.respondedParticipantIds, never here.",
+        "description": "One member's anonymous submission to a BoardEvaluation cycle (board-self-evaluation). Carries NO member relation and no participant identity anywhere in its content: anonymity is inherited from the existing secret-ballot mechanism (opaque HMAC dedup token only, same as VotingService's secret-round voterToken). Completion is tracked separately on BoardEvaluation.respondedParticipantIds, never here.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -5838,14 +5753,14 @@
           "responseToken": {
             "title": "Response token",
             "type": "string",
-            "description": "Opaque HMAC(participantId + ':' + evaluationId, server-side secret) dedup token — reuses the same secret-ballot mechanism VotingService uses for secret VotingRounds (app config key 'voter_token_secret'). One-way: cannot be inverted to recover the participant id without the server-side secret. Used only for idempotent one-response-per-member enforcement, never for read display or identity resolution."
+            "description": "Opaque HMAC(participantId + ':' + evaluationId, server-side secret) dedup token, reuses the same secret-ballot mechanism VotingService uses for secret VotingRounds (app config key 'voter_token_secret'). One-way: cannot be inverted to recover the participant id without the server-side secret. Used only for idempotent one-response-per-member enforcement, never for read display or identity resolution."
           },
           "boardEvaluation": {
             "title": "Board evaluation",
             "type": "string",
             "format": "uuid",
             "$ref": "board-evaluation",
-            "description": "The evaluation cycle this response belongs to (many-to-one). Canonical property-level $ref relation (ADR-062 rule 7). Links the response to the CYCLE only — never to a participant, preserving the secret-ballot guarantee."
+            "description": "The evaluation cycle this response belongs to (many-to-one). Canonical property-level $ref relation (ADR-062 rule 7). Links the response to the CYCLE only: never to a participant, preserving the secret-ballot guarantee."
           }
         }
       }

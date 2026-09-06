@@ -18,6 +18,9 @@ namespace OCA\Decidiq\Tests\Unit\Service;
 
 use OCA\Decidiq\Service\ApprovalRouteCommandService;
 use OCA\Decidiq\Service\ApprovalRouteService;
+use OCA\Decidiq\Service\ApprovalRouteStepMapper;
+use OCA\Decidiq\Service\ApprovalStageGuard;
+use OCA\Decidiq\Service\MandateDirectory;
 use OCA\Decidiq\Service\RegisterObjectStore;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -59,6 +62,18 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 			public array $rows = ['decision-stage' => [], 'approval-action' => [], 'approval-route' => []];
 
 			/**
+			 * Required properties per schema, mirroring lib/Settings — the fake
+			 * refuses a write exactly where live OpenRegister does.
+			 *
+			 * @var array<string, array<int, string>>
+			 */
+			private const REQUIRED = [
+				'decision-stage' => ['sequence', 'stageType', 'status', 'decisionMakerType', 'label'],
+				'approval-action' => ['subject', 'step', 'actor', 'action'],
+				'approval-route' => ['name', 'steps'],
+			];
+
+			/**
 			 * Uuid counter.
 			 *
 			 * @var int
@@ -66,9 +81,9 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 			private int $counter = 0;
 
 			/**
-			 * Create or patch a row.
+			 * Create or fully replace a row, validating as live OR does.
 			 *
-			 * @param array<string, mixed> $object The object or patch.
+			 * @param array<string, mixed> $object The COMPLETE object.
 			 * @param string $register The register.
 			 * @param string $schema The schema.
 			 * @param string|null $uuid The uuid.
@@ -79,14 +94,67 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 				if ($uuid === null) {
 					$this->counter++;
 					$uuid = $schema . '-' . $this->counter;
-					$this->rows[$schema][$uuid] = ($object + ['id' => $uuid]);
-
-					return $this->rows[$schema][$uuid];
 				}
 
-				$this->rows[$schema][$uuid] = (array_merge(($this->rows[$schema][$uuid] ?? []), $object) + ['id' => $uuid]);
+				// A uuid-bearing save REPLACES and validates whole, as live
+				// OpenRegister does — a partial payload must refuse here the way
+				// it 400s on the rig, or this fake cannot fail.
+				$this->assertRequired(schema: $schema, object: $object);
+				$this->rows[$schema][$uuid] = ($object + ['id' => $uuid]);
 
 				return $this->rows[$schema][$uuid];
+			}
+
+			/**
+			 * Merge a partial payload, as OR's patchObject() does (RFC 7386
+			 * shaped): absent keys are preserved, an explicit null removes the
+			 * key, and the MERGED result is validated against the schema.
+			 *
+			 * @param string $objectId The uuid.
+			 * @param array<string, mixed> $data The partial data.
+			 * @param string $register The register.
+			 * @param string $schema The schema.
+			 *
+			 * @return array<string, mixed> The patched row.
+			 */
+			public function patchObject(string $objectId, array $data, string $register, string $schema): array {
+				$merged = ($this->rows[$schema][$objectId] ?? []);
+				foreach ($data as $key => $value) {
+					if ($value === null) {
+						unset($merged[$key]);
+						continue;
+					}
+
+					$merged[$key] = $value;
+				}
+
+				$this->assertRequired(schema: $schema, object: $merged);
+				$this->rows[$schema][$objectId] = ($merged + ['id' => $objectId]);
+
+				return $this->rows[$schema][$objectId];
+			}
+
+			/**
+			 * Refuse a payload missing required schema properties.
+			 *
+			 * @param string $schema The schema.
+			 * @param array<string, mixed> $object The payload to validate.
+			 *
+			 * @return void
+			 *
+			 * @throws RuntimeException When required properties are missing.
+			 */
+			private function assertRequired(string $schema, array $object): void {
+				$missing = [];
+				foreach ((self::REQUIRED[$schema] ?? []) as $property) {
+					if (array_key_exists($property, $object) === false) {
+						$missing[] = $property;
+					}
+				}
+
+				if ($missing !== []) {
+					throw new RuntimeException('required properties (' . implode(', ', $missing) . ') are missing');
+				}
 			}
 
 			/**
@@ -100,6 +168,14 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 				$filters = $config['filters'];
 				$schema = $filters['schema'];
 				unset($filters['register'], $filters['schema']);
+
+				if (isset($filters['id']) === true || isset($filters['uuid']) === true) {
+					// Live OpenRegister matches filters against the object's own
+					// JSON properties; identity lives in @self, so a top-level
+					// id/uuid filter matches NOTHING. A fake resolving it would
+					// agree with the caller's bug and could not fail (dossiq#1686).
+					return [];
+				}
 
 				$out = [];
 				foreach (($this->rows[$schema] ?? []) as $row) {
@@ -146,8 +222,44 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 				return $entity;
 			}
 		);
+		$facade->method('patchObject')->willReturnCallback(
+			function (
+				string $objectId,
+				array $data,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+			) use ($state): ObjectEntityInterface {
+				$row = $state->patchObject($objectId, $data, (string)$register, (string)$schema);
+
+				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity->method('jsonSerialize')->willReturn($row);
+
+				return $entity;
+			}
+		);
 		$facade->method('findAll')->willReturnCallback(
 			static fn (array $config = []): array => $state->findAll($config)
+		);
+		// find() resolves by uuid, as live OpenRegister does — the resolving
+		// form a top-level 'id' filter never was.
+		$facade->method('find')->willReturnCallback(
+			function (
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+			) use ($state): ?ObjectEntityInterface {
+				$row = ($state->rows[(string)$schema][(string)$id] ?? null);
+				if ($row === null) {
+					return null;
+				}
+
+				$entity = $this->createMock(ObjectEntityInterface::class);
+				$entity->method('jsonSerialize')->willReturn($row);
+
+				return $entity;
+			}
 		);
 
 		return new RegisterObjectStore($facade);
@@ -160,7 +272,7 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 	 * @return ApprovalRouteService The engine.
 	 */
 	private function engine(): ApprovalRouteService {
-		return new ApprovalRouteService($this->store());
+		return new ApprovalRouteService($this->store(), new ApprovalStageGuard(new MandateDirectory($this->store())), new ApprovalRouteStepMapper());
 
 	}//end engine()
 
@@ -330,7 +442,7 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$service = $this->service($engine);
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'voorstel-1', 'proposal');
 
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
 
 		$grown = $this->template();
 		$grown['steps'][] = ['order' => 4, 'stageType' => 'ratifying', 'actorType' => 'role', 'actor' => 'college', 'label' => 'Vaststelling'];
@@ -352,14 +464,14 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$service = $this->service($engine);
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'voorstel-1', 'proposal');
 
-		$first = $service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised']);
+		$first = $service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
 		$this->assertTrue($first['recorded']);
 		$this->assertFalse($first['completed']);
 
 		$statuses = array_map(static fn (array $s): string => (string)$s['status'], $this->stagesOf('voorstel-1'));
 		$this->assertSame(['decided', 'active', 'pending'], $statuses);
 
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'approved']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'endorsed']);
 		$last = $service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'approved']);
 
 		$this->assertTrue($last['completed']);
@@ -377,7 +489,7 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$engine = $this->engine();
 		$service = $this->service($engine);
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'voorstel-1', 'proposal');
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
 
 		$before = count($this->objectService->rows['approval-action']);
 
@@ -403,14 +515,15 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$engine = $this->engine();
 		$service = $this->service($engine);
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'voorstel-1', 'proposal');
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised']);
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'approved']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'endorsed']);
 
 		$service->recordAction([
 			'subject' => 'voorstel-1',
 			'actor' => 'anyone',
 			'action' => 'returned',
 			'returnToStep' => 2,
+			'comment' => 'Onvolledig',
 		]);
 
 		$stages = $this->stagesOf('voorstel-1');
@@ -432,13 +545,33 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$engine->instantiate(route: $this->template(), subject: 'via-service', subjectSchema: 'proposal');
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'via-seam', 'proposal');
 
-		$engine->record(['subject' => 'via-service', 'actor' => 'anyone', 'action' => 'advised']);
-		$service->recordAction(['subject' => 'via-seam', 'actor' => 'anyone', 'action' => 'advised']);
+		$engine->record(['subject' => 'via-service', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
+		$service->recordAction(['subject' => 'via-seam', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
 
 		$strip = static function (array $stages): array {
 			return array_map(
 				static function (array $s): array {
-					unset($s['id'], $s['decision']);
+					// `route` and `taskUuid` are provenance LINKAGE, not route
+					// state: the direct path instantiates from a bare template
+					// (no stored id to link) where the seam links the stored
+					// row. Stripping them keeps this test about what REQ-ARE-005
+					// promises — the travelling state cannot diverge.
+					unset($s['id'], $s['decision'], $s['route'], $s['taskUuid']);
+
+					// `decidedAt` is a WALL CLOCK reading, stamped independently
+					// by each path. The two calls above run microseconds apart,
+					// so whenever they straddle a second boundary the arrays
+					// differ by exactly one second and this test fails for a
+					// reason that has nothing to do with divergence. Observed
+					// 2026-09-03: 11:30:08 against 11:30:09.
+					//
+					// It is NORMALISED rather than unset, because whether a
+					// decided stage records a decision time at all is part of
+					// what must not diverge. Both paths still have to agree that
+					// there IS one; they no longer have to agree on the second.
+					if (isset($s['decidedAt']) === true && $s['decidedAt'] !== '') {
+						$s['decidedAt'] = '<recorded>';
+					}
 
 					return $s;
 				},
@@ -463,8 +596,8 @@ class ApprovalRouteCommandServiceTest extends TestCase {
 		$engine = $this->engine();
 		$service = $this->service($engine);
 		$service->holdRoute('dossiq', 'pr-1', $this->template(), 'voorstel-1', 'proposal');
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised']);
-		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'approved']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'advised', 'advice' => 'Akkoord']);
+		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'alice', 'action' => 'endorsed']);
 		$service->recordAction(['subject' => 'voorstel-1', 'actor' => 'anyone', 'action' => 'approved']);
 
 		$this->assertSame('approved', $service->finalOutcomeOf('voorstel-1'));

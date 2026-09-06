@@ -9,14 +9,14 @@
 // @spec openspec/specs/agenda-management/spec.md
 // @spec openspec/specs/meeting-management/spec.md
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	MAX_SERIES_INSTANCES,
-	STATUTORY_ALV_ITEMS,
-	missingStatutoryItems,
 	buildAgendaTree,
-	flattenTree,
 	expandRecurrence,
+	flattenTree,
+	MAX_SERIES_INSTANCES,
+	missingStatutoryItems,
+	STATUTORY_ALV_ITEMS,
 } from '../../src/services/agendaRules.js'
 import {
 	DEFAULT_NOTICE_PERIOD_DAYS,
@@ -35,7 +35,7 @@ describe('missingStatutoryItems', () => {
 	it('reports all eight statutory items for an empty ALV agenda', () => {
 		const missing = missingStatutoryItems('general_assembly', [])
 		expect(missing).toHaveLength(STATUTORY_ALV_ITEMS.length)
-		expect(missing.map((m) => m.id)).toContain('kascommissie-report')
+		expect(missing.map((m) => m.id)).toContain('audit-committee-report')
 	})
 
 	it('matches case-insensitively on en + nl synonyms', () => {
@@ -60,7 +60,7 @@ describe('missingStatutoryItems', () => {
 		]
 		const ids = missingStatutoryItems('general_assembly', items).map((m) => m.id)
 		expect(ids).toContain('financial-statements')
-		expect(ids).toContain('kascommissie-report')
+		expect(ids).toContain('audit-committee-report')
 		expect(ids).toContain('board-elections')
 		expect(ids).not.toContain('opening')
 		expect(ids).not.toContain('annual-report')

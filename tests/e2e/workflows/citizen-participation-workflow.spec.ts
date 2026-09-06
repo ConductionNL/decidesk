@@ -30,16 +30,18 @@
  * @e2e openspec/specs/citizen-participation/spec.md#admin-sets-instance-defaults
  * @e2e openspec/specs/voting-system/spec.md#duplicate-detection-shared-with-statutory-voting
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
+
+import { expect, test } from '@playwright/test'
 import {
 	BASE,
-	newLedger,
+	cleanupAll,
 	createObject,
 	getObject,
-	cleanupAll,
+	newLedger,
 	objId,
-	type SeedLedger,
-} from './governance-fixture'
+} from './governance-fixture.ts'
 
 let ledger: SeedLedger
 

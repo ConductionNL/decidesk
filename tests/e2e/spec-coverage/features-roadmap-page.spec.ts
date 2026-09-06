@@ -17,9 +17,10 @@
  *
  * @e2e openspec/specs/dashboard/spec.md#view-the-features-and-roadmap-page
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 
 async function dismissSupportDialog(page: Page): Promise<void> {
 	const dialog = page
@@ -69,9 +70,16 @@ test('Features & roadmap: app-scoped nav lands on the roadmap surface', async ({
 	await expect(
 		page.getByRole('button', { name: /Show roadmap/i }).first(),
 	).toBeVisible()
-	await expect(
-		page.getByRole('button', { name: /Suggest feature/i }).first(),
-	).toBeVisible()
+	// A LINK, not a button, and deliberately so: it navigates to
+	// github.com/ConductionNL/decidiq/issues/new. CnFeaturesAndRoadmapPage
+	// renders it as an `<a href>` wearing `button-vue` classes, with no
+	// `role="button"`, so `getByRole('button')` could never match it and this
+	// assertion had been failing on every run. Asserting `link` matches the
+	// semantics the component actually has, and the href is the part worth
+	// pinning: a styled anchor that stops navigating is the real regression.
+	const suggest = page.getByRole('link', { name: /Suggest feature/i }).first()
+	await expect(suggest).toBeVisible()
+	await expect(suggest).toHaveAttribute('href', /github\.com\/.*\/issues\/new/)
 })
 
 // @e2e openspec/specs/dashboard/spec.md#view-the-features-and-roadmap-page

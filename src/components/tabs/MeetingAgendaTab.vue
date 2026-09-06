@@ -174,9 +174,13 @@ export default {
 		return {
 			loading: false,
 			error: '',
-			rows: [],
+			rawRows: [],
 			meeting: null,
 			agendaSchema: null,
+			// uuid → name for the agenda-item types this instance has configured.
+			// Empty is a valid state, not a failure: an instance that seeds no
+			// types shows the coarse enum and nothing breaks.
+			itemTypeNames: {},
 			formOpen: false,
 			editTarget: null,
 			deleteTarget: null,
@@ -187,6 +191,24 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Agenda rows, with the Type column resolved against the configured
+		 * kinds.
+		 *
+		 * Computed rather than stored so the column fills in when the type names
+		 * arrive, without the agenda blocking on that fetch.
+		 *
+		 * @return {Array<object>} The rows to render.
+		 *
+		 * @spec openspec/changes/questions-as-agenda-items/specs/questions-as-agenda-items/spec.md
+		 */
+		rows() {
+			return this.rawRows.map((item) => ({
+				...item,
+				kindDisplay: this.itemTypeNames[item.type] || item.itemType,
+			}))
+		},
+
 		/** @spec openspec/specs/relation-tab-ui/spec.md */
 		columns() {
 			return [
@@ -196,7 +218,15 @@ export default {
 					width: '60px',
 				},
 				{ key: 'titleDisplay', label: this.t('decidiq', 'Title') },
-				{ key: 'itemType', label: this.t('decidiq', 'Type') },
+				// The CONFIGURABLE kind, not the coarse enum. Since
+				// questions-as-agenda-items collapsed oral questions and
+				// interpellation requests into agenda items, `itemType`
+				// (informational/discussion/decision) would render every one of
+				// them as "discussion" and the column would stop telling a clerk
+				// anything. `kindDisplay` falls back to `itemType` for an item
+				// whose type is unset, so an instance that seeds no types reads
+				// exactly as it did before.
+				{ key: 'kindDisplay', label: this.t('decidiq', 'Type') },
 				{
 					key: 'estimatedDuration',
 					label: this.t('decidiq', 'Duration (min)'),
@@ -270,10 +300,16 @@ export default {
 					_order: JSON.stringify({ orderNumber: 'asc' }),
 					_limit: 100,
 				})
+				// 🔴 NOT AWAITED. The Type column is a label; the agenda is the
+				// page. Awaiting this put one more object-list query in front of
+				// every render, and on a loaded instance those cost about a
+				// second each. `rows` is computed, so the names appear as soon as
+				// they arrive and the agenda never waits for them.
+				this.loadItemTypes()
 				// Tree order: sub-items (`parentItem`) nest under their parent;
 				// flattened parent→children order with a nesting indicator.
 				const flat = flattenTree(buildAgendaTree(items || []))
-				this.rows = flat.map((item) => ({
+				this.rawRows = flat.map((item) => ({
 					...item,
 					titleDisplay: item.parentItem ? `↳ ${item.title}` : item.title,
 				}))
@@ -283,6 +319,44 @@ export default {
 					e?.message || this.t('decidiq', 'Failed to load agenda.')
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Fetch the configured agenda-item types, so the Type column can name
+		 * the kind an item actually is.
+		 *
+		 * Fail-soft on purpose: a fetch that throws leaves the map empty, every
+		 * row falls back to `itemType`, and the agenda still renders. An empty
+		 * agenda-item-type collection is the normal state of an instance that
+		 * has seeded no example set, so it must not read as an error.
+		 *
+		 * @spec openspec/changes/questions-as-agenda-items/specs/questions-as-agenda-items/spec.md
+		 */
+		async loadItemTypes() {
+			try {
+				const typeStore = ensureRelationType('agenda-item-type')
+				const types = await typeStore.fetchCollection('agenda-item-type', {
+					_limit: 200,
+				})
+				const names = {}
+				for (const type of types || []) {
+					if (!type?.name) continue
+					// 🔴 INDEXED BY BOTH, BECAUSE A SEED WRITES THE SLUG.
+					// A row created through the UI holds the type's uuid, but
+					// seedData stores a reference exactly as the file wrote it:
+					// measured on a live instance, seeded agenda items carry
+					// `meeting: "raadsvergadering-2025-01-15"`, the slug, not a
+					// uuid. Keying on `id` alone would leave every example-set
+					// item falling back to the coarse enum, so the set that
+					// exists to demonstrate configurable kinds would show none.
+					if (type.id) names[type.id] = type.name
+					const slug = type['@self']?.slug
+					if (slug) names[slug] = type.name
+				}
+				this.itemTypeNames = names
+			} catch {
+				this.itemTypeNames = {}
 			}
 		},
 

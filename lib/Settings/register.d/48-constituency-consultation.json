@@ -9,7 +9,7 @@
         "icon": "AccountQuestionOutline",
         "version": "0.1.1",
         "title": "MemberConsultation",
-        "description": "An informal, explicitly NON-BINDING member poll (achterbanraadpleging / ledenraadpleging): a defined member audience — a governance body's active members, a fractie, or a configured Nextcloud group such as an OR's achterban — is asked a question linked to an agenda item and/or decision, and the summarised outcome flows back into the meeting as an input artifact. It is explicitly NOT a formal ballot (voting-system / preferential-ballot: never creates/feeds a VotingRound, Vote, tally or quorum) and NOT citizen input (citizen-participation / PublicConsultation: no public-group read rule, no anonymous-public intake). CONSTRAINT (REQ-CCO-001): at least one of agendaItem / decision MUST be set — this at-least-one-of rule is NOT expressible in the OR 'required' array (no anyOf dialect is invented here) and is enforced at save time by the imperative response/create path, documented per REQ-CCO-001. Every surface carries the 'niet-bindende raadpleging' label (REQ-CCO-005). ADR-006 addendum (consultation-discriminator, 2026-08-19): exempted from folding into PublicConsultation as a genuinely distinct concept (13% measured field overlap, no public-authorization block, x-schema-org AskAction vs. Event) — see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md.",
+        "description": "An informal, explicitly NON-BINDING member poll (achterbanraadpleging / ledenraadpleging): a defined member audience, a governance body's active members, a fractie, or a configured Nextcloud group such as an OR's achterban, is asked a question linked to an agenda item and/or decision, and the summarised outcome flows back into the meeting as an input artifact. It is explicitly NOT a formal ballot (voting-system / preferential-ballot: never creates/feeds a VotingRound, Vote, tally or quorum) and NOT citizen input (citizen-participation / PublicConsultation: no public-group read rule, no anonymous-public intake). CONSTRAINT: at least one of agendaItem / decision MUST be set, this at-least-one-of rule is NOT expressible in the OR 'required' array (no anyOf dialect is invented here) and is enforced at save time by the imperative response/create path, documented. Every surface carries the 'niet-bindende raadpleging' label. ADR-006 addendum (consultation-discriminator, 2026-08-19): exempted from folding into PublicConsultation as a genuinely distinct concept (13% measured field overlap, no public-authorization block, x-schema-org AskAction vs. Event): see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md.",
         "type": "object",
         "x-schema-org": "schema:AskAction",
         "x-openregister": {
@@ -136,7 +136,7 @@
             "title": "Response type",
             "type": "string",
             "facetable": true,
-            "description": "How members respond. single-choice = exactly one option; multi-choice = one or more options; open-text = free text. Required. CONSTRAINT (REQ-CCO-001): choiceOptions is required when responseType is a choice type — conditional-required, not expressible in 'required', enforced at save time.",
+            "description": "How members respond. single-choice = exactly one option; multi-choice = one or more options; open-text = free text. Required. CONSTRAINT: choiceOptions is required when responseType is a choice type, conditional-required, not expressible in 'required', enforced at save time.",
             "enum": [
               "single-choice",
               "multi-choice",
@@ -161,7 +161,7 @@
             "title": "Audience type",
             "type": "string",
             "facetable": true,
-            "description": "Which audience is polled (REQ-CCO-002). body-members = all Persons with an active Membership in audienceBody; fractie = the subset of those whose active Membership carries party = audienceParty; nc-group = the members of the Nextcloud group audienceGroup (e.g. an OR's achterban). Resolved server-side by ConsultationAudienceService; never trusted from the client. Required.",
+            "description": "Which audience is polled. body-members = all Persons with an active Membership in audienceBody; fractie = the subset of those whose active Membership carries party = audienceParty; nc-group = the members of the Nextcloud group audienceGroup (e.g. an OR's achterban). Resolved server-side by ConsultationAudienceService; never trusted from the client. Required.",
             "enum": [
               "body-members",
               "politicalGroup",
@@ -195,14 +195,14 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Optional reference to the AgendaItem this consultation prepares. At least one of agendaItem / decision MUST be set (REQ-CCO-001, enforced at save time). The linked agenda item's detail page reverse-looks-up this consultation for its 'Raadpleging (niet-bindend)' section."
+            "description": "Optional reference to the AgendaItem this consultation prepares. At least one of agendaItem / decision MUST be set (enforced at save time). The linked agenda item's detail page reverse-looks-up this consultation for its 'Raadpleging (niet-bindend)' section."
           },
           "decision": {
             "title": "Decision",
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
-            "description": "Optional reference to the Decision this consultation prepares. At least one of agendaItem / decision MUST be set (REQ-CCO-001, enforced at save time). A raadpleging never feeds the formal vote on this decision (REQ-CCO-005)."
+            "description": "Optional reference to the Decision this consultation prepares. At least one of agendaItem / decision MUST be set (enforced at save time). A raadpleging never feeds the formal vote on this decision."
           },
           "opensAt": {
             "title": "Opens at",
@@ -217,7 +217,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "End of the response window. Required. Enforced server-side on every response write independent of the stored lifecycle status (window-over-stale-status, REQ-CCO-003). Drives the closing-soon notification.",
+            "description": "End of the response window. Required. Enforced server-side on every response write independent of the stored lifecycle status (window-over-stale-status). Drives the closing-soon notification.",
             "example": "2026-03-10T17:00:00Z"
           },
           "anonymousResponses": {
@@ -243,7 +243,7 @@
             "title": "Results",
             "type": "object",
             "nullable": true,
-            "description": "Identity-free results summary written ONLY by the summary step on the gesloten → verwerkt transition (ConsultationSummaryService, REQ-CCO-006); never client-writable. Holds audience size, response count, per-option counts for choice types, and an optional initiator-curated openTextDigest for open-text. Contains no respondent identities.",
+            "description": "Identity-free results summary written ONLY by the summary step on the gesloten → verwerkt transition (ConsultationSummaryService); never client-writable. Holds audience size, response count, per-option counts for choice types, and an optional initiator-curated openTextDigest for open-text. Contains no respondent identities.",
             "properties": {
               "audienceSize": {
                 "title": "Audience size",
@@ -274,7 +274,7 @@
         "icon": "CommentTextOutline",
         "version": "0.1.0",
         "title": "MemberConsultationResponse",
-        "description": "A single audience member's answer to a MemberConsultation (schema:Answer). Respond-once (at most one response per member per consultation, duplicate create by the same respondentId rejected) and edit-until-close (a member may edit their own response until the consultation leaves 'open' or closesAt passes). Members never read, edit, or delete other members' responses (OR RBAC owner rule). When the parent consultation's anonymousResponses is true, no view or summary displays the respondentId — it remains stored solely to enforce respond-once and edit-own (pseudonymous at display, not at rest; design D4). respondentId, submittedAt and updatedAt are server-set, never client-supplied.",
+        "description": "A single audience member's answer to a MemberConsultation (schema:Answer). Respond-once (at most one response per member per consultation, duplicate create by the same respondentId rejected) and edit-until-close (a member may edit their own response until the consultation leaves 'open' or closesAt passes). Members never read, edit, or delete other members' responses (OR RBAC owner rule). When the parent consultation's anonymousResponses is true, no view or summary displays the respondentId: it remains stored solely to enforce respond-once and edit-own (pseudonymous at display, not at rest; design D4). respondentId, submittedAt and updatedAt are server-set, never client-supplied.",
         "type": "object",
         "x-schema-org": "schema:Answer",
         "x-openregister": {

@@ -11,8 +11,8 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-	computeMeetingCost,
 	agendaItemCost,
+	computeMeetingCost,
 	formatEur,
 } from '../../src/utils/meetingCost.js'
 

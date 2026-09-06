@@ -9,7 +9,7 @@
         "icon": "ScaleBalance",
         "version": "0.1.0",
         "title": "Geheimhoudingsgrond",
-        "description": "A configurable legal ground for geheimhouding (Schema.org DefinedTerm in the DefinedTermSet 'geheimhoudingsgronden'). Grounds are DATA, not code: administrators add, edit, and deactivate them. Each ground carries a statutory citation and an optional pre-2023 legacyCitation, a category (gemeentewet / woo-absoluut / woo-relatief / overig), and a requiresBekrachtiging flag — because the 2023 Wet bevorderen integriteit en functioneren decentraal bestuur changed the bekrachtigingsregime and provinces, waterschappen and private governance domains differ again, whether bekrachtiging is required is a property of the configured ground and is NEVER hardcoded (REQ-EMB-002). Deactivated grounds (active:false) MUST remain resolvable on existing geheimhouding records but MUST NOT be selectable for new ones (enforced app-side / in the ground picker; not expressible as a schema constraint). Seed grounds ship both the post-2023 Gemeentewet labels (art. 87-89) and the pre-2023 labels (voorheen art. 25/55/86) plus the Woo art. 5.1 lid 1/lid 2 gronden.",
+        "description": "A configurable legal ground for geheimhouding (Schema.org DefinedTerm in the DefinedTermSet 'geheimhoudingsgronden'). Grounds are DATA, not code: administrators add, edit, and deactivate them. Each ground carries a statutory citation and an optional pre-2023 legacyCitation, a category (gemeentewet / woo-absoluut / woo-relatief / overig), and a requiresBekrachtiging flag: because the 2023 Wet bevorderen integriteit en functioneren decentraal bestuur changed the bekrachtigingsregime and provinces, waterschappen and private governance domains differ again, whether bekrachtiging is required is a property of the configured ground and is NEVER hardcoded. Deactivated grounds (active:false) MUST remain resolvable on existing geheimhouding records but MUST NOT be selectable for new ones (enforced app-side / in the ground picker; not expressible as a schema constraint). Seed grounds ship both the post-2023 Gemeentewet labels (art. 87-89) and the pre-2023 labels (voorheen art. 25/55/86) plus the Woo art. 5.1 lid 1/lid 2 gronden.",
         "type": "object",
         "x-schema-org": "schema:DefinedTerm",
         "x-openregister": {
@@ -69,7 +69,7 @@
             "title": "Requires bekrachtiging",
             "type": "boolean",
             "facetable": true,
-            "description": "Whether a geheimhouding on this ground must be bekrachtigd by the confirming body. A per-ground property, NEVER hardcoded (REQ-EMB-002): the imperative bekrachtiging workflow keys off this flag, and the declarative lifecycle only permits the direct opgelegd -> opgeheven shortcut when this is false. Required.",
+            "description": "Whether a geheimhouding on this ground must be bekrachtigd by the confirming body. A per-ground property, NEVER hardcoded: the imperative bekrachtiging workflow keys off this flag, and the declarative lifecycle only permits the direct opgelegd -> opgeheven shortcut when this is false. Required.",
             "example": true
           },
           "description": {
@@ -100,7 +100,7 @@
         "icon": "ShieldLockOutline",
         "version": "0.1.0",
         "title": "Geheimhouding",
-        "description": "A formal geheimhouding record: the juridical layer OVER Decidiq's existing confidentiality classifiers, never a fifth vocabulary (REQ-EMB-001). Modelled as a Schema.org Action (agent = imposing organ via imposedByBody, object = the target, startTime = imposedAt, endTime = opheffingDate). Attaches to EXACTLY ONE target — a DigitalDocument, an AgendaItem, or a Decision — expressed as a scope enum plus exactly one populated target reference (targetDocument / targetAgendaItem / targetDecision). SAVE-TIME RULE (imperative, NOT a schema constraint — no oneOf/allOf is ever used in a decidesk register fragment because allOf triggers inheritance and aborts import): scope MUST match the single populated target reference; enforced in GeheimhoudingService.impose(). The record references a structured GeheimhoudingGrond (never free text; the structured ground supersedes the free-text Decision.legalBasis for NEW geheimhouding records — existing legalBasis values stay untouched). Its lifecycle is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'): opgelegd -> bekrachtigd -> opgeheven, plus the direct opgelegd -> opgeheven shortcut PERMITTED ONLY when the ground does not require bekrachtiging (that conditional guard is a save-time check in GeheimhoudingService, since a lifecycle map cannot read the referenced ground's requiresBekrachtiging). The app SHALL NOT implement an imperative state machine for the transition map itself. IMPOSING drives the target's EXISTING classifier (AgendaItem.confidentiality -> confidential; Decision.isPublished -> confidential; DigitalDocument excluded from publication surfaces) via the imperative GeheimhoudingService, which carries ALL target fields forward (OR saveObject is PUT-semantic). Geheimhouding records are NEVER exposed on OpenRaadsinformatie: authorization.read is authenticated-only, no public predicate. OUT-OF-CORE (imperative): impose/bekrachtig/opheffing orchestration, bekrachtiging agenda placement + overdue flagging, opheffing routing into the normal publication machinery, the member-facing embargo + EmbargoReleaseJob, the publication guard, and the view-audit trail.",
+        "description": "A formal geheimhouding record: the juridical layer OVER Decidiq's existing confidentiality classifiers, never a fifth vocabulary. Modelled as a Schema.org Action (agent = imposing organ via imposedByBody, object = the target, startTime = imposedAt, endTime = opheffingDate). Attaches to EXACTLY ONE target: a DigitalDocument, an AgendaItem, or a Decision, expressed as a scope enum plus exactly one populated target reference (targetDocument / targetAgendaItem / targetDecision). SAVE-TIME RULE (imperative, NOT a schema constraint: no oneOf/allOf is ever used in a decidesk register fragment because allOf triggers inheritance and aborts import): scope MUST match the single populated target reference; enforced in GeheimhoudingService.impose(). The record references a structured GeheimhoudingGrond (never free text; the structured ground supersedes the free-text Decision.legalBasis for NEW geheimhouding records: existing legalBasis values stay untouched). Its lifecycle is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'): opgelegd -> bekrachtigd -> opgeheven, plus the direct opgelegd -> opgeheven shortcut PERMITTED ONLY when the ground does not require bekrachtiging (that conditional guard is a save-time check in GeheimhoudingService, since a lifecycle map cannot read the referenced ground's requiresBekrachtiging). The app SHALL NOT implement an imperative state machine for the transition map itself. IMPOSING drives the target's EXISTING classifier (AgendaItem.confidentiality -> confidential; Decision.isPublished -> confidential; DigitalDocument excluded from publication surfaces) via the imperative GeheimhoudingService, which carries ALL target fields forward (OR saveObject is PUT-semantic). Geheimhouding records are NEVER exposed on OpenRaadsinformatie: authorization.read is authenticated-only, no public predicate. OUT-OF-CORE (imperative): impose/bekrachtig/opheffing orchestration, bekrachtiging agenda placement + overdue flagging, opheffing routing into the normal publication machinery, the member-facing embargo + EmbargoReleaseJob, the publication guard, and the view-audit trail.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -255,7 +255,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "geheimhouding-grond",
-            "description": "Reference to the structured GeheimhoudingGrond (the legal basis — never free text, REQ-EMB-002). The ground's requiresBekrachtiging flag drives the bekrachtiging workflow and the opgelegd -> opgeheven shortcut guard. Required."
+            "description": "Reference to the structured GeheimhoudingGrond (the legal basis: never free text). The ground's requiresBekrachtiging flag drives the bekrachtiging workflow and the opgelegd -> opgeheven shortcut guard. Required."
           },
           "imposedBy": {
             "title": "Imposed by",
@@ -289,7 +289,7 @@
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Geheimhouding state (declared in x-openregister-lifecycle, ADR-031): opgelegd -> bekrachtigd -> opgeheven, with the direct opgelegd -> opgeheven shortcut permitted only when the ground does not require bekrachtiging (save-time guard). opgeheven is terminal. An overdue bekrachtiging NEVER changes this state — it is flagged fail-visible, the organ decides.",
+            "description": "Geheimhouding state (declared in x-openregister-lifecycle, ADR-031): opgelegd -> bekrachtigd -> opgeheven, with the direct opgelegd -> opgeheven shortcut permitted only when the ground does not require bekrachtiging (save-time guard). opgeheven is terminal. An overdue bekrachtiging NEVER changes this state: it is flagged fail-visible, the organ decides.",
             "enum": [
               "imposed",
               "ratified",
@@ -303,7 +303,7 @@
             "format": "date",
             "facetable": true,
             "nullable": true,
-            "description": "Date by which the confirming body must bekrachtig the geheimhouding, defaulting to the confirming body's next scheduled meeting date (manually overridable). When it passes without a linked bekrachtigingsbesluit the geheimhouding is flagged overdue (fail-visible KPI + notification) and MUST NOT auto-lift or auto-expire (REQ-EMB-003). Only meaningful while lifecycle is opgelegd on a bekrachtiging-requiring ground.",
+            "description": "Date by which the confirming body must bekrachtig the geheimhouding, defaulting to the confirming body's next scheduled meeting date (manually overridable). When it passes without a linked bekrachtigingsbesluit the geheimhouding is flagged overdue (fail-visible KPI + notification) and MUST NOT auto-lift or auto-expire. Only meaningful while lifecycle is opgelegd on a bekrachtiging-requiring ground.",
             "example": "2026-09-30"
           },
           "ratificationDecision": {
@@ -312,7 +312,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Reference to the confirming body's Decision that bekrachtigt the geheimhouding. Set alongside the transition to bekrachtigd (REQ-EMB-003)."
+            "description": "Reference to the confirming body's Decision that bekrachtigt the geheimhouding. Set alongside the transition to bekrachtigd."
           },
           "ratificationDate": {
             "title": "Bekrachtiging date",
@@ -328,7 +328,7 @@
             "format": "uuid",
             "$ref": "agenda-item",
             "nullable": true,
-            "description": "Reference to the AgendaItem created on the confirming body's next scheduled meeting for the bekrachtiging (REQ-EMB-003, created imperatively by GeheimhoudingService). Its confidentiality respects the underlying stukken."
+            "description": "Reference to the AgendaItem created on the confirming body's next scheduled meeting for the bekrachtiging (created imperatively by GeheimhoudingService). Its confidentiality respects the underlying stukken."
           },
           "dissolutionDecision": {
             "title": "Opheffingsbesluit",
@@ -336,7 +336,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Reference to the opheffingsbesluit Decision by the imposing or confirming body (required to lift, REQ-EMB-004). Set alongside the transition to opgeheven; on opheffing the target becomes publication-ELIGIBLE again but is never auto-published."
+            "description": "Reference to the opheffingsbesluit Decision by the imposing or confirming body (required to lift). Set alongside the transition to opgeheven; on opheffing the target becomes publication-ELIGIBLE again but is never auto-published."
           },
           "liftingDate": {
             "title": "Opheffing date",
@@ -351,7 +351,7 @@
             "title": "Opheffing conditions",
             "type": "string",
             "nullable": true,
-            "description": "Optional free-text conditions attached to the opheffing (e.g. 'openbaar na afronding onderhandelingen'). Recorded on opheffing (REQ-EMB-004).",
+            "description": "Optional free-text conditions attached to the opheffing (e.g. 'openbaar na afronding onderhandelingen'). Recorded on opheffing.",
             "example": "openbaar na afronding onderhandelingen"
           }
         }

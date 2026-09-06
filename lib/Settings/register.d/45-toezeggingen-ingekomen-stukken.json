@@ -9,7 +9,7 @@
         "icon": "HandshakeOutline",
         "version": "0.1.0",
         "title": "Toezegging",
-        "description": "A political commitment (toezegging) made by a portefeuillehouder or college member to a council or committee, tracked from the moment it is made in a meeting through afdoening, with a deadline, declarative rappels (ADR-031), and a live public toezeggingenlijst via the OpenRegister published-predicate. A toezegging is a public-accountability instrument: it is NOT an ActionItem (CalDAV VTODO) and NOT motion-execution tracking (UitvoeringsUpdate) — it only cross-references both. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A political commitment (toezegging) made by a portefeuillehouder or college member to a council or committee, tracked from the moment it is made in a meeting through afdoening, with a deadline, declarative rappels (ADR-031), and a live public toezeggingenlijst via the OpenRegister published-predicate. A toezegging is a public-accountability instrument: it is NOT an ActionItem (CalDAV VTODO) and NOT motion-execution tracking (UitvoeringsUpdate), it only cross-references both. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -260,7 +260,7 @@
           "settlementEvidence": {
             "title": "Afdoening evidence",
             "type": "string",
-            "description": "Link or reference to evidence of afdoening (e.g. the raadsbrief). Optional. A plain URL/reference string — not a UID field — so the object stays fully publishable (design D4).",
+            "description": "Link or reference to evidence of afdoening (e.g. the raadsbrief). Optional. A plain URL/reference string: not a UID field, so the object stays fully publishable (design D4).",
             "example": "https://gemeente-voorbeeldingen.nl/raadsbrieven/evaluatie-afvalbeleid-2026.pdf"
           },
           "relatedMotion": {
@@ -376,7 +376,7 @@
             "title": "Sender type",
             "type": "string",
             "facetable": true,
-            "description": "Nature of the sender — drives public anonymisation (natuurlijk-persoon is anonymised, organisatie/bestuursorgaan pass through). Required.",
+            "description": "Nature of the sender: drives public anonymisation (natuurlijk-persoon is anonymised, organisatie/bestuursorgaan pass through). Required.",
             "enum": [
               "natural-person",
               "organisation",
@@ -416,7 +416,7 @@
             "title": "Routing advice",
             "type": "string",
             "facetable": true,
-            "description": "Griffie routing advice for the document. Optional until advised. CONSTRAINT: when set to 'betrekken-bij-agendapunt', targetAgendaItem MUST be referenced — this conditional-required rule is NOT expressible in the OR schema 'required' array (no if/then dialect is used here to avoid inventing one); it is enforced at save time by IngekomenStukRoutingService (Tasks 5-8) and documented here per REQ-001.",
+            "description": "Griffie routing advice for the document. Optional until advised. CONSTRAINT: when set to 'betrekken-bij-agendapunt', targetAgendaItem MUST be referenced, this conditional-required rule is NOT expressible in the OR schema 'required' array (no if/then dialect is used here to avoid inventing one); it is enforced at save time by IngekomenStukRoutingService (Tasks 5-8) and documented here per REQ-001.",
             "enum": [
               "noted-for-information",
               "referred-to-executive-board-for-disposal",
@@ -430,7 +430,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Reference to the AgendaItem the document should be handled under. REQUIRED when routingAdvice is 'betrekken-bij-agendapunt' (conditional-required, enforced at save time — see routingAdvice). Optional otherwise."
+            "description": "Reference to the AgendaItem the document should be handled under. REQUIRED when routingAdvice is 'betrekken-bij-agendapunt' (conditional-required, enforced at save time: see routingAdvice). Optional otherwise."
           },
           "listAgendaItem": {
             "title": "List agenda item",

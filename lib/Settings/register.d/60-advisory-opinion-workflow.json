@@ -9,7 +9,7 @@
         "icon": "AccountQuestionOutline",
         "version": "0.1.0",
         "title": "Adviesaanvraag",
-        "description": "A formal advisory-opinion request (adviesaanvraag) from a deciding body to an external advisory body — jongerenraad, adviesraad sociaal domein, cliëntenraad — modelled as universal GovernanceBody objects (ADR-006, never a parallel schema). It registers who asks whom, the question posed, the linked decision/agenda item/advisory stage, the requested-by date, and the accountability tail (verantwoording) when the final besluit deviates from the advies strekking. It is NOT a Decision subtype and NOT a WOR ConsultationRequest (works-council-consultation, statutory employee participation); its vocabulary is deliberately mirrored where sensible but the objects are separate (design D1). In-route advice stages keep using decision-methods method=advice (actor sets advised/deferred directly); this schema is the request/response/accountability wrapper around such a stage (via advisoryStage) or the out-of-route stand-alone case. The Advies response is a separate first-class artifact (schema advies) authored by the advisory body's secretary, not response fields on this object (design D1). CONSTRAINT (REQ-AOW-005, DEFERRED): mandatory-verantwoording-on-deviation is a cross-object conditional requirement (Decision outcome × Advies.strekking × presence of motivering) that the lifecycle dialect cannot express; it is enforced by the imperative fail-closed AdviceAccountabilityGuard in the decision status-transition path — that guard, the additive Decision verantwoording fields, and the bodyType enum extension are the imperative/base-edit tail of this change and are NOT part of this declarative fragment.",
+        "description": "A formal advisory-opinion request (adviesaanvraag) from a deciding body to an external advisory body: jongerenraad, adviesraad sociaal domein, cliëntenraad, modelled as universal GovernanceBody objects (ADR-006, never a parallel schema). It registers who asks whom, the question posed, the linked decision/agenda item/advisory stage, the requested-by date, and the accountability tail (verantwoording) when the final besluit deviates from the advies strekking. It is NOT a Decision subtype and NOT a WOR ConsultationRequest (works-council-consultation, statutory employee participation); its vocabulary is deliberately mirrored where sensible but the objects are separate (design D1). In-route advice stages keep using decision-methods method=advice (actor sets advised/deferred directly); this schema is the request/response/accountability wrapper around such a stage (via advisoryStage) or the out-of-route stand-alone case. The Advies response is a separate first-class artifact (schema advies) authored by the advisory body's secretary, not response fields on this object (design D1). CONSTRAINT (DEFERRED): mandatory-verantwoording-on-deviation is a cross-object conditional requirement (Decision outcome × Advies.strekking × presence of motivering) that the lifecycle dialect cannot express; it is enforced by the imperative fail-closed AdviceAccountabilityGuard in the decision status-transition path, that guard, the additive Decision verantwoording fields, and the bodyType enum extension are the imperative/base-edit tail of this change and are NOT part of this declarative fragment.",
         "type": "object",
         "x-schema-org": "schema:AskAction",
         "x-openregister": {
@@ -228,7 +228,7 @@
             "format": "date",
             "facetable": true,
             "nullable": true,
-            "description": "Date by which the advice is requested (not a statutory term). Optional; drives the declarative deadline rappels and the overdue workload view. A lapsed date is a reason for the griffie to set niet-uitgebracht — a human decision, never automation (design D5).",
+            "description": "Date by which the advice is requested (not a statutory term). Optional; drives the declarative deadline rappels and the overdue workload view. A lapsed date is a reason for the griffie to set niet-uitgebracht: a human decision, never automation (design D5).",
             "example": "2026-06-15"
           },
           "lifecycle": {
@@ -252,7 +252,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Optional reference to the Decision this advice prepares. When set and a linked Advies deviates from the decision outcome, the DEFERRED AdviceAccountabilityGuard (REQ-AOW-005, imperative, not in this fragment) blocks the completing transition until a verantwoording is recorded. Empty for the out-of-route case."
+            "description": "Optional reference to the Decision this advice prepares. When set and a linked Advies deviates from the decision outcome, the DEFERRED AdviceAccountabilityGuard (imperative, not in this fragment) blocks the completing transition until a verantwoording is recorded. Empty for the out-of-route case."
           },
           "advisoryStage": {
             "title": "Advisory stage",
@@ -260,7 +260,7 @@
             "format": "uuid",
             "$ref": "decision-stage",
             "nullable": true,
-            "description": "Optional reference to an in-route advisory DecisionStage (method=advice). When set, the stage actor sets the advised/deferred outcome directly via existing decision-methods semantics (no new derivation mechanism, REQ-AOW-004); this aanvraag only adds the request metadata, the Advies artifact and the verantwoording the stage does not model. Empty for the out-of-route stand-alone case."
+            "description": "Optional reference to an in-route advisory DecisionStage (method=advice). When set, the stage actor sets the advised/deferred outcome directly via existing decision-methods semantics (no new derivation mechanism); this aanvraag only adds the request metadata, the Advies artifact and the verantwoording the stage does not model. Empty for the out-of-route stand-alone case."
           },
           "agendaItem": {
             "title": "Agenda item",
@@ -268,13 +268,13 @@
             "format": "uuid",
             "$ref": "agenda-item",
             "nullable": true,
-            "description": "Optional reference to the AgendaItem the advice relates to. Raadscommissie advies on plenary agenda items remains owned by commissievergaderingen and is NOT registered through this capability (REQ-AOW-004)."
+            "description": "Optional reference to the AgendaItem the advice relates to. Raadscommissie advies on plenary agenda items remains owned by commissievergaderingen and is NOT registered through this capability."
           },
           "accountabilityText": {
             "title": "Verantwoording",
             "type": "string",
             "nullable": true,
-            "description": "Motivering recorded when the final besluit deviates from the advies strekking (REQ-AOW-005). Written alongside the transition to verantwoord. The same motivering also lands on the Decision's own verantwoording fields (the DEFERRED additive base-register edit) so the besluit record is self-contained for archiving (design D4). Optional; required only when a deviating decision is completed, enforced by the DEFERRED guard, not by this schema.",
+            "description": "Motivering recorded when the final besluit deviates from the advies strekking. Written alongside the transition to verantwoord. The same motivering also lands on the Decision's own verantwoording fields (the DEFERRED additive base-register edit) so the besluit record is self-contained for archiving (design D4). Optional; required only when a deviating decision is completed, enforced by the DEFERRED guard, not by this schema.",
             "example": "De raad kiest locatie B in afwijking van het advies (locatie A) vanwege geluidsnormen."
           },
           "accountabilityDate": {
@@ -292,7 +292,7 @@
             "format": "date-time",
             "facetable": true,
             "nullable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live adviesaanvraag is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now, REQ-AOW-007). Because the predicate sits on the live object, a verantwoording recorded after publication is publicly visible without republication (design D3). Publish is an explicit staff action; this schema carries no internal-only fields by construction, so the whole object is publishable."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live adviesaanvraag is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Because the predicate sits on the live object, a verantwoording recorded after publication is publicly visible without republication (design D3). Publish is an explicit staff action; this schema carries no internal-only fields by construction, so the whole object is publishable."
           },
           "depublicationDate": {
             "title": "Depublication date",
@@ -309,7 +309,7 @@
         "icon": "FileDocumentCheckOutline",
         "version": "0.1.0",
         "title": "Advies",
-        "description": "The advisory body's formal response artifact (schema:Recommendation) to an Adviesaanvraag: the strekking (positief / positief-met-kanttekeningen / negatief / geen-advies), a summary, the advies date, the recording secretary, and the optional response document (attached via the Files leaf). It is a SEPARATE first-class object, not response fields on the Adviesaanvraag, because it has its own recording authority (the advisory body's secretary, not the requesting griffie), its own publication moment, and its own strekking that the DEFERRED AdviceAccountabilityGuard evaluates (design D1; mirrors the commissievergaderingen CommissieAdvies precedent). Recording an Advies accompanies the Adviesaanvraag transition to advies-uitgebracht. CONSTRAINT (design D4/REQ-AOW-007): this schema carries ONLY publishable fields by construction (no internal-only/confidential-remarks property) — the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now, so adding any non-public property requires revisiting the public-predicate design.",
+        "description": "The advisory body's formal response artifact (schema:Recommendation) to an Adviesaanvraag: the strekking (positief / positief-met-kanttekeningen / negatief / geen-advies), a summary, the advies date, the recording secretary, and the optional response document (attached via the Files leaf). It is a SEPARATE first-class object, not response fields on the Adviesaanvraag, because it has its own recording authority (the advisory body's secretary, not the requesting griffie), its own publication moment, and its own strekking that the DEFERRED AdviceAccountabilityGuard evaluates (design D1; mirrors the commissievergaderingen CommissieAdvies precedent). Recording an Advies accompanies the Adviesaanvraag transition to advies-uitgebracht. CONSTRAINT (design D4): this schema carries ONLY publishable fields by construction (no internal-only/confidential-remarks property), the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now, so adding any non-public property requires revisiting the public-predicate design.",
         "type": "object",
         "x-schema-org": "schema:Recommendation",
         "x-openregister": {
@@ -423,7 +423,7 @@
             "format": "date-time",
             "facetable": true,
             "nullable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live advies is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now, REQ-AOW-007). The advies publishes independently of its aanvraag. Publish is an explicit staff action."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live advies is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). The advies publishes independently of its aanvraag. Publish is an explicit staff action."
           },
           "depublicationDate": {
             "title": "Depublication date",

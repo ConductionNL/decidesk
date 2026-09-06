@@ -9,7 +9,7 @@
         "icon": "OfficeBuildingOutline",
         "version": "0.1.0",
         "title": "VveConfiguration",
-        "description": "Per-body VvE statutory context: binds a governance body (the VvE) to its modelreglement preset, its breukdelen denominator, the splitsingsakte governing document (reference only — registered by the governing-documents-register capability, never duplicated here), and any per-akte majority overrides. Exactly one VveConfiguration per governance body. A governance body without a VveConfiguration is entirely unaffected by this pack (fail-soft to existing behaviour). Contains no financial ledger properties by construction (REQ-VVE-001).",
+        "description": "Per-body VvE statutory context: binds a governance body (the VvE) to its modelreglement preset, its breukdelen denominator, the splitsingsakte governing document (reference only, registered by the governing-documents-register capability, never duplicated here), and any per-akte majority overrides. Exactly one VveConfiguration per governance body. A governance body without a VveConfiguration is entirely unaffected by this pack (fail-soft to existing behaviour). Contains no financial ledger properties by construction.",
         "type": "object",
         "x-schema-org": "schema:OwnershipInfo",
         "x-openregister": {
@@ -49,7 +49,7 @@
           "deedOfDivisionDocument": {
             "title": "Splitsingsakte document",
             "type": "string",
-            "description": "Reference to the splitsingsakte governing document registered by the governing-documents-register capability. Reference only — this pack never registers the document itself. A plain reference string (governing document uuid/slug); nil UUID placeholder until the sibling registration lands.",
+            "description": "Reference to the splitsingsakte governing document registered by the governing-documents-register capability. Reference only: this pack never registers the document itself. A plain reference string (governing document uuid/slug); nil UUID placeholder until the sibling registration lands.",
             "example": "splitsingsakte-vve-zeewaarts-2019"
           },
           "majorityOverrides": {
@@ -108,7 +108,7 @@
         "icon": "Gavel",
         "version": "0.1.0",
         "title": "VveDecisionTemplate",
-        "description": "Statutory content for a VvE ALV decision: name, proposed besluittekst, decision category, and default required majority/quorum sourced from the modelreglementen. Distinct from ProcessTemplate (which models a state machine): this is decision content, instantiated into an ordinary Decision object — decision lifecycle, routes, and voting stay in the existing decision model, never forked. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins (REQ-VVE-002).",
+        "description": "Statutory content for a VvE ALV decision: name, proposed besluittekst, decision category, and default required majority/quorum sourced from the modelreglementen. Distinct from ProcessTemplate (which models a state machine): this is decision content, instantiated into an ordinary Decision object, decision lifecycle, routes, and voting stay in the existing decision model, never forked. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins.",
         "type": "object",
         "x-schema-org": "schema:HowTo",
         "x-openregister": {
@@ -194,7 +194,7 @@
         "icon": "BookOpenVariantOutline",
         "version": "0.1.0",
         "title": "ModelreglementPreset",
-        "description": "A modelreglement voting-rule preset (1992/2006/2017): maps VvE decision categories to their required voteThreshold and quorumFraction per that modelreglement, each mapping carrying its article reference. A VvE picks its preset via VveConfiguration.modelreglement and may deviate per splitsingsakte via majorityOverrides. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins (REQ-VVE-003). Resolution feeds the existing round-open defaults; this introduces no second threshold enum, tally path, or quorum calculator.",
+        "description": "A modelreglement voting-rule preset (1992/2006/2017): maps VvE decision categories to their required voteThreshold and quorumFraction per that modelreglement, each mapping carrying its article reference. A VvE picks its preset via VveConfiguration.modelreglement and may deviate per splitsingsakte via majorityOverrides. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins. Resolution feeds the existing round-open defaults; this introduces no second threshold enum, tally path, or quorum calculator.",
         "type": "object",
         "x-schema-org": "schema:HowTo",
         "x-openregister": {
@@ -282,7 +282,7 @@
         "icon": "ClipboardCheckOutline",
         "version": "0.1.0",
         "title": "KascommissieVerklaring",
-        "description": "The kascommissie's verklaring over a boekjaar: its verdict (goedkeurend / met-voorbehoud / afkeurend), toelichting, a link to the jaarrekening agenda item, and its verslag uploaded as an OpenRegister FileService attachment (no app-local file storage). Referenced by the decharge Decision for that boekjaar and surfaced to the meeting; a missing or afkeurend verklaring produces a visible warning but never a hard block (the ALV remains sovereign, BW 2:48). The verklaring outlives the agenda item and may be recorded before the ALV agenda exists (REQ-VVE-006).",
+        "description": "The kascommissie's verklaring over a boekjaar: its verdict (goedkeurend / met-voorbehoud / afkeurend), toelichting, a link to the jaarrekening agenda item, and its verslag uploaded as an OpenRegister FileService attachment (no app-local file storage). Referenced by the decharge Decision for that boekjaar and surfaced to the meeting; a missing or afkeurend verklaring produces a visible warning but never a hard block (the ALV remains sovereign, BW 2:48). The verklaring outlives the agenda item and may be recorded before the ALV agenda exists.",
         "type": "object",
         "x-schema-org": "schema:AssessAction",
         "x-openregister": {

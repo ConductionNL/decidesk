@@ -9,7 +9,7 @@
         "icon": "CommentQuestionOutline",
         "version": "0.1.0",
         "title": "MondelingeVraag",
-        "description": "An oral question (mondelinge vraag) for the vragenuur: a raadslid submits a question to a portefeuillehouder before a per-body configurable deadline (VragenuurConfiguratie), the chair/griffier admits or rejects it, admitted questions are scheduled into the vragenuur AgendaItem of the target meeting, and the spoken answer is recorded with optional follow-ups — a Toezegging in the sibling toezeggingen register (vervolgToezegging) or a follow-up written question (vervolgSchriftelijkeVraag). Implements the vragenrecht side of Gemeentewet art. 155 / the local Reglement van Orde; complements SchriftelijkeVraag (fractievoorzitter-fractie-koppeling) with bidirectional escalation via bronSchriftelijkeVraag. AUTHORITY (design D3, REQ-VRI-002): raadsleden create; only griffie/chair transition admission, scheduling and answering — enforced by OR RBAC groups plus per-object guards on the imperative OralQuestionService action endpoints (not declared in this fragment; the read/write RBAC group dialect is not established in decidesk's register fragments today, so authority is documented here and carried by the action endpoints). NUMBERING + DEADLINE (design D3): vraagNummer (MV-{jaar}-{volgnummer}, per body per year) and the submission deadline (targetMeeting.start − indieningstermijnUren, griffier override) are computed imperatively by OralQuestionService — sequence allocation and cross-object datetime comparison are not expressible as a dialect. PUBLICATION (design D4): the live object is NEVER public (rejection reasons and pre-decision context must not publish raw); public exposure runs exclusively through the derived allow-list PublicationPayload (public-publication REQ-VRI-015), so this schema declares no public read predicate.",
+        "description": "An oral question (mondelinge vraag) for the vragenuur: a raadslid submits a question to a portefeuillehouder before a per-body configurable deadline (VragenuurConfiguratie), the chair/griffier admits or rejects it, admitted questions are scheduled into the vragenuur AgendaItem of the target meeting, and the spoken answer is recorded with optional follow-ups, a Toezegging in the sibling toezeggingen register (vervolgToezegging) or a follow-up written question (vervolgSchriftelijkeVraag). Implements the vragenrecht side of Gemeentewet art. 155 / the local Reglement van Orde; complements SchriftelijkeVraag (fractievoorzitter-fractie-koppeling) with bidirectional escalation via bronSchriftelijkeVraag. AUTHORITY (design D3): raadsleden create; only griffie/chair transition admission, scheduling and answering, enforced by OR RBAC groups plus per-object guards on the imperative OralQuestionService action endpoints (not declared in this fragment; the read/write RBAC group dialect is not established in decidesk's register fragments today, so authority is documented here and carried by the action endpoints). NUMBERING + DEADLINE (design D3): vraagNummer (MV-{jaar}-{volgnummer}, per body per year) and the submission deadline (targetMeeting.start − indieningstermijnUren, griffier override) are computed imperatively by OralQuestionService, sequence allocation and cross-object datetime comparison are not expressible as a dialect. PUBLICATION (design D4): the live object is NEVER public (rejection reasons and pre-decision context must not publish raw); public exposure runs exclusively through the derived allow-list PublicationPayload (public-publication), so this schema declares no public read predicate.",
         "type": "object",
         "x-schema-org": "schema:Question",
         "x-openregister": {
@@ -220,7 +220,7 @@
             "type": "string",
             "facetable": true,
             "pattern": "^MV-\\d{4}-\\d+$",
-            "description": "Human-readable question number in the format MV-{jaar}-{volgnummer} (schema-validated by pattern), mirroring the SV-{jaar}-{volgnummer} pattern. Auto-assigned by OralQuestionService at submission (sequence per governance body per year — imperative, design D3); always present at save time. Uniqueness is a review/validation concern (OR has no cross-object unique constraint) and the index sorts by number so duplicates are visible.",
+            "description": "Human-readable question number in the format MV-{jaar}-{volgnummer} (schema-validated by pattern), mirroring the SV-{jaar}-{volgnummer} pattern. Auto-assigned by OralQuestionService at submission (sequence per governance body per year: imperative, design D3); always present at save time. Uniqueness is a review/validation concern (OR has no cross-object unique constraint) and the index sorts by number so duplicates are visible.",
             "example": "MV-2026-001"
           },
           "submitter": {
@@ -233,7 +233,7 @@
           "politicalGroup": {
             "title": "Fraction",
             "type": "string",
-            "description": "Reference to the submitter's Fractie (fractievoorzitter-fractie-koppeling — hard depends_on, that change owns the schema). Required. Seeded as a nil-UUID placeholder until that change lands (design D6). Declared as a PLAIN STRING, not format:uuid + $ref: the Fractie schema does not exist in this register yet, so a $ref to it is a dangling target (ADR-062 rule f) while dropping the $ref but keeping format:uuid is a relation-shaped property with no $ref (rule 7) — the pair is unsatisfiable until that change lands. Restore format:uuid + $ref: Fractie in the same commit that introduces the schema."
+            "description": "Reference to the submitter's Fractie (fractievoorzitter-fractie-koppeling: hard depends_on, that change owns the schema). Required. Seeded as a nil-UUID placeholder until that change lands (design D6). Declared as a PLAIN STRING, not format:uuid + $ref: the Fractie schema does not exist in this register yet, so a $ref to it is a dangling target (ADR-062 rule f) while dropping the $ref but keeping format:uuid is a relation-shaped property with no $ref (rule 7), the pair is unsatisfiable until that change lands. Restore format:uuid + $ref: Fractie in the same commit that introduces the schema."
           },
           "subject": {
             "title": "Subject",
@@ -273,7 +273,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Reference to the vragenuur AgendaItem of the target meeting the question is scheduled into. An ordinary agenda item managed by agenda-item-crud; set at scheduling together with volgorde when the lifecycle moves to ingepland (REQ-VRI-004). Optional until scheduled."
+            "description": "Reference to the vragenuur AgendaItem of the target meeting the question is scheduled into. An ordinary agenda item managed by agenda-item-crud; set at scheduling together with volgorde when the lifecycle moves to ingepland. Optional until scheduled."
           },
           "sortOrder": {
             "title": "Order",
@@ -284,7 +284,7 @@
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Question status (declared in x-openregister-lifecycle, ADR-031, REQ-VRI-002): ingediend → toegelaten | afgewezen; toegelaten → ingepland; ingepland → beantwoord | niet-behandeld; niet-behandeld → ingepland; ingetrokken reachable from ingediend/toegelaten/ingepland/niet-behandeld. beantwoord, afgewezen and ingetrokken are terminal. afwijzingsReden is required when afgewezen; antwoordSamenvatting is required when beantwoord (both save-time enforced).",
+            "description": "Question status (declared in x-openregister-lifecycle, ADR-031): ingediend → toegelaten | afgewezen; toegelaten → ingepland; ingepland → beantwoord | niet-behandeld; niet-behandeld → ingepland; ingetrokken reachable from ingediend/toegelaten/ingepland/niet-behandeld. beantwoord, afgewezen and ingetrokken are terminal. afwijzingsReden is required when afgewezen; antwoordSamenvatting is required when beantwoord (both save-time enforced).",
             "enum": [
               "submitted",
               "admitted",
@@ -299,7 +299,7 @@
           "rejectionReason": {
             "title": "Rejection reason",
             "type": "string",
-            "description": "Reason the question was rejected (chair/griffier). Required when the lifecycle is afgewezen — a conditional-required rule enforced at save time, NOT in the schema 'required' array (no if/then dialect is used). Visible to the indiener.",
+            "description": "Reason the question was rejected (chair/griffier). Required when the lifecycle is afgewezen: a conditional-required rule enforced at save time, NOT in the schema 'required' array (no if/then dialect is used). Visible to the indiener.",
             "example": "Betreft een individuele casus, geen algemeen belang"
           },
           "answerSummary": {
@@ -319,17 +319,17 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Toezegging",
-            "description": "Optional reference to a Toezegging registered in the sibling toezeggingen register (toezeggingen-ingekomen-stukken) when a commitment is made during the answer. Afdoening and lifecycle live EXCLUSIVELY on that Toezegging (design D5, REQ-VRI-005); this register creates no execution-update log. Nullable/soft: degrades to a plain link if that change is delayed."
+            "description": "Optional reference to a Toezegging registered in the sibling toezeggingen register (toezeggingen-ingekomen-stukken) when a commitment is made during the answer. Afdoening and lifecycle live EXCLUSIVELY on that Toezegging (design D5); this register creates no execution-update log. Nullable/soft: degrades to a plain link if that change is delayed."
           },
           "followUpWrittenQuestion": {
             "title": "Follow-up written question",
             "type": "string",
-            "description": "Optional reference to a follow-up SchriftelijkeVraag (fractievoorzitter-fractie-koppeling) created from a niet-behandeld or beantwoord oral question. Its answering workflow stays in that change (REQ-VRI-006). Declared as a PLAIN STRING — see the note on MondelingeVraag.politicalGroup: the SchriftelijkeVraag schema does not exist in this register yet. Restore format:uuid + $ref in the commit that introduces it."
+            "description": "Optional reference to a follow-up SchriftelijkeVraag (fractievoorzitter-fractie-koppeling) created from a niet-behandeld or beantwoord oral question. Its answering workflow stays in that change. Declared as a PLAIN STRING: see the note on MondelingeVraag.politicalGroup: the SchriftelijkeVraag schema does not exist in this register yet. Restore format:uuid + $ref in the commit that introduces it."
           },
           "sourceWrittenQuestion": {
             "title": "Source written question",
             "type": "string",
-            "description": "Declared as a PLAIN STRING — see the note on MondelingeVraag.politicalGroup: the SchriftelijkeVraag schema does not exist in this register yet. Restore format:uuid + $ref in the commit that introduces it. Optional reference to the SchriftelijkeVraag this oral question escalates from (fractievoorzitter-fractie-koppeling). Set on written → oral escalation; when the oral question reaches beantwoord, OralQuestionService sets the linked SV to 'vervallen-door-mondelinge-beantwoording' via a PUT-semantic save carrying all other SV fields forward (design D6, REQ-VRI-006). No field mirroring or shared lifecycle."
+            "description": "Declared as a PLAIN STRING: see the note on MondelingeVraag.politicalGroup: the SchriftelijkeVraag schema does not exist in this register yet. Restore format:uuid + $ref in the commit that introduces it. Optional reference to the SchriftelijkeVraag this oral question escalates from (fractievoorzitter-fractie-koppeling). Set on written → oral escalation; when the oral question reaches beantwoord, OralQuestionService sets the linked SV to 'vervallen-door-mondelinge-beantwoording' via a PUT-semantic save carrying all other SV fields forward (design D6). No field mirroring or shared lifecycle."
           }
         }
       },
@@ -338,7 +338,7 @@
         "icon": "AccountVoice",
         "version": "0.1.0",
         "title": "Interpellatieverzoek",
-        "description": "An interpellation request (interpellatieverzoek): a raadslid requests to interpellate a portefeuillehouder on a subject outside the order of the day (Gemeentewet art. 155 / local Reglement van Orde), collects support signatures (steunbetuigingen) against a per-body configurable threshold (VragenuurConfiguratie), the council decides on admission (verlof), and an admitted interpellation is scheduled as its OWN AgendaItem (never merged into the vragenuur item) and its treatment recorded. Explicitly deferred to this change by motie-amendement-administratie; motie van wantrouwen is out of scope. AUTHORITY (design D3): raadsleden create and record support; only griffie transitions the council's admission decision, scheduling and treatment — OR RBAC plus per-object guards on the imperative action endpoints (RBAC group dialect not declared in this fragment; see MondelingeVraag note). NUMBERING (design D3): verzoekNummer (INT-{jaar}-{volgnummer}, per body per year) is allocated imperatively by OralQuestionService. THRESHOLD (design D3, REQ-VRI-011): the support status ('N of M required', ceil rounding) is a client-side computed display from VragenuurConfiguratie and the body's member count — it INFORMS, never gates, the council's decision. PUBLICATION (design D4): the live object is NEVER public; public exposure runs through the derived allow-list PublicationPayload carrying the support COUNT only (never the individual supporter list — same totals-never-voters discipline as vote publication), so this schema declares no public read predicate.",
+        "description": "An interpellation request (interpellatieverzoek): a raadslid requests to interpellate a portefeuillehouder on a subject outside the order of the day (Gemeentewet art. 155 / local Reglement van Orde), collects support signatures (steunbetuigingen) against a per-body configurable threshold (VragenuurConfiguratie), the council decides on admission (verlof), and an admitted interpellation is scheduled as its OWN AgendaItem (never merged into the vragenuur item) and its treatment recorded. Explicitly deferred to this change by motie-amendement-administratie; motie van wantrouwen is out of scope. AUTHORITY (design D3): raadsleden create and record support; only griffie transitions the council's admission decision, scheduling and treatment. OR RBAC plus per-object guards on the imperative action endpoints (RBAC group dialect not declared in this fragment; see MondelingeVraag note). NUMBERING (design D3): verzoekNummer (INT-{jaar}-{volgnummer}, per body per year) is allocated imperatively by OralQuestionService. THRESHOLD (design D3): the support status ('N of M required', ceil rounding) is a client-side computed display from VragenuurConfiguratie and the body's member count, it INFORMS, never gates, the council's decision. PUBLICATION (design D4): the live object is NEVER public; public exposure runs through the derived allow-list PublicationPayload carrying the support COUNT only (never the individual supporter list, same totals-never-voters discipline as vote publication), so this schema declares no public read predicate.",
         "type": "object",
         "x-schema-org": "schema:AskAction",
         "x-openregister": {
@@ -549,7 +549,7 @@
           "politicalGroup": {
             "title": "Fraction",
             "type": "string",
-            "description": "Reference to the requester's Fractie (fractievoorzitter-fractie-koppeling — hard depends_on). Required. Seeded as a nil-UUID placeholder until that change lands (design D6). Declared as a PLAIN STRING — see the note on MondelingeVraag.politicalGroup: the Fractie schema does not exist in this register yet. Restore format:uuid + $ref: Fractie in the commit that introduces it."
+            "description": "Reference to the requester's Fractie (fractievoorzitter-fractie-koppeling: hard depends_on). Required. Seeded as a nil-UUID placeholder until that change lands (design D6). Declared as a PLAIN STRING: see the note on MondelingeVraag.politicalGroup: the Fractie schema does not exist in this register yet. Restore format:uuid + $ref: Fractie in the commit that introduces it."
           },
           "subject": {
             "title": "Subject",
@@ -591,13 +591,13 @@
               "format": "uuid",
               "$ref": "Person"
             },
-            "description": "Support signatures — an array of raadslid (Person) references, added while the request is ingediend (REQ-VRI-011). The display threshold status ('N of M required', ceil rounding) is computed client-side from VragenuurConfiguratie and the body's member count and INFORMS, never gates, the council's decision. On publication only the COUNT is exposed, never the individual references (design D4)."
+            "description": "Support signatures: an array of raadslid (Person) references, added while the request is ingediend. The display threshold status ('N of M required', ceil rounding) is computed client-side from VragenuurConfiguratie and the body's member count and INFORMS, never gates, the council's decision. On publication only the COUNT is exposed, never the individual references (design D4)."
           },
           "lifecycle": {
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Request status (declared in x-openregister-lifecycle, ADR-031, REQ-VRI-010): ingediend → toegelaten | afgewezen; toegelaten → geagendeerd; geagendeerd → behandeld; ingetrokken reachable from ingediend/toegelaten/geagendeerd. behandeld, afgewezen and ingetrokken are terminal. afwijzingsReden required when afgewezen; behandelingVerslag required when behandeld (both save-time enforced).",
+            "description": "Request status (declared in x-openregister-lifecycle, ADR-031): ingediend → toegelaten | afgewezen; toegelaten → geagendeerd; geagendeerd → behandeld; ingetrokken reachable from ingediend/toegelaten/geagendeerd. behandeld, afgewezen and ingetrokken are terminal. afwijzingsReden required when afgewezen; behandelingVerslag required when behandeld (both save-time enforced).",
             "enum": [
               "submitted",
               "admitted",
@@ -613,13 +613,13 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date of the council's admission decision (verlof) — recorded on toegelaten and afgewezen. Optional until decided.",
+            "description": "Date of the council's admission decision (verlof): recorded on toegelaten and afgewezen. Optional until decided.",
             "example": "2026-05-12"
           },
           "rejectionReason": {
             "title": "Rejection reason",
             "type": "string",
-            "description": "Reason the council rejected the request. Required when the lifecycle is afgewezen — a conditional-required rule enforced at save time, NOT in the schema 'required' array."
+            "description": "Reason the council rejected the request. Required when the lifecycle is afgewezen: a conditional-required rule enforced at save time, NOT in the schema 'required' array."
           },
           "behandeldIn": {
             "title": "Treated in",
@@ -633,12 +633,12 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Reference to the interpellation's OWN AgendaItem (created via agenda-item-crud — a separate item, never merged into the vragenuur item, REQ-VRI-012). Set at scheduling (geagendeerd). Optional until scheduled."
+            "description": "Reference to the interpellation's OWN AgendaItem (created via agenda-item-crud: a separate item, never merged into the vragenuur item). Set at scheduling (geagendeerd). Optional until scheduled."
           },
           "handlingMinutes": {
             "title": "Treatment record",
             "type": "string",
-            "description": "Record of the interpellation debate and the portefeuillehouder's answers (rich text). Required at the transition to behandeld (save-time enforced). May reference follow-up instruments (moties/toezeggingen) which live in their own registers — never duplicated here (REQ-VRI-013)."
+            "description": "Record of the interpellation debate and the portefeuillehouder's answers (rich text). Required at the transition to behandeld (save-time enforced). May reference follow-up instruments (moties/toezeggingen) which live in their own registers: never duplicated here."
           }
         }
       },
@@ -647,7 +647,7 @@
         "icon": "CogOutline",
         "version": "0.1.0",
         "title": "VragenuurConfiguratie",
-        "description": "Per-governance-body vragenuur/interpellatie settings: at most one object per body, carrying the oral-question submission deadline (indieningstermijnUren) and the interpellation support threshold (interpellatieSteunDrempelType/-Waarde per Reglement van Orde). Modelled as its own schema rather than properties on GovernanceBody (design D2) so this change stays ADDED-only, does not race sibling changes touching GovernanceBody, and a body with no vragenuur simply has no configuratie object (threshold display degrades gracefully, REQ-VRI-011). Internal configuration — never published.",
+        "description": "Per-governance-body vragenuur/interpellatie settings: at most one object per body, carrying the oral-question submission deadline (indieningstermijnUren) and the interpellation support threshold (interpellatieSteunDrempelType/-Waarde per Reglement van Orde). Modelled as its own schema rather than properties on GovernanceBody (design D2) so this change stays ADDED-only, does not race sibling changes touching GovernanceBody, and a body with no vragenuur simply has no configuratie object (threshold display degrades gracefully). Internal configuration: never published.",
         "type": "object",
         "x-schema-org": "schema:StructuredValue",
         "x-openregister": {
@@ -666,19 +666,19 @@
             "type": "string",
             "format": "uuid",
             "$ref": "governance-body",
-            "description": "Reference to the GovernanceBody this configuration applies to (schema:StructuredValue). Required. At most one VragenuurConfiguratie per body — uniqueness is a review/validation concern (OR has no cross-object unique constraint)."
+            "description": "Reference to the GovernanceBody this configuration applies to (schema:StructuredValue). Required. At most one VragenuurConfiguratie per body: uniqueness is a review/validation concern (OR has no cross-object unique constraint)."
           },
           "submissionPeriodHours": {
             "title": "Submission deadline (hours)",
             "type": "integer",
             "default": 24,
-            "description": "Number of hours before the target meeting's start by which oral questions must be submitted (Reglement van Orde). Default 24. Used by OralQuestionService to compute the deadline as targetMeeting.start − indieningstermijnUren; the griffier may override a late submission explicitly (REQ-VRI-003).",
+            "description": "Number of hours before the target meeting's start by which oral questions must be submitted (Reglement van Orde). Default 24. Used by OralQuestionService to compute the deadline as targetMeeting.start − indieningstermijnUren; the griffier may override a late submission explicitly.",
             "example": 24
           },
           "interpellationSupportThresholdType": {
             "title": "Support threshold type",
             "type": "string",
-            "description": "How the interpellation support threshold is expressed: 'breukdeel' (a fraction of the body's members, e.g. 0.2 = 1/5 per Reglement van Orde) or 'aantal' (an absolute number of supporters). Combined with interpellatieSteunDrempelWaarde. Informative only (REQ-VRI-011).",
+            "description": "How the interpellation support threshold is expressed: 'breukdeel' (a fraction of the body's members, e.g. 0.2 = 1/5 per Reglement van Orde) or 'aantal' (an absolute number of supporters). Combined with interpellatieSteunDrempelWaarde. Informative only.",
             "enum": [
               "fraction",
               "count"
@@ -688,7 +688,7 @@
           "interpellationSupportThresholdValue": {
             "title": "Support threshold value",
             "type": "number",
-            "description": "The threshold value: a fraction (e.g. 0.2 for 1/5 of members) when interpellatieSteunDrempelType is 'breukdeel', or an absolute count when 'aantal'. When applied as a breukdeel of the member count the required number is rounded UP (ceil) — documented here so the rule travels with the schema (design risk: threshold rounding disputes).",
+            "description": "The threshold value: a fraction (e.g. 0.2 for 1/5 of members) when interpellatieSteunDrempelType is 'breukdeel', or an absolute count when 'aantal'. When applied as a breukdeel of the member count the required number is rounded UP (ceil): documented here so the rule travels with the schema (design risk: threshold rounding disputes).",
             "example": 0.2
           }
         }

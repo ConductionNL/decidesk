@@ -5,7 +5,7 @@
 	"menu": [
 		{
 			"id": "Consultations",
-			"label": "Consultations",
+			"label": "Public consultations",
 			"icon": "CommentQuestionOutline",
 			"route": "Consultations",
 			"order": 66
@@ -31,7 +31,7 @@
 			"id": "Consultations",
 			"route": "/consultations",
 			"type": "index",
-			"title": "Consultations",
+			"title": "Public consultations",
 			"config": {
 				"register": "decidiq",
 				"schema": "public-consultation",
@@ -118,7 +118,7 @@
 			"id": "ConsultationDetail",
 			"route": "/consultations/:id",
 			"type": "detail",
-			"title": "Consultation",
+			"title": "Public consultation",
 			"config": {
 				"register": "decidiq",
 				"schema": "public-consultation",

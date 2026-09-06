@@ -9,7 +9,7 @@
         "icon": "AccountKeyOutline",
         "version": "0.1.0",
         "title": "Bevoegdheidstoedeling",
-        "description": "A bevoegdheidstoedeling: a record of who may exercise which authority on whose behalf — delegatie, mandaat, volmacht, or machtiging (Awb afdeling 10.1.1/10.1.2, BW Boek 3 titel 3). It stores the delegans/mandaatgever and the delegataris/gemandateerde (as a body, a function description, and/or a person), the scope (onderwerp) and its limits (financieelPlafond, beperkingen), the wettelijke grondslag, a trace to the authorizing delegatie-/mandaatbesluit (Decision) and, on intrekking, the revoking Decision, a validity window (geldigVanaf/geldigTot), an ondermandaat parent link, a declarative status lifecycle (ADR-031), declarative expiry rappels, and a live public delegatie- en mandaatregister via the OpenRegister published-predicate. The register documents authority; it never enforces it. It stores relations, not documents: publication of the delegatiebesluit text itself (CVDR/DROP) belongs to the verordeningenregister capability. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only / confidential-remark property; internal working notes live in the sidebar audit trail; delegataris persons are governance persons already public in the people register; function descriptions are organisational facts). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A bevoegdheidstoedeling: a record of who may exercise which authority on whose behalf, delegatie, mandaat, volmacht, or machtiging (Awb afdeling 10.1.1/10.1.2, BW Boek 3 titel 3). It stores the delegans/mandaatgever and the delegataris/gemandateerde (as a body, a function description, and/or a person), the scope (onderwerp) and its limits (financieelPlafond, beperkingen), the wettelijke grondslag, a trace to the authorizing delegatie-/mandaatbesluit (Decision) and, on intrekking, the revoking Decision, a validity window (geldigVanaf/geldigTot), an ondermandaat parent link, a declarative status lifecycle (ADR-031), declarative expiry rappels, and a live public delegatie- en mandaatregister via the OpenRegister published-predicate. The register documents authority; it never enforces it. It stores relations, not documents: publication of the delegatiebesluit text itself (CVDR/DROP) belongs to the verordeningenregister capability. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only / confidential-remark property; internal working notes live in the sidebar audit trail; delegataris persons are governance persons already public in the people register; function descriptions are organisational facts). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:AuthorizeAction",
         "x-openregister": {
@@ -171,7 +171,7 @@
             "title": "Delegataris (function)",
             "type": "string",
             "facetable": true,
-            "description": "The delegataris / gemandateerde as a plain-text function/role description (e.g. 'afdelingshoofd Samenleving', 'teamleider Inkoop'). Plain text by design — HR/formatie management is out of scope so personnel churn never invalidates the register. At least one delegataris field MUST be present.",
+            "description": "The delegataris / gemandateerde as a plain-text function/role description (e.g. 'afdelingshoofd Samenleving', 'teamleider Inkoop'). Plain text by design. HR/formatie management is out of scope so personnel churn never invalidates the register. At least one delegataris field MUST be present.",
             "example": "afdelingshoofd Samenleving"
           },
           "delegatePerson": {
@@ -205,7 +205,7 @@
             "type": "boolean",
             "facetable": true,
             "default": false,
-            "description": "Whether ondermandaat (a further sub-assignment under this toedeling) is permitted. A child toedeling MAY reference this one via parentToedeling only when this flag is true — enforced server-side on save by OndermandaatGuardService (Tasks 3, imperative), not by a schema constraint."
+            "description": "Whether ondermandaat (a further sub-assignment under this toedeling) is permitted. A child toedeling MAY reference this one via parentToedeling only when this flag is true: enforced server-side on save by OndermandaatGuardService (Tasks 3, imperative), not by a schema constraint."
           },
           "statutoryBasis": {
             "title": "Legal basis",
@@ -231,7 +231,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Bevoegdheidstoedeling",
-            "description": "Optional self-reference to the parent toedeling this one is an ondermandaat of (hoofdmandaat = no parent, depth 0). Accepted only when the parent exists and has ondermandaatToegestaan true, and only when the ancestor chain stays acyclic — both enforced server-side, fail-closed, by OndermandaatGuardService (Tasks 3, imperative; cross-object graph validation is not expressible as a schema constraint). Depth is displayed by walking the loaded chain, never stored."
+            "description": "Optional self-reference to the parent toedeling this one is an ondermandaat of (hoofdmandaat = no parent, depth 0). Accepted only when the parent exists and has ondermandaatToegestaan true, and only when the ancestor chain stays acyclic: both enforced server-side, fail-closed, by OndermandaatGuardService (Tasks 3, imperative; cross-object graph validation is not expressible as a schema constraint). Depth is displayed by walking the loaded chain, never stored."
           },
           "validFrom": {
             "title": "Valid from",
@@ -246,7 +246,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Optional date until which the toedeling is valid. Empty means open-ended. Drives the declarative expiry rappels (REQ-DMR-007) and the 'geldig op' view; a toedeling without geldigTot never triggers an expiry notification.",
+            "description": "Optional date until which the toedeling is valid. Empty means open-ended. Drives the declarative expiry rappels and the 'geldig op' view; a toedeling without geldigTot never triggers an expiry notification.",
             "example": "2026-08-15"
           },
           "withdrawnBy": {
@@ -254,7 +254,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
-            "description": "Optional reference to the revoking Decision (intrekkingsbesluit). Set together with the transition to status ingetrokken in the same save, so every ingetrokken toedeling traces to the besluit that revoked it (REQ-DMR-002). Absent for a vervallen lapse."
+            "description": "Optional reference to the revoking Decision (intrekkingsbesluit). Set together with the transition to status ingetrokken in the same save, so every ingetrokken toedeling traces to the besluit that revoked it. Absent for a vervallen lapse."
           },
           "status": {
             "title": "Status",
@@ -274,7 +274,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live toedeling is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public register reflects status changes (an intrekking, a vervallen lapse) without republication (REQ-DMR-005 / design D4)."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live toedeling is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public register reflects status changes (an intrekking, a vervallen lapse) without republication (design D4)."
           },
           "depublicationDate": {
             "title": "Depublication date",

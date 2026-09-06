@@ -95,8 +95,28 @@ test('Goals: index lists all five seeded goals', async ({ page }) => {
 
 	// The index container appearing does not mean its rows have arrived —
 	// give each seeded row real headroom instead of the 10s expect default.
+	//
+	// 🔴 `.first()` IS LOAD-BEARING, AND IT IS NOT PAPERING OVER A BUG.
+	// `example-set-setup-step.spec.ts` runs earlier in the same worker against
+	// the same instance and, to prove a multi-set pick lands, actually IMPORTS
+	// the `works-council` and `association` example sets. `association.json`
+	// ships exactly one Goal, and its title is verbatim the last entry in
+	// SEEDED_GOAL_TITLES — the fixture copies the profiles on purpose, so the
+	// two cannot drift into disagreeing about what a Goal looks like.
+	//
+	// So on a full run this page legitimately holds TWO rows titled 'Digitale
+	// dienstverlening leden': the one ci-seed.sh created, and the one that
+	// import planted. Two goals may share a title; they belong to different
+	// bodies. Without `.first()` Playwright's strict mode turns that into
+	// "resolved to 2 elements" and fails a test whose actual claim is "this
+	// seeded goal is listed" — which is true, twice over.
+	//
+	// Measured: development push run on 6eca4ec7, 204 passed / 1 failed, the
+	// only failure. It was invisible until then because every earlier push run
+	// died during setup before Playwright started, so the suite reported
+	// failure without ever having executed a spec.
 	for (const title of SEEDED_GOAL_TITLES) {
-		await expect(page.getByText(title, { exact: true })).toBeVisible({
+		await expect(page.getByText(title, { exact: true }).first()).toBeVisible({
 			timeout: 45_000,
 		})
 	}

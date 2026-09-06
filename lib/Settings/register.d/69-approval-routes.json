@@ -9,7 +9,7 @@
         "icon": "FormatListNumbered",
         "version": "0.1.0",
         "title": "ApprovalRoute",
-        "description": "A REUSABLE sign-off route: an ordered sequence of actors a subject travels for approval. Independent of any one subject — it describes a sequence to be travelled, and the travelling instance is DecisionStage. Distinct from DecisionTemplate/ProcessTemplate, which answer a different question: what STATES a decision may be in and how it moves between them. A route answers WHO signs, in what order.",
+        "description": "A REUSABLE sign-off route: an ordered sequence of actors a subject travels for approval. Independent of any one subject: it describes a sequence to be travelled, and the travelling instance is DecisionStage. Distinct from DecisionTemplate/ProcessTemplate, which answer a different question: what STATES a decision may be in and how it moves between them. A route answers WHO signs, in what order.",
         "x-schema-org": "schema:HowTo",
         "type": "object",
         "required": [
@@ -43,7 +43,7 @@
             "title": "Active",
             "type": "boolean",
             "default": true,
-            "description": "Whether this route may still be instantiated. A route already travelled by a subject is unaffected — its stages were copied at instantiation."
+            "description": "Whether this route may still be instantiated. A route already travelled by a subject is unaffected: its stages were copied at instantiation."
           },
           "steps": {
             "title": "Steps",
@@ -111,7 +111,7 @@
         "icon": "ClipboardCheckOutline",
         "version": "0.1.0",
         "title": "ApprovalAction",
-        "description": "An APPEND-ONLY record of what one actor did at one step of a sign-off route. Many rows per step: an advice, a return, a re-submission, a delegate acting under mandate. Never overwritten, and never deleted when a route is returned to an earlier step — a DecisionStage holds where a route IS, and these hold what happened, including the attempts a return undid. Collapsing the two loses exactly the history that makes a sign-off auditable.",
+        "description": "An APPEND-ONLY record of what one actor did at one step of a sign-off route. Many rows per step: an advice, a return, a re-submission, a delegate acting under mandate. Never overwritten, and never deleted when a route is returned to an earlier step: a DecisionStage holds where a route IS, and these hold what happened, including the attempts a return undid. Collapsing the two loses exactly the history that makes a sign-off auditable.",
         "x-schema-org": "schema:Action",
         "type": "object",
         "required": [

@@ -167,6 +167,17 @@ class DecisionRequestedListener implements IEventListener {
 			}
 		}
 
+		// Forward the delegation context too: the delegating app sends the ask
+		// itself in there (dossiq's requestDecision node sends
+		// `context.question`), and createDecision() derives the schema-required
+		// `text` from it when no explicit text was supplied. Dropping the
+		// context here is what left flow-raised decisions without a `text`,
+		// schema-invalid from birth.
+		$context = ($payload['context'] ?? null);
+		if (is_array($context) === true) {
+			$decisionData['context'] = $context;
+		}
+
 		return $decisionData;
 	}//end buildDecisionData()
 }//end class

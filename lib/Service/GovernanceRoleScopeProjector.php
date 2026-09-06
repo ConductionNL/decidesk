@@ -158,7 +158,21 @@ class GovernanceRoleScopeProjector {
 	 */
 	public function reconcileAll(): int {
 		$this->objectService->setRegister('decidiq');
-		$this->objectService->setSchema('governancebody');
+		// 🔴 `governance-body`, HYPHENATED. This asked for `governancebody`, which
+		// is not a slug this app declares and not one anything on the instance
+		// carries, so findAll() threw and the ONLY caller —
+		// ProjectGovernanceRoleScopes, a repair step — catches \Throwable and
+		// downgrades it to a warning so a repair never fails an upgrade. The
+		// backfill therefore reported "skipped" on every upgrade this app has
+		// ever had, and REQ-RBAC-001 has never projected a single body.
+		//
+		// Measured 2026-08-31 on a live instance: 'Schema slug "governancebody"
+		// is not carried by register "decidiq" (id 28), which carries 91
+		// schema(s). 0 schema(s) elsewhere on this instance carry this slug.'
+		// Every other setSchema() call in lib/ is hyphenated (voting-round,
+		// engagement-record, citizen-vote, public-consultation); this was the one
+		// that was not.
+		$this->objectService->setSchema('governance-body');
 		$bodies = $this->objectService->findAll(['filters' => ['_limit' => 9999]]);
 
 		$count = 0;

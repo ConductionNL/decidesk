@@ -1,29 +1,29 @@
 {
 	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "P&C-cyclus (Planning & Control) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). PCCycli index + cyclus detail (year-view timeline) + step detail pages; schema refs BY SLUG (pc-cyclus / cyclus-stap), never PascalCase. The Dashboard 'P&C-stappen over deadline' stat widget lives in the base src/manifest.json (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it). The cyclus-detail year-view timeline (design D7) is one custom widget; the plain step grid on the same page is the graceful-degradation fallback.",
+	"_note": "P&C-cyclus (Planning & Control) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). PlanningCycles index + cycle detail (year-view timeline) + step detail pages; schema refs BY SLUG (pc-cyclus / cyclus-stap), never PascalCase. The Dashboard 'P&C-stappen over deadline' stat widget lives in the base src/manifest.json (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it). The cyclus-detail year-view timeline (design D7) is one custom widget; the plain step grid on the same page is the graceful-degradation fallback.",
 	"_spec": "openspec/changes/pc-cyclus/specs/pc-cyclus/spec.md",
 	"menu": [
 		{
-			"id": "PCCycli",
+			"id": "PlanningCycles",
 			"label": "P&C cycles",
 			"icon": "Calendar",
-			"route": "PCCycli",
+			"route": "PlanningCycles",
 			"order": 52
 		}
 	],
 	"pages": [
 		{
-			"id": "PCCycli",
-			"route": "/pc-cycli",
+			"id": "PlanningCycles",
+			"route": "/planning-cycles",
 			"type": "index",
 			"title": "P&C cycles",
-			"_note": "spec: openspec/changes/pc-cyclus/specs/pc-cyclus/spec.md — REQ-PCC-009 PCCycli index. Columns name/year/governanceBody/progress; quick filters on year and governance body. Schema ref by slug (pc-cyclus).",
+			"_note": "spec: openspec/changes/pc-cyclus/specs/pc-cyclus/spec.md — REQ-PCC-009 planning-cycles index. Columns name/year/governanceBody/progress; quick filters on year and governance body. Schema ref by slug (pc-cyclus).",
 			"config": {
 				"register": "decidiq",
-				"schema": "pc-cyclus",
+				"schema": "planning-cycle",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
-				"_note": "PCCycli list (REQ-PCC-009). Progress reads from the declarative completedStepCount/stepCount aggregations, never recomputed client-side.",
+				"_note": "PlanningCycles list (REQ-PCC-009). Progress reads from the declarative completedStepCount/stepCount aggregations, never recomputed client-side.",
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
@@ -40,7 +40,7 @@
 					{ "key": "overdueStepCount", "label": "Overdue", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "PCCyclusDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "PlanningCycleDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -48,15 +48,15 @@
 			}
 		},
 		{
-			"id": "PCCyclusDetail",
-			"route": "/pc-cycli/:id",
+			"id": "PlanningCycleDetail",
+			"route": "/planning-cycles/:id",
 			"type": "detail",
 			"title": "P&C cycle",
 			"_note": "spec: openspec/changes/pc-cyclus/specs/pc-cyclus/spec.md — REQ-PCC-009 cyclus detail with a year-view timeline. Cyclus data leads; the step list renders as a plain related/grid fallback (graceful degradation, design D7). Progress from the declarative counters. Schema ref by slug (pc-cyclus).",
 			"config": {
 				"register": "decidiq",
-				"schema": "pc-cyclus",
-				"_note": "PCCyclusDetail (REQ-PCC-009). The year-view timeline is a custom widget shipped in src/ (design D7); the Related widget lists the child CyclusStap objects in sequence order as the degrade-gracefully fallback. Progress (completedStepCount of stepCount) and overdueStepCount read from the REQ-PCC-001 declarative aggregations, never recomputed. No meeting/agenda/decision is created here.",
+				"schema": "planning-cycle",
+				"_note": "PlanningCycleDetail (REQ-PCC-009). The year-view timeline is a custom widget shipped in src/ (design D7); the Related widget lists the child CyclusStap objects in sequence order as the degrade-gracefully fallback. Progress (completedStepCount of stepCount) and overdueStepCount read from the REQ-PCC-001 declarative aggregations, never recomputed. No meeting/agenda/decision is created here.",
 				"widgets": [
 					{ "id": "cyclus-data", "type": "data", "title": "P&C cycle", "icon": "Calendar", "content": { "columns": 2 } },
 					{ "id": "cyclus-steps", "type": "related", "title": "Steps", "icon": "ClipboardCheckOutline" }
@@ -76,15 +76,15 @@
 			}
 		},
 		{
-			"id": "CyclusStapDetail",
-			"route": "/cyclus-stappen/:id",
+			"id": "PlanningCycleStepDetail",
+			"route": "/planning-cycle-steps/:id",
 			"type": "detail",
 			"title": "P&C step",
 			"_note": "spec: openspec/changes/pc-cyclus/specs/pc-cyclus/spec.md — REQ-PCC-009 step detail. All step fields, document slots with their delivered files, and the behandeling links (agendaItem / decision) as navigable references. Schema ref by slug (cyclus-stap).",
 			"config": {
 				"register": "decidiq",
-				"schema": "cyclus-stap",
-				"_note": "CyclusStapDetail (REQ-PCC-003/007/009). Step data leads 8-wide; document slots and their delivered FileService files in the Files leaf; the linked cyclus/agendaItem/decision/besluitvormendOrgaan/behandelendeCommissie render as resolved references in the data + Related widgets. Status is declared in x-openregister-lifecycle. Audit trail is a sidebar tab.",
+				"schema": "planning-cycle-step",
+				"_note": "PlanningCycleStepDetail (REQ-PCC-003/007/009). Step data leads 8-wide; document slots and their delivered FileService files in the Files leaf; the linked cyclus/agendaItem/decision/besluitvormendOrgaan/behandelendeCommissie render as resolved references in the data + Related widgets. Status is declared in x-openregister-lifecycle. Audit trail is a sidebar tab.",
 				"widgets": [
 					{ "id": "stap-data", "type": "data", "title": "P&C step", "icon": "ClipboardCheckOutline", "content": { "columns": 2 } },
 					{ "id": "stap-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },

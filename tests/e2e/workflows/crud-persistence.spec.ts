@@ -23,16 +23,17 @@
  * @e2e openspec/specs/meeting-management/spec.md#create-a-board-meeting-with-physical-location
  * @e2e openspec/specs/decision-management/spec.md#create-a-standalone-decision-outside-a-meeting
  */
-import { test, expect } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
+
+import { expect, test } from '@playwright/test'
 import {
 	BASE,
-	newLedger,
+	cleanupAll,
 	createObject,
 	getObject,
-	cleanupAll,
+	newLedger,
 	objId,
-	type SeedLedger,
-} from './governance-fixture'
+} from './governance-fixture.ts'
 
 let ledger: SeedLedger
 
@@ -110,6 +111,10 @@ test.beforeEach(({ page }) => {
 // That error aborts the WHOLE SUITE before a single test runs — 0 collected, no
 // tally, and the failure names this file rather than anything under test. `{}`
 // is the documented way to say "no fixtures, but give me testInfo".
+// Playwright requires the first argument to BE an object destructuring
+// pattern; a plain identifier makes the file fail to load, so an empty one
+// is how a callback says it needs no fixtures.
+// eslint-disable-next-line no-empty-pattern
 test.afterEach(async ({}, testInfo) => {
 	if (testInfo.status === testInfo.expectedStatus) return
 	const dump = traffic

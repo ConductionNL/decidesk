@@ -1,0 +1,457 @@
+{
+	"_note": "one-consultation-schema — three pairs of schemas modelled one thing: an organisation asks a set of parties for their view on something by a deadline, they answer, and the answers are processed into a decision. Adviesaanvraag/Advies, Zienswijzeronde/Zienswijze and MemberConsultation/MemberConsultationResponse are that sentence three times, in three vocabularies. Consultation and ConsultationResponse are new rather than one of the three widened, because none of the three could absorb the others honestly: MemberConsultation declares itself informal and can only address members, while an advice request is a formal instrument aimed at another body. PublicConsultation is deliberately NOT folded in: it carries award criteria, estimated value and a tender reference, so it is a procurement schema that happens to be called a consultation, and folding it would drag tendering into every consultation.",
+	"_spec": "openspec/changes/one-consultation-schema/specs/one-consultation-schema/spec.md",
+	"components": {
+		"schemas": {
+			"Consultation": {
+				"slug": "governance-consultation",
+				"icon": "CommentQuestionOutline",
+				"version": "0.1.0",
+				"title": "Consultation",
+				"description": "An organisation asks a set of parties for their view on something, by a deadline. A council asks the participating municipalities for their zienswijze on a draft budget. A works council asks its constituency. A board asks an advisory committee for a formal advice. A VvE asks its members before an ALV. Same shape every time, so one schema, and the words are configuration. The slug is `governance-consultation`, not `consultation`: schema slugs are GLOBAL on a shared OpenRegister and `consultation` already belongs to dossiq, so both definitions would resolve to each other and the wrong one could answer. gate-106 refused it, correctly.",
+				"type": "object",
+				"x-schema-org": "schema:Question",
+				"x-openregister": {
+					"schemaType": "schema:Question",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"required": [
+					"subject",
+					"askingBody",
+					"deadline",
+					"lifecycle"
+				],
+				"properties": {
+					"subject": {
+						"title": "Subject",
+						"type": "string",
+						"description": "What is being asked about, in one line.",
+						"example": "Ontwerpbegroting 2027"
+					},
+					"question": {
+						"title": "Question",
+						"type": "string",
+						"description": "What exactly the parties are being asked. Optional when the subject says it."
+					},
+					"description": {
+						"title": "Description",
+						"type": "string",
+						"description": "Any background the parties need to answer."
+					},
+					"subjectType": {
+						"title": "Subject type",
+						"type": "string",
+						"facetable": true,
+						"description": "What kind of thing is being consulted on. Free vocabulary: an organisation uses its own words.",
+						"example": "draft-budget",
+						"x-notes": "Deliberately NOT an enum. The retired Zienswijzeronde fixed seven values from one Dutch arrangement (draft-budget, framework-memorandum, accession-withdrawal and so on), which is exactly the kind of vocabulary this programme moves into configuration. It becomes a configurable type alongside the others when the Configuration surface lands."
+					},
+					"subjectDescription": {
+						"title": "Subject description",
+						"type": "string",
+						"description": "What is being consulted on, at more length than the subject line allows."
+					},
+					"askingBody": {
+						"title": "Asking body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"facetable": true,
+						"description": "The body putting the question."
+					},
+					"audienceType": {
+						"title": "Audience",
+						"type": "string",
+						"facetable": true,
+						"description": "How the parties who may answer are determined.",
+						"enum": [
+							"bodies",
+							"body-members",
+							"political-group",
+							"user-group"
+						],
+						"default": "bodies",
+						"x-notes": "`bodies` is the value the retired advice and view schemas needed and MemberConsultation could not express: it addresses other ORGANISATIONS, not people. That gap is why this is a new schema rather than a widened one."
+					},
+					"audienceBody": {
+						"title": "Audience body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"nullable": true,
+						"description": "The single body being asked, when only one is."
+					},
+					"audienceParty": {
+						"title": "Audience group",
+						"type": "string",
+						"nullable": true,
+						"description": "The fraction or party being asked, when the audience is one."
+					},
+					"audienceGroup": {
+						"title": "Audience user group",
+						"type": "string",
+						"nullable": true,
+						"description": "The Nextcloud group being asked, when the audience is one."
+					},
+					"binding": {
+						"title": "Binding",
+						"type": "boolean",
+						"default": false,
+						"description": "Whether the answers bind the asking body, or only inform it.",
+						"x-notes": "The distinction the three retired schemas made in prose rather than in a field: MemberConsultation's description said it was 'explicitly NOT a formal ballot', while an advice request under a statute is formal. Declaring it makes the difference queryable instead of a sentence nobody can filter on."
+					},
+					"responseType": {
+						"title": "Response type",
+						"type": "string",
+						"description": "What kind of answer is expected.",
+						"enum": [
+							"position",
+							"single-choice",
+							"multi-choice",
+							"open-text"
+						],
+						"default": "position"
+					},
+					"choiceOptions": {
+						"title": "Choice options",
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"description": "The options to pick from, when the answer is a choice."
+					},
+					"opensAt": {
+						"title": "Opens at",
+						"type": "string",
+						"format": "date-time",
+						"nullable": true,
+						"description": "When answering opens. Empty means it is open already."
+					},
+					"deadline": {
+						"title": "Deadline",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "By when an answer is expected."
+					},
+					"anonymousResponses": {
+						"title": "Anonymous responses",
+						"type": "boolean",
+						"default": false,
+						"description": "Whether answers are recorded without naming who gave them."
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Where the consultation is in its course.",
+						"enum": [
+							"draft",
+							"open",
+							"processing",
+							"closed",
+							"processed",
+							"withdrawn",
+							"not-issued"
+						],
+						"default": "draft",
+						"example": "open",
+						"x-notes": "Unioned from the three retired lifecycles. `not-issued` is kept because an advice request that never produced an advice is a real outcome the advisory workflow recorded, and dropping it would rewrite stored rows."
+					},
+					"agendaItem": {
+						"title": "Agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"nullable": true,
+						"description": "The agenda item this consultation feeds."
+					},
+					"relatedDecision": {
+						"title": "Related decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "The decision the answers inform."
+					},
+					"cycleStep": {
+						"title": "Cycle step",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "cyclus-stap",
+						"nullable": true,
+						"description": "The planning-cycle step this consultation belongs to."
+					},
+					"accountabilityText": {
+						"title": "Accountability",
+						"type": "string",
+						"description": "What the asking body did with the answers, and why."
+					},
+					"accountabilityDate": {
+						"title": "Accountability date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "When the asking body accounted for the answers."
+					},
+					"results": {
+						"title": "Results",
+						"type": "object",
+						"nullable": true,
+						"description": "The summarised outcome, once the answers are in."
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "When this consultation becomes public."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "When this consultation stops being public."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"ConsultationResponse": {
+				"slug": "governance-consultation-response",
+				"icon": "CommentCheckOutline",
+				"version": "0.1.0",
+				"title": "Consultation response",
+				"description": "One party's answer to a consultation, and what the asking body did with it. A zienswijze, an advies, a member's pick from a list: the same record, whoever gave it and whatever it is called.",
+				"type": "object",
+				"x-schema-org": "schema:Answer",
+				"x-openregister": {
+					"schemaType": "schema:Answer",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"required": [
+					"consultation",
+					"status"
+				],
+				"properties": {
+					"consultation": {
+						"title": "Consultation",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-consultation",
+						"facetable": true,
+						"description": "The consultation being answered."
+					},
+					"respondentBody": {
+						"title": "Respondent body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"nullable": true,
+						"description": "The organisation that answered, when the audience was organisations."
+					},
+					"respondentPerson": {
+						"title": "Respondent",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"nullable": true,
+						"description": "The person who answered, when the answer is attributed to one."
+					},
+					"respondentId": {
+						"title": "Respondent identifier",
+						"type": "string",
+						"nullable": true,
+						"description": "An opaque identifier for the respondent, used when answers are anonymous or the respondent is not a recorded person.",
+						"x-notes": "Three shapes of respondent, because the retired schemas had three: a governance body (Zienswijze.participant), a Person (Advies.recordedBy) and an opaque string (MemberConsultationResponse.respondentId). Collapsing them to one would either lose the reference or force an anonymous answer to invent a person."
+					},
+					"position": {
+						"title": "Position",
+						"type": "string",
+						"facetable": true,
+						"description": "The view given.",
+						"enum": [
+							"positive",
+							"positive-with-reservations",
+							"negative",
+							"none"
+						],
+						"nullable": true,
+						"x-notes": "Unioned from Advies.tenor and Zienswijze.position, which had the same four values under two names: `no-advice` and `no-view` both become `none`, since both mean the party declined to give one."
+					},
+					"text": {
+						"title": "Text",
+						"type": "string",
+						"description": "The answer in the respondent's own words."
+					},
+					"choices": {
+						"title": "Choices",
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"description": "The options the respondent picked, when the answer was a choice."
+					},
+					"submittedAt": {
+						"title": "Submitted at",
+						"type": "string",
+						"format": "date-time",
+						"nullable": true,
+						"description": "When the answer was given."
+					},
+					"deadline": {
+						"title": "Deadline",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "This respondent's own deadline, when it differs from the consultation's."
+					},
+					"responseDocument": {
+						"title": "Response document",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "digital-document",
+						"nullable": true,
+						"description": "The document the answer was given in."
+					},
+					"processing": {
+						"title": "Processing",
+						"type": "string",
+						"facetable": true,
+						"description": "What the asking body did with this answer.",
+						"enum": [
+							"adopted",
+							"partly-adopted",
+							"not-adopted"
+						],
+						"nullable": true
+					},
+					"processingNotes": {
+						"title": "Processing notes",
+						"type": "string",
+						"description": "Why the asking body handled the answer that way."
+					},
+					"status": {
+						"title": "Status",
+						"type": "string",
+						"facetable": true,
+						"description": "Where this answer is in its course.",
+						"enum": [
+							"outstanding",
+							"in-preparation",
+							"submitted",
+							"processed",
+							"not-submitted"
+						],
+						"default": "outstanding"
+					},
+					"relatedDecision": {
+						"title": "Related decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "The decision that adopted this answer."
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "When this answer becomes public."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "When this answer stops being public."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"Adviesaanvraag": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): a formal advice request is a Consultation whose audience is other bodies and whose `binding` says whether the advice binds. `advisoryBody` became `audienceBody`, `requestingBody` became `askingBody`, and `accountabilityText`/`accountabilityDate` kept their names. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Advies": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): an advice is a ConsultationResponse. `tenor` became `position`, whose `no-advice` value became `none`; `summary` became `text`; `recordedBy` became `respondentPerson`; `adviceDocument` became `responseDocument`. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Zienswijzeronde": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): a round of views is a Consultation. `sharedBody` became `askingBody`, `title` became `subject`, and `subjectType` became a free string rather than seven values fixed by one Dutch arrangement. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Zienswijze": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): a view is a ConsultationResponse. `ronde` became `consultation`, `participant` became `respondentBody`, and `position`, `text`, `processing`, `processingNotes` and `status` kept their names. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"MemberConsultation": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): a member poll is a Consultation with `binding: false`, which is what its description said in prose. `closesAt` became `deadline`; the audience fields kept their names, with `body-members`, `political-group` and `user-group` joining `bodies` in one list. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"MemberConsultationResponse": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (one-consultation-schema): a member's answer is a ConsultationResponse. `consultation` and `choices` kept their names, `openText` became `text`, and `respondentId` stayed as the opaque identifier an anonymous answer needs. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"ConsultationRequest": {
+				"version": "0.2.0",
+				"description": "Repointed by one-consultation-schema: `constituencyConsultation` now references `consultation`, because `member-consultation` is retired. The works-council request itself is NOT folded in this step: it carries its own response inline (responseOutcome, responseText, responseDate) plus a second decision stage, so folding it is a separate piece of work rather than a rename.",
+				"properties": {
+					"constituencyConsultation": {
+						"title": "Constituency consultation",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-consultation",
+						"nullable": true,
+						"description": "The consultation of the constituency this request started, when one was started. Optional: a request with none keeps a usable lifecycle and a detail page with an empty reference. This capability defines no poll mechanics of its own; it only points at one."
+					}
+				}
+			}
+		}
+	}
+}

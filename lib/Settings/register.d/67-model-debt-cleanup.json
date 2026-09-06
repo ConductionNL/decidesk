@@ -6,7 +6,7 @@
     "schemas": {
       "Decision": {
         "version": "0.9.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring the fragment-55 citesGoverningDocuments delta): this fragment merges ONLY the optional meeting and agendaItem join properties onto the existing decision schema (REQ-SDM-022). Neither is required and no existing property is modified, so decisions created before this change stay valid. Declares the join that MeetingDecisionsTab.vue and AgendaMotionsTab.vue already write silently today, so OpenRegister validates the write instead of silently accepting an undeclared field.",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring the fragment-55 citesGoverningDocuments delta): this fragment merges ONLY the optional meeting and agendaItem join properties onto the existing decision schema. Neither is required and no existing property is modified, so decisions created before this change stay valid. Declares the join that MeetingDecisionsTab.vue and AgendaMotionsTab.vue already write silently today, so OpenRegister validates the write instead of silently accepting an undeclared field.",
         "properties": {
           "meeting": {
             "title": "Meeting",
@@ -15,7 +15,7 @@
             "facetable": true,
             "nullable": true,
             "$ref": "Meeting",
-            "description": "Optional reference to the Meeting this decision was taken in (REQ-SDM-022). Written by MeetingDecisionsTab.vue when a decision is created from a meeting's decisions tab. Empty for decisions created outside a meeting flow (e.g. a citizen-panel or nomination decision)."
+            "description": "Optional reference to the Meeting this decision was taken in. Written by MeetingDecisionsTab.vue when a decision is created from a meeting's decisions tab. Empty for decisions created outside a meeting flow (e.g. a citizen-panel or nomination decision)."
           },
           "agendaItem": {
             "title": "Agenda item",
@@ -24,13 +24,13 @@
             "facetable": true,
             "nullable": true,
             "$ref": "agenda-item",
-            "description": "Optional reference to the AgendaItem this decision resolves (REQ-SDM-022). Written by AgendaMotionsTab.vue when a decision (motion) is created from an agenda item's motions tab. Empty for decisions not tied to a specific agenda item."
+            "description": "Optional reference to the AgendaItem this decision resolves. Written by AgendaMotionsTab.vue when a decision (motion) is created from an agenda item's motions tab. Empty for decisions not tied to a specific agenda item."
           }
         }
       },
       "Person": {
         "version": "0.2.0",
-        "description": "An individual person who participates in governance. Popolo: Person. Identity only — organisational role/relationship lives on Membership (ADR-001 §2). Replaces the flat Participant. Carries an optional nextcloudUserId (judge amendment, 2026-08-19, design.md Data-migration section): the Nextcloud account linkage carried over from the retired Participant shim, so the code chain's Participant-to-Person crosswalk has a strong identity key (match order: nextcloudUserId exact -> email exact -> create new) instead of relying on email heuristics alone.",
+        "description": "An individual person who participates in governance. Popolo: Person. Identity only: organisational role/relationship lives on Membership (ADR-001 §2). Replaces the flat Participant. Carries an optional nextcloudUserId (judge amendment, 2026-08-19, design.md Data-migration section): the Nextcloud account linkage carried over from the retired Participant shim, so the code chain's Participant-to-Person crosswalk has a strong identity key (match order: nextcloudUserId exact -> email exact -> create new) instead of relying on email heuristics alone.",
         "properties": {
           "nextcloudUserId": {
             "title": "Nextcloud user",
@@ -43,11 +43,11 @@
       },
       "ConflictOfInterest": {
         "version": "0.2.0",
-        "description": "A declared or detected conflict-of-interest disclosure per MCCG / governance code. As of this change (REQ-SDM-023), boardMember references Membership, not the deprecated Participant shim: a conflict-of-interest declaration is inherently a statement about a person's role/relationship in a specific governance body, and Membership already carries independenceStatus, the exact MCCG-adjacent field a COI declaration is evaluated against.",
+        "description": "A declared or detected conflict-of-interest disclosure per MCCG / governance code. As of this change, boardMember references Membership, not the deprecated Participant shim: a conflict-of-interest declaration is inherently a statement about a person's role/relationship in a specific governance body, and Membership already carries independenceStatus, the exact MCCG-adjacent field a COI declaration is evaluated against.",
         "properties": {
           "boardMember": {
             "title": "Board member",
-            "description": "UUID of the Membership (the board member's role/relationship in this governance body) declaring the conflict of interest (REQ-SDM-023, was Participant).",
+            "description": "UUID of the Membership (the board member's role/relationship in this governance body) declaring the conflict of interest (was Participant).",
             "type": "string",
             "format": "uuid",
             "$ref": "Membership"
@@ -56,11 +56,11 @@
       },
       "Participant": {
         "version": "0.3.0",
-        "description": "DEPRECATED: superseded by Person + Membership (ADR-001 §2). Retained as a narrowed shim for exactly four remaining consumers (REQ-PCR-010): the Meeting quorum aggregation (totalParticipantCount/presentParticipantCount), VotingService::resolveParticipantUuid(), Vote.participant, and EngagementRecord.participant. As of this change, ConflictOfInterest.boardMember and ProxyAuthorization.grantor/holder no longer reference Participant (retargeted to Membership/Person respectively — REQ-SDM-023/024). A member or attendee of a governance body."
+        "description": "DEPRECATED: superseded by Person + Membership (ADR-001 §2). Retained as a narrowed shim for exactly four remaining consumers: the Meeting quorum aggregation (totalParticipantCount/presentParticipantCount), VotingService:resolveParticipantUuid, Vote.participant, and EngagementRecord.participant. As of this change, ConflictOfInterest.boardMember and ProxyAuthorization.grantor/holder no longer reference Participant (retargeted to Membership/Person respectively: 024). A member or attendee of a governance body."
       },
       "BoardProxy": {
         "version": "0.2.0",
-        "description": "RETIRED (REQ-SDM-024): superseded by ProxyAuthorization + its proxyStatus property, which now carries this schema's approval-workflow concept (pending-approval -> active -> suspended/revoked). Definition and slug are kept, not deleted (hardDelete: false, existing rows), but no new BoardProxy rows should be created — use ProxyAuthorization instead. Historical description: a proxy (volmacht) granted by one board member to another for a single meeting; the row ProxyVoteService wrote through /api/proxies and the row the per-holder proxy cap counted; the signed-document side of a volmacht lives on ProxyAuthorization.",
+        "description": "RETIRED: superseded by ProxyAuthorization + its proxyStatus property, which now carries this schema's approval-workflow concept (pending-approval -> active -> suspended/revoked). Definition and slug are kept, not deleted (hardDelete: false, existing rows), but no new BoardProxy rows should be created, use ProxyAuthorization instead. Historical description: a proxy (volmacht) granted by one board member to another for a single meeting; the row ProxyVoteService wrote through /api/proxies and the row the per-holder proxy cap counted; the signed-document side of a volmacht lives on ProxyAuthorization.",
         "x-openregister": {
           "schemaType": "custom:BoardProxy",
           "active": false,

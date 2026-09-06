@@ -110,6 +110,14 @@ BASE="${BASE%/}"
 USER_NAME="${ADMIN_USER:-${NC_ADMIN_USER:-admin}}"
 USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
 
+# A deliberately UNPRIVILEGED account. The suite otherwise has exactly one
+# account, `admin`, and against a single admin "this endpoint denies a
+# non-admin" and "this endpoint denies nobody" produce identical evidence — so
+# decidiq's four RequiresOrAdmin controllers had no live proof they gate
+# anything. Consumed by tests/e2e/workflows/rbac-authorization-workflow.spec.ts.
+E2E_MEMBER_USER="${E2E_MEMBER_USER:-decidiq-e2e-member}"
+E2E_MEMBER_PASS="${E2E_MEMBER_PASS:-decidiq-e2e-member-pw}"
+
 # The calendar collection action-item VTODOs are written into. Its own URI, not
 # `personal`: Nextcloud's auto-provisioned "Personal" calendar is VEVENT-only,
 # and a calendar's component set is fixed at creation — so this must be a
@@ -210,9 +218,43 @@ if [ -f ./occ ]; then
 		echo "::error::PROPFIND returned: ${CAL_PROPS}"
 		exit 1
 	fi
+
+	# ── 0a-ter. AN UNPRIVILEGED ACCOUNT, so admin-gating is testable ─────────
+	#
+	# Created with NO --group, so it lands outside `admin` — which is exactly
+	# what IGroupManager::isAdmin() reads, and what RequiresOrAdmin consumes.
+	#
+	# Idempotent in the same shape as the calendar above: the create may fail
+	# ("user already exists") and the VERIFY is what gates.
+	OC_PASS="${E2E_MEMBER_PASS}" php ./occ user:add --password-from-env \
+		"${E2E_MEMBER_USER}" >/dev/null 2>&1 || true
+
+	# VERIFY over occ, and gate. An absent member account turns the spec's 403
+	# assertions into 401s, which reads as a broken guard rather than a missing
+	# fixture — the failure would name the wrong thing.
+	MEMBER_INFO="$(php ./occ user:info "${E2E_MEMBER_USER}" --output=json 2>/dev/null || true)"
+	if [ -z "${MEMBER_INFO}" ]; then
+		echo "::error::could not provision the non-admin account '${E2E_MEMBER_USER}'."
+		echo "::error::rbac-authorization-workflow.spec.ts asserts 403 for it on four"
+		echo "::error::RequiresOrAdmin surfaces; without the account those become 401s."
+		exit 1
+	fi
+
+	# It must NOT be an admin. If it were, every 403 assertion would invert and
+	# the spec would pass while proving the opposite of its own name — the worst
+	# available outcome, because it is green.
+	if printf '%s' "${MEMBER_INFO}" | python3 -c \
+		'import json,sys; sys.exit(0 if "admin" in json.load(sys.stdin).get("groups",[]) else 1)' \
+		2>/dev/null; then
+		echo "::error::'${E2E_MEMBER_USER}' is in the admin group; it must not be."
+		exit 1
+	fi
+	echo "[ci-seed] non-admin account '${E2E_MEMBER_USER}' present and unprivileged."
 else
 	echo "[ci-seed] no ./occ in $(pwd) — skipping the front-controller config (not a server root?)."
 	echo "[ci-seed] WARNING: the VTODO calendar gate is also skipped; action-item specs may 500."
+	echo "[ci-seed] WARNING: the non-admin account is also skipped; the admin-gating spec will"
+	echo "[ci-seed]          see 401 where it asserts 403."
 fi
 
 # ── 0b. GATE: the SERVED page must actually advertise pretty URLs ────────────
@@ -400,11 +442,42 @@ REG_CODE="$(curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" || echo 000)"
 verify "$REG_BODY" registers "$REG_CODE"
 
+# 🔴 THE PAGE SIZE IS PART OF THE ASSERTION, SO IT MUST OUTRUN THE INSTANCE.
+#
+# This asked for `_limit=1000` and then reported every required slug it could
+# not find as a MISSING SCHEMA. On a dev instance with 35 apps installed the
+# schema table holds 1111 rows, so ten decidiq schemas fell off the end of the
+# page and the script failed with:
+#
+#   ::error::Decidiq schemas missing after import:
+#     ['meeting', 'action-item', 'minutes', 'vote', 'transcript', ...]
+#
+# Every one of them was present in the database. The import had worked; the
+# QUESTION was too small. That is the worst shape a check can take: it names a
+# real-sounding cause and sends you to look at the import.
+#
+# So the limit outruns any plausible instance, AND truncation is detected rather
+# than assumed away: if the response comes back exactly full, the page is the
+# suspect and the script says so instead of blaming the import.
+SCH_LIMIT=20000
 SCH_BODY="$(mktemp)"
 SCH_CODE="$(curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	-o "$SCH_BODY" -w '%{http_code}' \
-	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" || echo 000)"
+	"${BASE}/index.php/apps/openregister/api/schemas?_limit=${SCH_LIMIT}" || echo 000)"
 verify "$SCH_BODY" schemas "$SCH_CODE"
+
+SCH_COUNT="$(python3 -c "
+import json
+d=json.load(open('${SCH_BODY}'))
+r=d.get('results', d if isinstance(d, list) else [])
+print(len(r))
+" 2>/dev/null || echo 0)"
+if [ "${SCH_COUNT}" -ge "${SCH_LIMIT}" ] 2>/dev/null; then
+	echo "::error::The schema listing came back exactly full (${SCH_COUNT} of _limit=${SCH_LIMIT})."
+	echo "::error::It is TRUNCATED, so a 'missing schema' below would be a paging artefact, not a failed import. Raise SCH_LIMIT."
+	exit 1
+fi
+echo "[ci-seed] schema listing: ${SCH_COUNT} row(s), under the ${SCH_LIMIT} page limit"
 
 # The register existing is still not the same as it being READABLE by the admin
 # session the specs use. Several specs assert `expect(resp.ok()).toBe(true)` on
@@ -717,6 +790,52 @@ else
 		'the built-in Municipal Council process template')"
 	echo "[ci-seed]   process-template ${PROCESS_TEMPLATE_ID}  Municipal Council (built-in)"
 
+	# ── One governing document with two versions ───────────────────────────────
+	#
+	# 🔴 THIS SPEC HAS NEVER RUN. `register-detail-widgets.spec.ts` asserts the
+	# version-timeline widget renders both versions of "Afvalstoffenverordening
+	# Amsterdam", and skips when it cannot find that record. It lives only in
+	# municipality.json, and CI picks `example_profile=none` (see the setup/config
+	# call below), so the record has never existed here and the test has skipped
+	# on every run since it was written. A skip reads exactly like a pass in the
+	# summary line, which is how it went unnoticed.
+	#
+	# Seeded here rather than by loading the profile, for the same reason as the
+	# Goals and the ProcessTemplate above: a whole demo dataset would land in
+	# every other list the specs assert on.
+	#
+	# The title carries no ${SEED_TAG} prefix because the spec matches it
+	# exactly, and the fields are copied from municipality.json so the fixture
+	# and the shipped example set cannot drift apart. `governingBody` is
+	# repointed at THIS run's body: the profile names `gemeenteraad-amsterdam`,
+	# which does not exist here, and a dangling reference would seed a document
+	# the detail page cannot resolve.
+	GOVERNING_DOC_ID="$(seed_object governing-document \
+		"{\"type\":\"by-law\",\"citationTitle\":\"Afvalstoffenverordening Amsterdam\",\"officialTitle\":\"Verordening op de inzameling en verwerking van huishoudelijke afvalstoffen Amsterdam\",\"statutoryBasis\":[\"Gemeentewet art. 149\"],\"governingBody\":\"${BODY_ID}\",\"externalRegisterIdentifier\":\"CVDR641871\",\"currentVersionNumber\":2,\"currentEffectiveDate\":\"2025-06-01\",\"status\":\"in-effect\"}" \
+		'the governing document "Afvalstoffenverordening Amsterdam"')"
+	echo "[ci-seed]   governing-document ${GOVERNING_DOC_ID}  Afvalstoffenverordening Amsterdam"
+
+	# BOTH versions, because the spec asserts both render and that the earlier
+	# one reads as replaced. One version would satisfy "the widget rendered" and
+	# prove nothing about the timeline.
+	#
+	# 🔴 `in-effect`, NOT `in-force`. The two schemas do NOT share a status
+	# vocabulary: GoverningDocument accepts both (register.d/77), and
+	# GoverningDocumentVersie accepts only
+	# ['draft','adopted','in-effect','replaced','lapsed'] (register.d/55). This
+	# line wrote the document's word onto a versie and the API answered 400,
+	# which exits the seed and takes the WHOLE suite with it.
+	for versie in \
+		'1|2024-01-01|replaced|Eerste vaststelling van de Afvalstoffenverordening Amsterdam.' \
+		'2|2025-06-01|in-effect|Geactualiseerde verordening na evaluatie 2025.'
+	do
+		IFS='|' read -r v_num v_date v_status v_notes <<<"${versie}"
+		v_id="$(seed_object governing-document-versie \
+			"{\"document\":\"${GOVERNING_DOC_ID}\",\"versionNumber\":${v_num},\"effectiveDate\":\"${v_date}\",\"status\":\"${v_status}\",\"notes\":\"${v_notes}\"}" \
+			"governing-document version ${v_num}")"
+		echo "[ci-seed]   governing-document-versie ${v_id}  v${v_num} (${v_status})"
+	done
+
 	echo "[ci-seed] governance fixture seeded."
 fi
 
@@ -746,6 +865,13 @@ required = {
     # built-in template is the floor; see the seeding note above for why it is
     # not the full catalogue.
     'process-template': 1,
+    # register-detail-widgets.spec.ts asserts BOTH versions of the seeded
+    # governing document render in the version timeline. The document is the
+    # floor; the versions are counted separately below because a document with
+    # no versions renders an empty timeline, which is the shape that made this
+    # spec skip silently for its whole life.
+    'governing-document': 1,
+    'governing-document-versie': 2,
     # NOT action-item: CalDAV-backed and read-only through this API (see above).
 }
 
@@ -930,7 +1056,15 @@ echo "[ci-seed] done."
 # `load-example-set.done` from `$picked === NONE_PROFILE`. The skip action
 # writes only DEMO_DECIDED_KEY and would leave `example-set` open — still
 # enough wizard to mask every click.
-DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
+# 🔴 `${BASE}`, NOT ITS OWN RESOLUTION. This line used to read
+# `${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}`, which ignores
+# PLAYWRIGHT_BASE_URL and falls back to the SHARED dev container — the exact
+# default the top of this script refuses, in the block whose whole job is to
+# WRITE app config. On CI it worked because the workflow exports BASE_URL; on a
+# throwaway rig driven by PLAYWRIGHT_BASE_URL it aimed a POST at :8080 and the
+# run then failed on a status document it had never written, from an instance
+# it had never touched. `${BASE}` is already resolved and already guarded.
+DEMO_BASE="${BASE}"
 DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
 	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
 	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' \

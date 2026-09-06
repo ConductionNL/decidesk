@@ -5,49 +5,38 @@
 		"description": "Canonical navigation layout applied AFTER all manifest.d fragments merge (see buildManifest in main.js). Fragments stay the source of WHAT exists in the menu (ADR-037); this file is the single place deciding WHERE entries live. relocations: sourceId -> targetGroupId (groups dissolve into the target, leaves move under it). settingsSection: top-level config/definition/admin ids lifted into Nextcloud's settings foldout (NcAppNavigationSettings gear, outside the scrollable nav); operational/report/dashboard items (Dashboard, Meetings, Decisions, ActionItems, GovernanceBodies, Registers) stay in the main nav. removals: leaf menu-entry ids retired as duplicate navigation — their PAGES stay routable for deep links and e2e specs. Populated by ia-six-clusters (2026-08-19) to collapse the 44-entry flat nav that accreted from 22 uncoordinated manifest.d fragments back to ADR-004's six-item ceiling; see openspec/changes/ia-six-clusters/design.md for the full placement map and rationale."
 	},
 	"relocations": {
-		"MondelingeVragen": "Meetings",
-		"Interpellaties": "Meetings",
-		"IngekomenStukken": "Meetings",
-		"Raadsinformatiebrieven": "Meetings",
-		"KascommissieVerklaringen": "Meetings",
-
-		"Raadplegingen": "Decisions",
+		"AncillaryPositions": "GovernanceBodies",
+		"AuditStatements": "Meetings",
+		"AuthorityDelegations": "Registers",
+		"Commitments": "ActionItems",
+		"ConfidentialityRestrictions": "Registers",
 		"Consultations": "Decisions",
-		"WorTrajecten": "Decisions",
-		"Adviesaanvragen": "Decisions",
-		"Zienswijzerondes": "Decisions",
-		"Zienswijzen": "Decisions",
-		"UrgentDecisions": "Decisions",
-
-		"Toezeggingen": "ActionItems",
-		"Termijnagenda": "ActionItems",
-		"PCCycli": "ActionItems",
+		"DeclaredGifts": "GovernanceBodies",
 		"Goals": "ActionItems",
-
-		"Roosters": "GovernanceBodies",
-		"Nevenfuncties": "GovernanceBodies",
-		"Geschenken": "GovernanceBodies",
-		"OnboardingTrajecten": "GovernanceBodies",
-		"OffboardingTrajecten": "GovernanceBodies",
-		"ProxyAuthorizations": "GovernanceBodies",
-
-		"Regelingen": "Registers",
+		"GovernanceConsultations": "Decisions",
 		"GoverningDocuments": "Registers",
-		"Bevoegdheidstoedelingen": "Registers",
-		"Geheimhoudingen": "Registers"
+		"MemberOffboarding": "GovernanceBodies",
+		"MemberOnboarding": "GovernanceBodies",
+		"PlannedAgenda": "ActionItems",
+		"PlanningCycles": "ActionItems",
+		"ProxyAuthorizations": "GovernanceBodies",
+		"UrgentDecisions": "Decisions",
+		"WorksCouncilConsultations": "Decisions"
 	},
 	"removals": [],
 	"_removalsNote": "EMPTY BY DECISION (2026-08-19, gate-53/ADR-044): a removal that orphans a live route is functionality loss. The four previously-removed ids were re-placed instead: UrgentDecisions and Zienswijzen nest under Decisions, MyDeclarations lifts into the gear (per-user self-service, stable-name contract with member-onboarding), FeaturesRoadmapMenu keeps its original footer section.",
 	"settingsSection": [
-		"Termijnregelingen",
-		"VveDecisionTemplates",
-		"ModelreglementPresets",
-		"VveConfigurations",
-		"WooDiwoo",
-		"GeheimhoudingGronden",
+		"DecisionTemplates",
+		"BodyCompositions",
+		"PositionTypes",
+		"PositionHolds",
+		"AgendaItemTypes",
+		"MeetingTypes",
+		"BodyConfigurations",
+		"ConfidentialityGrounds",
 		"ModerationQueue",
 		"MyDeclarations",
 		"UserSettingsMenu"
 	],
-	"_settingsSectionNote": "Populated by ia-six-clusters (2026-08-19). These 8 ids are operator/definition CONFIGURATION surfaces (deadline-scheme definitions, VvE templates/presets/config, Woo/DiWoo category mappings, confidentiality grounds, the citizen-participation moderation queue) plus the app's real per-user UserSettingsMenu. ADR-079 Decision 2 frames section:'settings' entries as being for 'genuinely per-user configuration' — these first 7 are NOT per-user, so this is an accepted INTERIM placement, not the architecturally final one: ADR-079 Decision 1's stated preference is that non-per-user configuration lives at /settings/admin/decidiq via a registered lib/Settings/*Admin.php section. decidiq does not yet have per-surface admin sub-pages for these 7 domains, and building 7 of them is a `kind: code` effort out of this (`kind: config`) change's scope. Parking them in the gear is still strictly ADR-004-compliant (Rule 4, 'Beheer is operator-only, all behind one door') and strictly better than the pre-change state (all 7 sat as primary top-level nav rows). Tracked as follow-up work, not blocking. UserSettingsMenu itself is the one genuinely per-user entry in this list and is unaffected by that tension; see also nav.includePersonalSettings in manifest.json, which suppresses the OTHER, generic Personal-settings entry so the gear shows exactly one."
+	"_settingsSectionNote": "Populated by ia-six-clusters (2026-08-19). These 8 ids are operator/definition CONFIGURATION surfaces (deadline-scheme definitions, VvE templates/presets/config, Woo/DiWoo category mappings, confidentiality grounds, the citizen-participation moderation queue) plus the app's real per-user UserSettingsMenu. ADR-079 Decision 2 frames section:'settings' entries as being for 'genuinely per-user configuration' — these first 7 are NOT per-user, so this is an accepted INTERIM placement, not the architecturally final one: ADR-079 Decision 1's stated preference is that non-per-user configuration lives at /settings/admin/decidiq via a registered lib/Settings/*Admin.php section. decidiq does not yet have per-surface admin sub-pages for these 7 domains, and building 7 of them is a `kind: code` effort out of this (`kind: config`) change's scope. Parking them in the gear is still strictly ADR-004-compliant (Rule 4, 'Beheer is operator-only, all behind one door') and strictly better than the pre-change state (all 7 sat as primary top-level nav rows). Tracked as follow-up work, not blocking. UserSettingsMenu itself is the one genuinely per-user entry in this list and is unaffected by that tension; see also nav.includePersonalSettings in manifest.json, which suppresses the OTHER, generic Personal-settings entry so the gear shows exactly one. UPDATED 2026-08-31 (retire-vve-template-surfaces): VveDecisionTemplates and ModelreglementPresets are gone, because unified-decision-templates superseded both schemas (active:false) and the pages outlived the model. DecisionTemplates replaces them and covers EVERY context, not just association, so a municipality and a company board can finally reach their own templates."
 }

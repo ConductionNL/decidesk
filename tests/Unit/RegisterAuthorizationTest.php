@@ -441,9 +441,17 @@ class RegisterAuthorizationTest extends TestCase {
 		// The count is the positive control: without it this loop passes vacuously
 		// if the schemas move, are renamed, or stop being found at all.
 		$this->assertSame(
-			27,
+			36,
 			$withBlock,
-			'Expected 27 schema-level authorization blocks. evaluation-response gained one that closes '
+			'Expected 36 schema-level authorization blocks. member-onboarding-in-plain-words added the '
+				. 'latest TWO, and unlike every rename before them these are NEW, not carried: '
+				. 'OnboardingTraject and OffboardingTraject declared no block of their own, so a '
+				. 'person\'s name, account id, installation date and reason for leaving — including '
+				. 'death and relocation — were read AND list open to anonymous visitors through the '
+				. 'register baseline. MemberOnboarding and MemberOffboarding declare `read` for '
+				. '`authenticated` only; `list` is deliberately NOT declared, because the register '
+				. 'IMPORTER rejects a schema that declares it and the schema then never exists at '
+				. 'all. evaluation-response gained one that closes '
 				. '`read` (its raw anonymous board self-evaluation answers were readable by every '
 				. 'authenticated account, defeating the suppression threshold BoardEvaluation applies to '
 				. 'the aggregate) while keeping `create` open so members can still submit. '
@@ -453,8 +461,98 @@ class RegisterAuthorizationTest extends TestCase {
 				. 'signature-and-outcome-authorization-guard added Decision\'s, narrowing anonymous read/list '
 				. 'to isPublished === "public" (IntegrationController::getOutcome() had documented an '
 				. 'OpenRegister RBAC guarantee that did not exist, precisely because this block was absent). '
+				. 'the-last-two-dutch-names added the last TWO, renaming TermijnagendaItem to '
+				. 'PlannedAgendaItem and Bevoegdheidstoedeling to AuthorityDelegation. '
+				. 'commitment-in-plain-words added one before them, renaming Toezegging to Commitment: a '
+				. 'rename adds exactly one block, because the retirement stub declares none of its own '
+				. 'while the source keeps the block it always had. '
+				. 'confidentiality-in-plain-words added two the same way, renaming Geheimhouding '
+				. 'to ConfidentialityRestriction and GeheimhoudingGrond to ConfidentialityGround. '
+				. 'integrity-disclosures-in-plain-words added two before them, and they are COPIES: renaming '
+				. 'Nevenfunctie to AncillaryPosition and Geschenk to DeclaredGift carried each schema\'s own '
+				. 'read-only block across unchanged, which is the point rather than a side effect. A rename '
+				. 'that DROPPED the block would fall back to the register baseline\'s public read, publishing '
+				. 'a member\'s declared gifts and outside roles to anonymous visitors whatever their '
+				. 'publication date said. '
 				. 'A different number means schemas gained or lost their own block, which changes which ones '
 				. 'the register baseline governs.'
 		);
 	}//end testSchemasWithTheirOwnBlockStillDeclareOnlyReads()
+
+	/**
+	 * A renamed schema keeps the authorization of the one it replaces.
+	 *
+	 * 🔴 A RENAME THAT DROPS THE BLOCK PUBLISHES PERSONAL DATA, SILENTLY.
+	 *
+	 * `PermissionHandler::resolveAuthorization()` falls back to the REGISTER
+	 * baseline when a schema declares no block of its own, and that baseline
+	 * grants `read` and `list` to `public`. So a disclosure schema that loses its
+	 * own block does not fail, does not warn, and does not look different in any
+	 * list: it simply becomes readable by anonymous visitors, ignoring the
+	 * publication date its own block existed to enforce.
+	 *
+	 * Nevenfunctie and Geschenk each carried a read-only block gating `public` on
+	 * `publicationDate`. AncillaryPosition and DeclaredGift are their renames, so
+	 * they must carry the same block, byte for byte.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/integrity-disclosures-in-plain-words/specs/integrity-disclosures-in-plain-words/spec.md#requirement-existing-disclosures-are-carried-across
+	 */
+	public function testARenamedSchemaKeepsItsPredecessorsAuthorization(): void {
+		// Every rename this programme has made where the SOURCE carried its own
+		// block. Each new entry here is one more schema that cannot silently
+		// lose its authorization to a rename.
+		$renames = [
+			'Nevenfunctie' => 'AncillaryPosition',
+			'Geschenk' => 'DeclaredGift',
+			'Geheimhouding' => 'ConfidentialityRestriction',
+			'GeheimhoudingGrond' => 'ConfidentialityGround',
+			'Toezegging' => 'Commitment',
+			'TermijnagendaItem' => 'PlannedAgendaItem',
+			'Bevoegdheidstoedeling' => 'AuthorityDelegation',
+		];
+
+		$blocks = [];
+		$files  = array_merge(
+			[__DIR__ . '/../../lib/Settings/decidesk_register.json'],
+			glob(__DIR__ . '/../../lib/Settings/register.d/*.json') ?: []
+		);
+		foreach ($files as $file) {
+			$decoded = json_decode((string)file_get_contents($file), true);
+			foreach (($decoded['components']['schemas'] ?? []) as $name => $schema) {
+				if (is_array($schema) === true && isset($schema['authorization']) === true) {
+					$blocks[$name] = $schema['authorization'];
+				}
+			}
+		}
+
+		foreach ($renames as $before => $after) {
+			// Not vacuous: if the predecessor stopped declaring a block, this
+			// test would otherwise pass by comparing nothing to nothing.
+			$this->assertArrayHasKey(
+				$before,
+				$blocks,
+				sprintf('%s must still declare the block %s is asserted to inherit.', $before, $after)
+			);
+
+			$this->assertArrayHasKey(
+				$after,
+				$blocks,
+				sprintf(
+					'%s declares no authorization block, so it falls back to the register baseline\'s '
+						. 'public read — publishing what %s deliberately gated on publicationDate.',
+					$after,
+					$before
+				)
+			);
+
+			$this->assertSame(
+				$blocks[$before],
+				$blocks[$after],
+				sprintf('%s must carry %s\'s authorization unchanged; a rename may not widen access.', $after, $before)
+			);
+		}
+
+	}//end testARenamedSchemaKeepsItsPredecessorsAuthorization()
 }//end class

@@ -9,7 +9,7 @@
         "icon": "BriefcaseAccountOutline",
         "version": "0.1.0",
         "title": "Nevenfunctie",
-        "description": "A structured other-position declaration (nevenfunctie) held by a Person at an organisation, made under a specific GovernanceBody's disclosure regime: bezoldigd/onbezoldigd, hours indication, a q.q. flag (uit hoofde van het ambt), start/end dates, a declared-at and reviewed-at date, a declarative disclosure lifecycle (gemeld → openbaar | intern → beëindigd), and a live public nevenfunctiesregister per body via the OpenRegister published-predicate. A nevenfunctie is a schema:Role. It supersedes Membership.otherPositions for new data (the free-text legacy field is not removed). CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction — NO remuneration amounts, NO private contact data, NO free-form internal-remarks property. Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A structured other-position declaration (nevenfunctie) held by a Person at an organisation, made under a specific GovernanceBody's disclosure regime: bezoldigd/onbezoldigd, hours indication, a q.q. flag (uit hoofde van het ambt), start/end dates, a declared-at and reviewed-at date, a declarative disclosure lifecycle (gemeld → openbaar | intern → beëindigd), and a live public nevenfunctiesregister per body via the OpenRegister published-predicate. A nevenfunctie is a schema:Role. It supersedes Membership.otherPositions for new data (the free-text legacy field is not removed). CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction. NO remuneration amounts, NO private contact data, NO free-form internal-remarks property. Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:Role",
         "x-openregister": {
@@ -169,7 +169,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "governance-body",
-            "description": "Reference to the GovernanceBody under whose disclosure regime the declaration is made (its Integriteitsbeleid sets the disclosure default and integrity recipient). Required — a person holding roles in two bodies faces two regimes and declares once per body (design D5)."
+            "description": "Reference to the GovernanceBody under whose disclosure regime the declaration is made (its Integriteitsbeleid sets the disclosure default and integrity recipient). Required: a person holding roles in two bodies faces two regimes and declares once per body (design D5)."
           },
           "organisation": {
             "title": "Organisation",
@@ -202,7 +202,7 @@
             "title": "Ex officio (q.q.)",
             "type": "boolean",
             "facetable": true,
-            "description": "Whether the position is held uit hoofde van het ambt (qualitate qua) rather than personally — a q.q. marker distinguishes it in the register (REQ-INT-001).",
+            "description": "Whether the position is held uit hoofde van het ambt (qualitate qua) rather than personally: a q.q. marker distinguishes it in the register.",
             "default": false,
             "example": false
           },
@@ -219,7 +219,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date the position ended. Set when the lifecycle moves to beëindigd (REQ-INT-002). Optional.",
+            "description": "Date the position ended. Set when the lifecycle moves to beëindigd. Optional.",
             "example": "2025-12-31"
           },
           "declaredAt": {
@@ -227,7 +227,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date the nevenfunctie was declared. Required. Drives the annual-review rappel when reviewedAt is never set (REQ-INT-008).",
+            "description": "Date the nevenfunctie was declared. Required. Drives the annual-review rappel when reviewedAt is never set.",
             "example": "2024-03-05"
           },
           "reviewedAt": {
@@ -235,14 +235,14 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date of the last annual self-review confirmation (REQ-INT-008/REQ-INT-010). Set by the member via self-service, carrying all other fields forward (saveObject PUT-semantic). Optional; when older than 12 months (or absent) the object counts toward the overdue-review KPI and the annual rappel.",
+            "description": "Date of the last annual self-review confirmation. Set by the member via self-service, carrying all other fields forward (saveObject PUT-semantic). Optional; when older than 12 months (or absent) the object counts toward the overdue-review KPI and the annual rappel.",
             "example": "2025-05-15"
           },
           "lifecycle": {
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Disclosure status (declared in x-openregister-lifecycle, ADR-031): gemeld → openbaar | intern → beëindigd. beëindigd is terminal. Legislative bodies default the target to openbaar (Gemeentewet), other body types to intern (design REQ-INT-003).",
+            "description": "Disclosure status (declared in x-openregister-lifecycle, ADR-031): gemeld → openbaar | intern → beëindigd. beëindigd is terminal. Legislative bodies default the target to openbaar (Gemeentewet), other body types to intern (design).",
             "enum": [
               "reported",
               "public",
@@ -256,14 +256,14 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past on a verified openbaar nevenfunctie, the LIVE object is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action (griffie); because the predicate sits on the live object the public register reflects lifecycle changes (e.g. beëindigd with endDate) without republication (REQ-INT-004 / design D4)."
+            "description": "Publication date (WOO/DIWOO). When set in the past on a verified openbaar nevenfunctie, the LIVE object is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action (griffie); because the predicate sits on the live object the public register reflects lifecycle changes (e.g. beëindigd with endDate) without republication (design D4)."
           },
           "depublicationDate": {
             "title": "Depublication date",
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Depublication date (WOO/DIWOO). When set and in the past, the nevenfunctie is withdrawn from public access. Set by staff on withdraw (REQ-INT-004)."
+            "description": "Depublication date (WOO/DIWOO). When set and in the past, the nevenfunctie is withdrawn from public access. Set by staff on withdraw."
           }
         }
       },
@@ -272,7 +272,7 @@
         "icon": "GiftOutline",
         "version": "0.1.0",
         "title": "Geschenk",
-        "description": "A registered gift or invitation (geschenk/uitnodiging) received by a Person acting for a GovernanceBody: the giving party as a plain string (never a Person reference, so no external-party PII enters the people register), a description, an estimated value in EUR, the date received, and a decision (aanvaard/geweigerd/overgedragen). Evaluated against the body's Integriteitsbeleid.geschenkDrempelbedrag (or EUR 50 default): at-or-above-threshold registrations are badged boven-drempel and trigger the integrity notification (REQ-INT-006). A geschenk-registratie is a schema:Action (agent = recipient). Optionally published per body policy (geschenkenOpenbaar) via the same public-predicate as Nevenfunctie. CONSTRAINT (design D4): publishable by construction — NO internal-remarks beyond the toelichting decision note; adding any non-public property requires revisiting the public-predicate design.",
+        "description": "A registered gift or invitation (geschenk/uitnodiging) received by a Person acting for a GovernanceBody: the giving party as a plain string (never a Person reference, so no external-party PII enters the people register), a description, an estimated value in EUR, the date received, and a decision (aanvaard/geweigerd/overgedragen). Evaluated against the body's Integriteitsbeleid.geschenkDrempelbedrag (or EUR 50 default): at-or-above-threshold registrations are badged boven-drempel and trigger the integrity notification. A geschenk-registratie is a schema:Action (agent = recipient). Optionally published per body policy (geschenkenOpenbaar) via the same public-predicate as Nevenfunctie. CONSTRAINT (design D4): publishable by construction. NO internal-remarks beyond the toelichting decision note; adding any non-public property requires revisiting the public-predicate design.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -359,7 +359,7 @@
           "giver": {
             "title": "Giver",
             "type": "string",
-            "description": "The giving party as a plain display string — NEVER a Person reference, so no external-party PII enters the people register (design D4 / security). Required.",
+            "description": "The giving party as a plain display string. NEVER a Person reference, so no external-party PII enters the people register (design D4 / security). Required.",
             "example": "Delegatie gemeente Aken"
           },
           "description": {
@@ -372,7 +372,7 @@
             "title": "Estimated value (EUR)",
             "type": "number",
             "facetable": true,
-            "description": "Estimated value in EUR. Required. Compared against the body's geschenkDrempelbedrag (policy or EUR 50 default): at-or-above-threshold drives the boven-drempel badge and integrity notification (REQ-INT-006). No remuneration/monetary sub-object — a plain number so the object stays publishable (design D4).",
+            "description": "Estimated value in EUR. Required. Compared against the body's geschenkDrempelbedrag (policy or EUR 50 default): at-or-above-threshold drives the boven-drempel badge and integrity notification. No remuneration/monetary sub-object: a plain number so the object stays publishable (design D4).",
             "example": 20
           },
           "receivedOn": {
@@ -387,7 +387,7 @@
             "title": "Decision",
             "type": "string",
             "facetable": true,
-            "description": "Decision on the gift/invitation. Required. The threshold is registration policy only — the system does NOT block saving any decision value (REQ-INT-006).",
+            "description": "Decision on the gift/invitation. Required. The threshold is registration policy only: the system does NOT block saving any decision value.",
             "enum": [
               "accepted",
               "refused",
@@ -413,7 +413,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When the body's Integriteitsbeleid sets geschenkenOpenbaar true and staff publish, the LIVE geschenk is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publication is an explicit staff action and off by default per body policy (REQ-INT-005)."
+            "description": "Publication date (WOO/DIWOO). When the body's Integriteitsbeleid sets geschenkenOpenbaar true and staff publish, the LIVE geschenk is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publication is an explicit staff action and off by default per body policy."
           },
           "depublicationDate": {
             "title": "Depublication date",
@@ -429,7 +429,7 @@
         "icon": "ShieldCheckOutline",
         "version": "0.1.0",
         "title": "Integriteitsbeleid",
-        "description": "Per-body integrity policy (one object per GovernanceBody) driving the interests-and-integrity defaults: the nevenfunctie disclosure default (openbaar/intern), the gift threshold in EUR, whether the geschenkenregister is public for this body, and the NC group receiving integrity notifications (burgemeester/voorzitter/compliance officer as configured). A schema (not GovernanceBody fields) because ADR-037 forbids editing the base register where GovernanceBody lives (design D1). When no policy object exists for a body, body-type defaults apply: legislative/democratic bodies default to openbaar (Gemeentewet), all other body types to intern, and the gift threshold to EUR 50 (model-gedragscode) — REQ-INT-003. This is internal configuration: it carries NO public read rule.",
+        "description": "Per-body integrity policy (one object per GovernanceBody) driving the interests-and-integrity defaults: the nevenfunctie disclosure default (openbaar/intern), the gift threshold in EUR, whether the geschenkenregister is public for this body, and the NC group receiving integrity notifications (burgemeester/voorzitter/compliance officer as configured). A schema (not GovernanceBody fields) because ADR-037 forbids editing the base register where GovernanceBody lives (design D1). When no policy object exists for a body, body-type defaults apply: legislative/democratic bodies default to openbaar (Gemeentewet), all other body types to intern, and the gift threshold to EUR 50 (model-gedragscode),. This is internal configuration: it carries NO public read rule.",
         "type": "object",
         "x-schema-org": "schema:CreativeWork",
         "x-openregister": {
@@ -455,7 +455,7 @@
             "title": "Nevenfunctie disclosure default",
             "type": "string",
             "facetable": true,
-            "description": "The disclosure target PRESELECTED when a gemeld nevenfunctie is processed for this body (openbaar for councils per Gemeentewet, intern for corporate boards). It preselects only — it does NOT bypass the explicit x-openregister-lifecycle transition (REQ-INT-003). Required.",
+            "description": "The disclosure target PRESELECTED when a gemeld nevenfunctie is processed for this body (openbaar for councils per Gemeentewet, intern for corporate boards). It preselects only: it does NOT bypass the explicit x-openregister-lifecycle transition. Required.",
             "enum": [
               "public",
               "internal"
@@ -465,14 +465,14 @@
           "giftThresholdAmount": {
             "title": "Gift threshold (EUR)",
             "type": "number",
-            "description": "Gift threshold in EUR: geschenken with geschatteWaarde at or above this value are badged boven-drempel and trigger the integrity notification (REQ-INT-006). Defaults to EUR 50 (model-gedragscode) when no policy object exists for the body.",
+            "description": "Gift threshold in EUR: geschenken with geschatteWaarde at or above this value are badged boven-drempel and trigger the integrity notification. Defaults to EUR 50 (model-gedragscode) when no policy object exists for the body.",
             "default": 50,
             "example": 50
           },
           "giftsPublic": {
             "title": "Public gift register",
             "type": "boolean",
-            "description": "Whether this body's geschenkenregister is public: when true, published geschenken are anonymously readable via the same public-predicate as nevenfuncties; when false (default) no publish action is offered and no geschenk of this body is anonymously readable (REQ-INT-005).",
+            "description": "Whether this body's geschenkenregister is public: when true, published geschenken are anonymously readable via the same public-predicate as nevenfuncties; when false (default) no publish action is offered and no geschenk of this body is anonymously readable.",
             "default": false,
             "example": false
           },

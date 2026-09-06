@@ -7,9 +7,9 @@
       "DecisionTemplate": {
         "slug": "decision-template",
         "icon": "Sitemap",
-        "version": "0.1.0",
+        "version": "0.3.0",
         "title": "DecisionTemplate",
-        "description": "Unified template for what governs a decision: route stages (state machine), voting rule, quorum policy, urgency policy, decision content (proposedText/regulationSource), and an ordered checklist of required/optional check items. Selected by decisionType (optional; absent = generic default for the context, mirroring GovernanceBody.processTemplate's existing default-template semantics) crossed with context. Supersedes ProcessTemplate (route/voting/quorum/urgency), VveDecisionTemplate, and ModelreglementPreset (decision content + modelreglement category majorities, now folded in as this template's own defaults) — see openspec/changes/unified-decision-templates/design.md. Schema-declaration only: no consumer (ProcessTemplateService, DecisionTransitionGuard, the admin Vue surface) reads this schema yet; that is unified-decision-templates-consumer-rewrite.",
+        "description": "Unified template for what governs a decision: route stages (state machine), voting rule, quorum policy, urgency policy, decision content (proposedText/regulationSource), and an ordered checklist of required/optional check items. Selected by decisionType (optional; absent = generic default for the context, mirroring GovernanceBody.processTemplate's existing default-template semantics) crossed with context. Supersedes ProcessTemplate (route/voting/quorum/urgency), VveDecisionTemplate, and ModelreglementPreset (decision content + modelreglement category majorities, now folded in as this template's own defaults): see openspec/changes/unified-decision-templates/design.md. Schema-declaration only: no consumer (ProcessTemplateService, DecisionTransitionGuard, the admin Vue surface) reads this schema yet; that is unified-decision-templates-consumer-rewrite.",
         "configuration": {
           "x-openregister-shareable": true
         },
@@ -39,19 +39,7 @@
           "decisionType": {
             "type": "string",
             "title": "Decision type",
-            "description": "Optional narrowing to one of Decision.decisionType's values. Absent means this template is the generic default for its context (mirrors GovernanceBody.processTemplate's existing default-template role; see GovernanceBody.additionalTemplates[] for the specialised-per-type resolution this anticipates).",
-            "enum": [
-              "motion",
-              "amendment",
-              "resolution",
-              "contract",
-              "contract-renewal",
-              "report-adoption",
-              "appointment",
-              "management-point",
-              "policy",
-              "meeting-outcome"
-            ],
+            "description": "Optional narrowing to one of Decision.decisionType's values. Absent means this template is the generic default for its context (mirrors GovernanceBody.processTemplate's existing default-template role; see GovernanceBody.additionalTemplates[] for the specialised-per-type resolution this anticipates). No enum: the vocabulary is configuration, held by the decidiq decision_types app setting and enforced by DecisionTypeRegistry (decision-types-as-configuration).",
             "example": "resolution"
           },
           "context": {
@@ -70,7 +58,7 @@
           "templateCategory": {
             "type": "string",
             "title": "Template category",
-            "description": "Optional free-vocabulary narrowing field for templates that need a finer classification than decisionType alone (e.g. the VvE ALV categories: discharge, annual-accounts, reserve-fund-contribution, mjop-adoption, authorisation-above-threshold, amendment-internal-regulations, other). Selection-scoped only — does not grow Decision.decisionType's vocabulary (design.md Decision 2).",
+            "description": "Optional free-vocabulary narrowing field for templates that need a finer classification than decisionType alone (e.g. the VvE ALV categories: discharge, annual-accounts, reserve-fund-contribution, mjop-adoption, authorisation-above-threshold, amendment-internal-regulations, other). Selection-scoped only: does not grow Decision.decisionType's vocabulary (design.md Decision 2).",
             "example": "discharge"
           },
           "builtIn": {
@@ -89,7 +77,7 @@
           "stateMachine": {
             "type": "object",
             "title": "State machine",
-            "description": "Structured state machine (1:1 convertible to Symfony Workflow YAML). states[] declares the lifecycle states; transitions[] declares the edges. This is the per-decision lifecycle graph DecisionTransitionGuard walks for a decision's own status field — a distinct concept from decision-route's DecisionStage route objects (design.md Decision 3). Absent for content-only templates.",
+            "description": "Structured state machine (1:1 convertible to Symfony Workflow YAML). states[] declares the lifecycle states; transitions[] declares the edges. This is the per-decision lifecycle graph DecisionTransitionGuard walks for a decision's own status field: a distinct concept from decision-route's DecisionStage route objects (design.md Decision 3). Absent for content-only templates.",
             "properties": {
               "states": {
                 "type": "array",
@@ -281,7 +269,7 @@
           "checklist": {
             "type": "array",
             "title": "Checklist",
-            "description": "Ordered required/optional check items a decision under this template is expected to satisfy. NEW in this schema — no legacy template family had a checklist. Declares the checklist definition only; instantiating a per-decision checklist-progress object is consumer-rewrite/decision-instance work, out of scope here.",
+            "description": "Ordered required/optional check items a decision under this template is expected to satisfy. NEW in this schema: no legacy template family had a checklist. Declares the checklist definition only; instantiating a per-decision checklist-progress object is consumer-rewrite/decision-instance work, out of scope here.",
             "items": {
               "type": "object",
               "title": "Checklist item",
@@ -327,7 +315,7 @@
               "sourceUuid": {
                 "type": "string",
                 "title": "Source identifier",
-                "description": "Provenance marker: the identifier the migrated object carried in its superseded schema (see sourceSchema). Deliberately NOT a $ref and not uuid-formatted — the source schemas are retired (active:false), their objects stay inert as historical fixtures, and no live join should ever traverse this field (ADR-062 rule 7 provenance exemption)."
+                "description": "Provenance marker: the identifier the migrated object carried in its superseded schema (see sourceSchema). Deliberately NOT a $ref and not uuid-formatted: the source schemas are retired (active:false), their objects stay inert as historical fixtures, and no live join should ever traverse this field (ADR-062 rule 7 provenance exemption)."
               }
             }
           }
@@ -335,7 +323,7 @@
       },
       "ProcessTemplate": {
         "version": "0.4.0",
-        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): route/voting/quorum/urgency are now declared on DecisionTemplate (decision-template schema, 68-unified-decision-templates.json). Definition and slug are kept, not deleted (hardDelete: false, existing rows), and every existing consumer (ProcessTemplateService, ProcessTemplatePolicyResolver, DecisionTransitionGuard, ProcessTemplateController, the admin Vue surface, GovernanceBody.processTemplate/additionalTemplates[] resolution) keeps reading process-template exactly as before — active:false is a create-time guard only, never a read guard (verified via ProcessTemplateService::list()/get(), which filter by register/schema context, never by x-openregister.active). No new process-template row should be created going forward; use DecisionTemplate instead. Repointing consumers is unified-decision-templates-consumer-rewrite; deleting this schema is unified-decision-templates-legacy-deletion, scheduled only after the consumer-rewrite change has shipped and been live-verified.",
+        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): route/voting/quorum/urgency are now declared on DecisionTemplate (decision-template schema, 68-unified-decision-templates.json). Definition and slug are kept, not deleted (hardDelete: false, existing rows), and every existing consumer (ProcessTemplateService, ProcessTemplatePolicyResolver, DecisionTransitionGuard, ProcessTemplateController, the admin Vue surface, GovernanceBody.processTemplate/additionalTemplates[] resolution) keeps reading process-template exactly as before, active:false is a create-time guard only, never a read guard (verified via ProcessTemplateService:list()/get(), which filter by register/schema context, never by x-openregister.active). No new process-template row should be created going forward; use DecisionTemplate instead. Repointing consumers is unified-decision-templates-consumer-rewrite; deleting this schema is unified-decision-templates-legacy-deletion, scheduled only after the consumer-rewrite change has shipped and been live-verified.",
         "x-openregister": {
           "schemaType": "custom:ProcessTemplate",
           "active": false,
@@ -346,7 +334,7 @@
       },
       "VveDecisionTemplate": {
         "version": "0.2.0",
-        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): decision content (proposedText, regulationSource) plus category/majority defaults are now declared on DecisionTemplate (decision-template schema, context=association, decisionType=resolution, templateCategory=<VvE category>). Definition and slug are kept, not deleted (hardDelete: false, existing rows) — this schema had zero PHP/Vue consumers before this change (grep-confirmed, proposal.md Motivation), so no read path is affected. No new vve-decision-template row should be created going forward; use DecisionTemplate instead.",
+        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): decision content (proposedText, regulationSource) plus category/majority defaults are now declared on DecisionTemplate (decision-template schema, context=association, decisionType=resolution, templateCategory=<VvE category>). Definition and slug are kept, not deleted (hardDelete: false, existing rows), this schema had zero PHP/Vue consumers before this change (grep-confirmed, proposal.md Motivation), so no read path is affected. No new vve-decision-template row should be created going forward; use DecisionTemplate instead.",
         "x-openregister": {
           "schemaType": "schema:HowTo",
           "active": false,
@@ -357,7 +345,7 @@
       },
       "ModelreglementPreset": {
         "version": "0.2.0",
-        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): the 2017 (current-law) modelreglement's categoryRules are folded directly into the corresponding DecisionTemplate seeds as that seed's own votingRule/quorumRule defaults (design.md: 'a preset a template consults' and 'the template's own default' are the same fact once VveDecisionTemplate and DecisionTemplate are one object). Definition and slug are kept, not deleted (hardDelete: false, existing rows) — this schema had zero PHP/Vue consumers before this change. The 1992/2006 modelreglement versions remain documented here and in regulationSource history; a VvE on an older modelreglement deviates via VveConfiguration.majorityOverrides[] (unchanged mechanism), not by selecting a different preset.",
+        "description": "SUPERSEDED (unified-decision-templates, chain link 1 of 3): the 2017 (current-law) modelreglement's categoryRules are folded directly into the corresponding DecisionTemplate seeds as that seed's own votingRule/quorumRule defaults (design.md: 'a preset a template consults' and 'the template's own default' are the same fact once VveDecisionTemplate and DecisionTemplate are one object). Definition and slug are kept, not deleted (hardDelete: false, existing rows), this schema had zero PHP/Vue consumers before this change. The 1992/2006 modelreglement versions remain documented here and in regulationSource history; a VvE on an older modelreglement deviates via VveConfiguration.majorityOverrides[] (unchanged mechanism), not by selecting a different preset.",
         "x-openregister": {
           "schemaType": "schema:HowTo",
           "active": false,
@@ -368,19 +356,19 @@
       },
       "VveConfiguration": {
         "version": "0.2.0",
-        "description": "Additive delta (ADR-037; OpenSpec unified-decision-templates): adds modelReglementVersion (a plain string enum) alongside the existing modelRegulation ModelreglementPreset $ref, and majorityOverrides[].templateCategory alongside the existing majorityOverrides[].decisionCategory. This is an additive-shaped retarget, not a schema-level removal — ADR-037 fragment merges are additive-only (deep-merge unions keys; it cannot delete a property or un-require one), so modelRegulation stays declared and required exactly as before; modelReglementVersion is the field new/updated code should read going forward. Informational only: ModelreglementPreset is superseded (see above) and VveConfiguration has zero PHP/Vue consumers today (grep-confirmed), so no read path is affected either way. The pre-existing vve-zeewaarts-configuratie seed object (57-vve-alv-pack.json) is left untouched — OR seed import is create-only, so patching it here would be inert; a new demo object, vve-parkstaete-configuratie, demonstrates the new fields on a freshly-created object instead (mirroring the 67-model-debt-cleanup.json convention).",
+        "description": "Additive delta (ADR-037; OpenSpec unified-decision-templates): adds modelReglementVersion (a plain string enum) alongside the existing modelRegulation ModelreglementPreset $ref, and majorityOverrides[].templateCategory alongside the existing majorityOverrides[].decisionCategory. This is an additive-shaped retarget, not a schema-level removal. ADR-037 fragment merges are additive-only (deep-merge unions keys; it cannot delete a property or un-require one), so modelRegulation stays declared and required exactly as before; modelReglementVersion is the field new/updated code should read going forward. Informational only: ModelreglementPreset is superseded (see above) and VveConfiguration has zero PHP/Vue consumers today (grep-confirmed), so no read path is affected either way. The pre-existing vve-zeewaarts-configuratie seed object (57-vve-alv-pack.json) is left untouched. OR seed import is create-only, so patching it here would be inert; a new demo object, vve-parkstaete-configuratie, demonstrates the new fields on a freshly-created object instead (mirroring the 67-model-debt-cleanup.json convention).",
         "properties": {
           "modelRegulation": {
             "title": "Modelreglement preset (superseded)",
             "type": "string",
             "format": "uuid",
             "$ref": "modelreglement-preset",
-            "description": "SUPERSEDED — ModelreglementPreset is retired (unified-decision-templates). Kept declared/required only because ADR-037 additive merges cannot un-require a property; new code should read modelReglementVersion instead."
+            "description": "SUPERSEDED. ModelreglementPreset is retired (unified-decision-templates). Kept declared/required only because ADR-037 additive merges cannot un-require a property; new code should read modelReglementVersion instead."
           },
           "modelReglementVersion": {
             "title": "Modelreglement version",
             "type": "string",
-            "description": "The modelreglement version (1992/2006/2017) this VvE follows, as a plain version string rather than a ModelreglementPreset reference (ModelreglementPreset is superseded — its 2017 categoryRules are now folded into the corresponding DecisionTemplate seeds). Optional; new/updated VveConfiguration objects should set this going forward.",
+            "description": "The modelreglement version (1992/2006/2017) this VvE follows, as a plain version string rather than a ModelreglementPreset reference (ModelreglementPreset is superseded: its 2017 categoryRules are now folded into the corresponding DecisionTemplate seeds). Optional; new/updated VveConfiguration objects should set this going forward.",
             "enum": [
               "1992",
               "2006",
@@ -399,7 +387,7 @@
                 "templateCategory": {
                   "title": "Template category",
                   "type": "string",
-                  "description": "The DecisionTemplate.templateCategory value this override applies to (renamed from decisionCategory; same VvE ALV category vocabulary — see decisionCategory for the enum, kept declared for the same additive-merge reason as modelRegulation above).",
+                  "description": "The DecisionTemplate.templateCategory value this override applies to (renamed from decisionCategory; same VvE ALV category vocabulary: see decisionCategory for the enum, kept declared for the same additive-merge reason as modelRegulation above).",
                   "enum": [
                     "discharge",
                     "annual-accounts",

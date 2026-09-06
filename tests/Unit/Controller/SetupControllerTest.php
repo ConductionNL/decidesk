@@ -46,7 +46,7 @@ class SetupControllerTest extends TestCase {
 
 	public function testStatusReportsBothExampleSetSteps(): void {
 		$this->appConfig->method('getValueString')->willReturn('');
-		$this->seedProfiles->method('listProfiles')->willReturn([]);
+		$this->seedProfiles->method('listChoices')->willReturn([]);
 
 		$data = $this->controller->status()->getData();
 
@@ -62,15 +62,22 @@ class SetupControllerTest extends TestCase {
 	}
 
 	public function testStatusOffersTheSetsTheAppShips(): void {
+		// 🔴 THE STATUS DOCUMENT IS THE OPTION LIST NOW. The manifest names
+		// `optionsSource: profiles` and declares no options of its own, so a set
+		// missing from this response is a set nobody can pick.
 		$this->appConfig->method('getValueString')->willReturn('');
-		$this->seedProfiles->method('listProfiles')->willReturn([
-			['id' => 'municipality', 'label' => 'Municipality', 'description' => '', 'objectCount' => 199],
+		$this->seedProfiles->method('listChoices')->willReturn([
+			['id' => 'none', 'label' => 'None', 'description' => 'Nothing.', 'objectCount' => 0, 'icon' => 'CloseCircleOutline'],
+			['id' => 'municipality', 'label' => 'Municipality', 'description' => 'A council.', 'objectCount' => 199, 'icon' => 'Domain'],
 		]);
 
 		$data = $this->controller->status()->getData();
 
-		// The sets are read from disk, so a set that ships is always offered.
-		$this->assertSame('municipality', $data['profiles'][0]['id']);
+		$this->assertSame(['none', 'municipality'], array_column($data['profiles'], 'id'));
+		// The card renders these three, so an entry without them is a blank card.
+		$this->assertSame('A council.', $data['profiles'][1]['description']);
+		$this->assertSame(199, $data['profiles'][1]['objectCount']);
+		$this->assertSame('Domain', $data['profiles'][1]['icon']);
 	}
 
 	public function testChoosingNoneClosesTheLoadStepWithoutRunningIt(): void {
@@ -80,7 +87,7 @@ class SetupControllerTest extends TestCase {
 		$this->appConfig->method('getValueString')
 			->willReturnCallback(static fn (string $app, string $key): string
 				=> ($key === 'example_profile' ? 'none' : ''));
-		$this->seedProfiles->method('listProfiles')->willReturn([]);
+		$this->seedProfiles->method('listChoices')->willReturn([]);
 
 		$data = $this->controller->status()->getData();
 
@@ -100,6 +107,72 @@ class SetupControllerTest extends TestCase {
 
 		$this->assertTrue($data['success']);
 		$this->assertSame('municipality', $data['config']['example_profile']);
+	}
+
+	public function testSeveralSetsArePersistedAsAList(): void {
+		// The choice step is `multiple`, so the browser posts an array. Stored
+		// comma-separated rather than as JSON so `occ config:app:get` stays
+		// readable.
+		$this->request->method('getParam')->willReturn(['municipality', 'works-council']);
+		$this->seedProfiles->method('isKnown')->willReturn(true);
+
+		$this->appConfig->expects($this->once())
+			->method('setValueString')
+			->with('decidiq', 'example_profile', 'municipality,works-council');
+
+		$data = $this->controller->saveConfig()->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertSame('municipality,works-council', $data['config']['example_profile']);
+	}
+
+	public function testOneBadSetRejectsTheWholePickRatherThanStoringTheRest(): void {
+		// Storing the good half would import something the operator did not
+		// confirm, and would report success for a pick that was refused.
+		$this->request->method('getParam')->willReturn(['municipality', 'atlantis']);
+		$this->seedProfiles->method('isKnown')
+			->willReturnCallback(static fn (string $id): bool => $id === 'municipality');
+
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$response = $this->controller->saveConfig();
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertStringContainsString('atlantis', $response->getData()['message']);
+	}
+
+	public function testPickingNoneAlongsideASetKeepsTheSet(): void {
+		// 🔴 THE CARDS ARE CHECKBOXES, so "None" and a set can both be ticked.
+		// Storing both would leave the load step reading "import nothing" and
+		// "import the municipality" from one value.
+		$this->request->method('getParam')->willReturn(['none', 'municipality']);
+		$this->seedProfiles->method('isKnown')->willReturn(true);
+
+		$this->appConfig->expects($this->once())
+			->method('setValueString')
+			->with('decidiq', 'example_profile', 'municipality');
+
+		$this->assertTrue($this->controller->saveConfig()->getData()['success']);
+	}
+
+	public function testTheSameSetTickedTwiceIsImportedOnce(): void {
+		$this->request->method('getParam')->willReturn(['municipality', 'municipality']);
+		$this->seedProfiles->method('isKnown')->willReturn(true);
+
+		$this->appConfig->expects($this->once())
+			->method('setValueString')
+			->with('decidiq', 'example_profile', 'municipality');
+
+		$this->assertTrue($this->controller->saveConfig()->getData()['success']);
+	}
+
+	public function testAValueThatIsNotAStringIsRefused(): void {
+		// The body is whatever the browser posted. An array nested inside the
+		// list would otherwise reach `(string)` and raise a fatal.
+		$this->request->method('getParam')->willReturn([['municipality']]);
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$this->assertSame(400, $this->controller->saveConfig()->getStatus());
 	}
 
 	public function testAnUnknownSetIsRejectedRatherThanStored(): void {
@@ -177,6 +250,44 @@ class SetupControllerTest extends TestCase {
 		// A success message that names no count cannot be told apart from an
 		// import that wrote nothing — the defect this programme already shipped.
 		$this->assertStringContainsString('199', $data['message']);
+	}
+
+	public function testEverySetPickedIsImported(): void {
+		$this->appConfig->method('getValueString')->willReturn('municipality,works-council');
+		$this->seedProfiles->method('install')
+			->willReturnCallback(static fn (string $id): array => [
+				'objects' => ($id === 'municipality' ? 199 : 45),
+				'profile' => $id,
+			]);
+
+		$data = $this->controller->runAction('load-example-set')->getData();
+
+		$this->assertTrue($data['success']);
+		// 244, not 199: a message naming only the first set's count is how a
+		// half-finished import reads as a whole one.
+		$this->assertStringContainsString('244', $data['message']);
+		$this->assertStringContainsString('2 set', $data['message']);
+	}
+
+	public function testAFailureHalfwayThroughSaysWhatAlreadyLanded(): void {
+		// 🔴 A PARTIAL IMPORT REPORTED AS A SUCCESS IS THE WORST OUTCOME: the
+		// operator has one set in their register and no reason to think so.
+		$this->appConfig->method('getValueString')->willReturn('municipality,works-council');
+		$this->seedProfiles->method('install')
+			->willReturnCallback(static function (string $id): array {
+				if ($id === 'works-council') {
+					throw new RuntimeException('OpenRegister is not installed.');
+				}
+
+				return ['objects' => 199, 'profile' => $id];
+			});
+
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$response = $this->controller->runAction('load-example-set');
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertStringContainsString('municipality', $response->getData()['message']);
 	}
 
 	public function testAFailedLoadIsReportedAndLeavesTheStepUNDECIDED(): void {

@@ -27,10 +27,9 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Listener;
 
 use OCA\Decidiq\Event\ApprovalActionRequestedEvent;
-use OCA\Decidiq\Event\ApprovalRouteConcludedEvent;
 use OCA\Decidiq\Service\ApprovalRouteCommandService;
+use OCA\Decidiq\Service\ApprovalRouteConclusionAnnouncer;
 use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventDispatcher;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -47,13 +46,13 @@ class ApprovalActionRequestedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ApprovalRouteCommandService $commandService The delegating command engine.
-	 * @param IEventDispatcher            $dispatcher     Dispatcher for the conclusion event.
-	 * @param LoggerInterface             $logger         Logger.
+	 * @param ApprovalRouteCommandService       $commandService The delegating command engine.
+	 * @param ApprovalRouteConclusionAnnouncer $announcer      The one door a conclusion leaves by.
+	 * @param LoggerInterface                   $logger         Logger.
 	 */
 	public function __construct(
 		private readonly ApprovalRouteCommandService $commandService,
-		private readonly IEventDispatcher $dispatcher,
+		private readonly ApprovalRouteConclusionAnnouncer $announcer,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -99,14 +98,12 @@ class ApprovalActionRequestedListener implements IEventListener {
 			return;
 		}
 
-		$this->dispatcher->dispatchTyped(
-			new ApprovalRouteConcludedEvent(
-				subject: $event->getSubject(),
-				sourceApp: $event->getSourceApp(),
-				outcome: $this->commandService->finalOutcomeOf(subject: $event->getSubject()),
-				actor: $event->getActor(),
-				correlationId: $event->getCorrelationId(),
-			)
+		// Announced through the shared announcer, not dispatched inline: the
+		// REST surface and the task inbox conclude routes too, and three
+		// dispatch sites is how payloads drift apart.
+		$this->announcer->announceIfConcluded(
+			subject: $event->getSubject(),
+			correlationId: $event->getCorrelationId(),
 		);
 
 	}//end handle()

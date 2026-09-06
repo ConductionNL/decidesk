@@ -13,7 +13,8 @@
 			"label": "Association or VvE",
 			"description": "A members' meeting with a board. House rules, weighted votes, audit statements and annual accounts.",
 			"order": 2,
-			"objectCount": 56
+			"objectCount": 45,
+			"icon": "AccountGroupOutline"
 		},
 		"description": "An example set an operator picks in the first-time setup wizard (ADR-042). NEVER imported on install: the register.d fragments declare schemas only, so a bare install has zero objects. Every object carries @self.configuration/register/schema so the import resolves the live decidiq register WITHOUT this descriptor declaring components.registers. That is deliberate and load-bearing: ImportHandler::importRegister() calls setApplication($appId) unconditionally on an existing register, so a descriptor that declared the register would re-point the decidiq register at this profile config id and hydrate over its authorization baseline. Verified on a live instance: importing this shape left application=decidiq, version and authorization byte-identical. Import is idempotent by slug, so loading a profile twice adds nothing. Descriptors live in this SUBDIRECTORY on purpose: RegisterDescriptorService scans lib/Settings/*.json non-recursively and matches descriptors by declared register slug, so four profile files in lib/Settings would collide with each other and with decidesk_register.json.",
 		"seedData": {
@@ -34,206 +35,69 @@
 						"isRecurring": true
 					}
 				],
-				"cyclus-stap": [
+				"audit-statement": [
 					{
 						"@self": {
 							"configuration": "decidiq",
 							"register": "decidiq",
-							"schema": "cyclus-stap"
+							"schema": "audit-statement"
 						},
-						"slug": "begroting-2027-vereniging",
-						"cyclus": "jaarcyclus-2026-vereniging",
-						"sequence": 5,
-						"stepType": "begroting",
-						"label": "Begroting",
-						"concernsYear": 2027,
-						"deliveryDeadline": "2026-10-01",
-						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
-						"handlingDate": "2026-11-25",
-						"documentSlots": [
-							{
-								"name": "Begroting",
-								"required": true
-							}
-						],
-						"status": "planned"
+						"slug": "audit-statement-parkstaete-2024",
+						"financialYear": 2024,
+						"verdict": "approving",
+						"notes": "De kascommissie heeft de administratie over 2024 gecontroleerd en stelt de ALV voor het bestuur decharge te verlenen.",
+						"governanceBody": "vve-parkstaete"
 					},
 					{
 						"@self": {
 							"configuration": "decidiq",
 							"register": "decidiq",
-							"schema": "cyclus-stap"
+							"schema": "audit-statement"
 						},
-						"slug": "decharge-2025-vereniging",
-						"cyclus": "jaarcyclus-2026-vereniging",
-						"sequence": 2,
-						"stepType": "decharge",
-						"label": "Decharge bestuur",
-						"concernsYear": 2025,
-						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
-						"handlingDate": "2026-04-15",
-						"documentSlots": [],
-						"status": "planned"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "cyclus-stap"
-						},
-						"slug": "jaarplan-2027-vereniging",
-						"cyclus": "jaarcyclus-2026-vereniging",
-						"sequence": 4,
-						"stepType": "jaarplan",
-						"label": "Jaarplan",
-						"concernsYear": 2027,
-						"deliveryDeadline": "2026-10-01",
-						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
-						"handlingDate": "2026-11-25",
-						"documentSlots": [
-							{
-								"name": "Jaarplan",
-								"required": true
-							}
-						],
-						"status": "planned"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "cyclus-stap"
-						},
-						"slug": "jaarstukken-2025-vereniging",
-						"cyclus": "jaarcyclus-2026-vereniging",
-						"sequence": 1,
-						"stepType": "jaarstukken",
-						"label": "Jaarstukken",
-						"concernsYear": 2025,
-						"deliveryDeadline": "2026-03-01",
-						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
-						"handlingDate": "2026-04-15",
-						"documentSlots": [
-							{
-								"name": "Jaarrekening",
-								"required": true,
-								"file": "Jaarstukken 2025.pdf"
-							},
-							{
-								"name": "Bestuursverslag",
-								"required": true
-							},
-							{
-								"name": "Kascommissieverslag",
-								"required": true
-							}
-						],
-						"status": "documents-received"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "cyclus-stap"
-						},
-						"slug": "tussenrapportage-2026-vereniging",
-						"cyclus": "jaarcyclus-2026-vereniging",
-						"sequence": 3,
-						"stepType": "berap",
-						"label": "Tussenrapportage",
-						"concernsYear": 2026,
-						"deliveryDeadline": "2026-05-15",
-						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
-						"handlingDate": "2026-06-20",
-						"documentSlots": [
-							{
-								"name": "Tussenrapportage",
-								"required": true
-							}
-						],
-						"status": "planned"
+						"slug": "audit-statement-parkstaete-2025",
+						"financialYear": 2025,
+						"verdict": "qualified",
+						"notes": "Goedkeurend met een kanttekening: twee facturen voor het MJOP-onderhoud ontbraken bij de stukken en zijn later nagestuurd.",
+						"governanceBody": "vve-parkstaete"
 					}
 				],
-				"cyclus-template": [
+				"body-governance-configuration": [
 					{
 						"@self": {
 							"configuration": "decidiq",
 							"register": "decidiq",
-							"schema": "cyclus-template"
+							"schema": "body-governance-configuration"
 						},
-						"slug": "association-jaarstukken",
-						"name": "Verenigings-/jaarstukkencyclus",
-						"context": "association",
-						"builtIn": true,
-						"steps": [
+						"slug": "parkstaete-configuration",
+						"governanceBody": "vve-parkstaete",
+						"constitutiveDocument": "splitsingsakte-vve-parkstaete",
+						"regulationVersion": "2017",
+						"voteWeightDenominator": 10000,
+						"majorityOverrides": [
 							{
-								"stepType": "jaarstukken",
-								"label": "Jaarstukken",
-								"subjectYearOffset": -1,
-								"deliveryDeadline": "03-01",
-								"handlingDate": "04-15",
-								"documentSlots": [
-									{
-										"name": "Jaarrekening",
-										"required": true
-									},
-									{
-										"name": "Bestuursverslag",
-										"required": true
-									},
-									{
-										"name": "Kascommissieverslag",
-										"required": true
-									}
-								]
-							},
-							{
-								"stepType": "decharge",
-								"label": "Decharge bestuur",
-								"subjectYearOffset": -1,
-								"handlingDate": "04-15",
-								"documentSlots": []
-							},
-							{
-								"stepType": "berap",
-								"label": "Tussenrapportage",
-								"subjectYearOffset": 0,
-								"deliveryDeadline": "05-15",
-								"handlingDate": "06-20",
-								"documentSlots": [
-									{
-										"name": "Tussenrapportage",
-										"required": true
-									}
-								]
-							},
-							{
-								"stepType": "jaarplan",
-								"label": "Jaarplan",
-								"subjectYearOffset": 1,
-								"deliveryDeadline": "10-01",
-								"handlingDate": "11-25",
-								"documentSlots": [
-									{
-										"name": "Jaarplan",
-										"required": true
-									}
-								]
-							},
-							{
-								"stepType": "begroting",
-								"label": "Begroting",
-								"subjectYearOffset": 1,
-								"deliveryDeadline": "10-01",
-								"handlingDate": "11-25",
-								"documentSlots": [
-									{
-										"name": "Begroting",
-										"required": true
-									}
-								]
+								"templateCategory": "amendment-internal-regulations",
+								"voteThreshold": "qualified-majority-three-quarters",
+								"deedArticle": "splitsingsakte VvE Parkstaete art. 62"
 							}
 						]
+					}
+				],
+				"confidentiality-ground": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-statutair",
+						"name": "Statutaire vertrouwelijkheid (niet-overheid)",
+						"citation": "statuten/reglement",
+						"legacyCitation": null,
+						"category": "other",
+						"requiresRatification": true,
+						"description": "Vertrouwelijkheidsgrond voor niet-overheidsgremia (vereniging, RvC, coöperatie) op basis van statuten of huishoudelijk reglement. Illustreert dat het bekrachtigingsvereiste een eigenschap van de configureerbare grond is, niet van de wet.",
+						"builtIn": true,
+						"active": true
 					}
 				],
 				"decision": [
@@ -278,6 +142,7 @@
 						"decisionType": "resolution",
 						"title": "Besluit statutenwijziging VNG 2021",
 						"text": "Besluit van de ledenraad van de Vereniging van Nederlandse Gemeenten tot wijziging van de statuten (BW 2:43), in het bijzonder de bevoegdheden van de ledenraad in art. 20.",
+						"lifecycle": "enacted",
 						"decisionDate": "2021-12-15",
 						"outcome": "adopted",
 						"citesGoverningDocuments": [
@@ -575,509 +440,12 @@
 							"voteThreshold": "qualified-majority-two-thirds"
 						},
 						"checklist": []
-					}
-				],
-				"geheimhouding-grond": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "geheimhouding-grond"
-						},
-						"slug": "grond-statutair",
-						"name": "Statutaire vertrouwelijkheid (niet-overheid)",
-						"citation": "statuten/reglement",
-						"legacyCitation": null,
-						"category": "other",
-						"requiresRatification": true,
-						"description": "Vertrouwelijkheidsgrond voor niet-overheidsgremia (vereniging, RvC, coöperatie) op basis van statuten of huishoudelijk reglement. Illustreert dat het bekrachtigingsvereiste een eigenschap van de configureerbare grond is, niet van de wet.",
-						"builtIn": true,
-						"active": true
-					}
-				],
-				"goal": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "goal"
-						},
-						"slug": "goal-vng-digitale-dienstverlening-2026",
-						"title": "Digitale dienstverlening leden",
-						"description": "Alle VNG-leden kunnen digitaal diensten afnemen bij de vereniging.",
-						"horizon": "annual",
-						"body": "ledenraad-vng",
-						"startDate": "2026-01-01",
-						"deadline": "2026-12-31",
-						"status": "draft"
-					}
-				],
-				"governance-body": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governance-body"
-						},
-						"slug": "ledenraad-vng",
-						"name": "Ledenraad VNG",
-						"bodyType": "association",
-						"domain": "association",
-						"votingDefault": "for-against-abstain",
-						"termStart": "2024-01-01T00:00:00Z",
-						"termEnd": "2025-12-31T00:00:00Z"
 					},
 					{
 						"@self": {
 							"configuration": "decidiq",
 							"register": "decidiq",
-							"schema": "governance-body"
-						},
-						"slug": "vve-parkstaete",
-						"name": "VvE Parkstaete",
-						"bodyType": "association",
-						"domain": "association",
-						"workflowTemplate": "association",
-						"votingDefault": "for-against-abstain"
-					}
-				],
-				"governing-document": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governing-document"
-						},
-						"slug": "splitsingsakte-vve-parkstaete",
-						"type": "deed-of-division",
-						"citationTitle": "Splitsingsakte VvE Parkstaete",
-						"description": "Splitsingsakte (BW 5:111), constitutief bij notariële akte; geen verband met een besluit.",
-						"governingBody": "vve-parkstaete",
-						"isPublic": false,
-						"status": "in-force"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governing-document"
-						},
-						"slug": "statuten-vng",
-						"type": "articles-of-association",
-						"citationTitle": "Statuten Vereniging van Nederlandse Gemeenten",
-						"description": "Statuten van de vereniging (BW 2:27), constitutief bij notariële akte en gewijzigd bij besluit tot statutenwijziging van de ledenraad.",
-						"governingBody": "ledenraad-vng",
-						"isPublic": true,
-						"status": "in-force"
-					}
-				],
-				"governing-document-versie": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governing-document-versie"
-						},
-						"slug": "splitsingsakte-parkstaete-v1",
-						"document": "splitsingsakte-vve-parkstaete",
-						"versionNumber": 1,
-						"effectiveDate": "2005-06-01",
-						"notes": "Constitutieve splitsingsakte bij notariële akte; geen verband met een besluit.",
-						"deedDate": "2005-05-20",
-						"notary": "mr. B. Jansen",
-						"status": "in-effect"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governing-document-versie"
-						},
-						"slug": "statuten-vng-v1",
-						"document": "statuten-vng",
-						"versionNumber": 1,
-						"effectiveDate": "1990-05-01",
-						"notes": "Constitutieve versie bij oprichting van de vereniging; opgericht bij notariële akte, geen verband met een besluit in Decidiq.",
-						"deedDate": "1990-04-12",
-						"notary": "mr. C. van Dam",
-						"status": "replaced"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "governing-document-versie"
-						},
-						"slug": "statuten-vng-v2",
-						"document": "statuten-vng",
-						"versionNumber": 2,
-						"determinedBy": "besluit-statutenwijziging-vng-2021",
-						"effectiveDate": "2022-01-01",
-						"notes": "Statutenwijziging 2021: aanpassing van de bevoegdheden van de ledenraad (art. 20).",
-						"deedDate": "2021-12-15",
-						"notary": "mr. A. de Wit",
-						"status": "in-effect"
-					}
-				],
-				"kascommissie-verklaring": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "kascommissie-verklaring"
-						},
-						"slug": "kascommissie-verklaring-2024",
-						"financialYear": 2024,
-						"verdict": "qualified",
-						"notes": "Voorbehoud: onderhoudsfacturen Q3 ontbraken bij controle.",
-						"governanceBody": "00000000-0000-0000-0000-000000000000"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "kascommissie-verklaring"
-						},
-						"slug": "kascommissie-verklaring-2025",
-						"financialYear": 2025,
-						"verdict": "approving",
-						"notes": "Administratie ordelijk; reservefondsdotatie conform MJOP.",
-						"agendaItem": "00000000-0000-0000-0000-000000000000",
-						"governanceBody": "00000000-0000-0000-0000-000000000000"
-					}
-				],
-				"meeting": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "meeting"
-						},
-						"slug": "ledenvergadering-vng-voorjaar-2025",
-						"title": "Algemene Ledenvergadering VNG — Voorjaar 2025",
-						"meetingType": "public hearing",
-						"scheduledDate": "2025-06-18T13:00:00Z",
-						"endDate": "2025-06-18T17:00:00Z",
-						"location": "World Forum Den Haag",
-						"meetingMode": "in-person",
-						"lifecycle": "scheduled",
-						"quorumRequired": 50
-					}
-				],
-				"member-consultation": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "member-consultation"
-						},
-						"slug": "ledenraadpleging-alv-contributie",
-						"question": "Welke contributieverhoging heeft uw voorkeur voor 2027?",
-						"description": "Peiling onder de leden ter voorbereiding op de ALV; het bestuur legt het definitieve voorstel voor aan de vergadering.",
-						"responseType": "multi-choice",
-						"choiceOptions": [
-							"Geen verhoging",
-							"+2%",
-							"+5%",
-							"Gedifferentieerd naar leeftijd"
-						],
-						"audienceType": "body-members",
-						"audienceBody": "00000000-0000-0000-0000-000000000000",
-						"agendaItem": "rondvraag",
-						"opensAt": "2026-03-01T09:00:00Z",
-						"closesAt": "2026-04-01T17:00:00Z",
-						"anonymousResponses": true,
-						"lifecycle": "draft"
-					}
-				],
-				"membership": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "membership"
-						},
-						"slug": "m-marie-vng",
-						"role": "member",
-						"label": "Lid ledenraad",
-						"votingWeight": 1,
-						"startDate": "2024-01-01T00:00:00Z",
-						"person": "marie-janssen",
-						"governanceBody": "ledenraad-vng"
-					}
-				],
-				"modelreglement-preset": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "modelreglement-preset"
-						},
-						"slug": "modelreglement-1992",
-						"name": "Modelreglement 1992",
-						"description": "Modelreglement bij splitsing in appartementsrechten, versie 1992. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-						"builtIn": true,
-						"categoryRules": [
-							{
-								"decisionCategory": "authorisation-above-threshold",
-								"voteThreshold": "qualified-majority-three-quarters",
-								"quorumFraction": "2/3",
-								"article": "MR 1992 art. 38 lid 5"
-							},
-							{
-								"decisionCategory": "amendment-internal-regulations",
-								"voteThreshold": "qualified-majority-two-thirds",
-								"quorumFraction": null,
-								"article": "MR 1992 art. 44"
-							},
-							{
-								"decisionCategory": "other",
-								"voteThreshold": "simple-majority",
-								"quorumFraction": null,
-								"article": "MR 1992 hoofdregel gewone meerderheid"
-							}
-						]
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "modelreglement-preset"
-						},
-						"slug": "modelreglement-2006",
-						"name": "Modelreglement 2006",
-						"description": "Modelreglement bij splitsing in appartementsrechten, versie 2006. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-						"builtIn": true,
-						"categoryRules": [
-							{
-								"decisionCategory": "authorisation-above-threshold",
-								"voteThreshold": "qualified-majority-two-thirds",
-								"quorumFraction": "2/3",
-								"article": "MR 2006 art. 52 lid 5"
-							},
-							{
-								"decisionCategory": "amendment-internal-regulations",
-								"voteThreshold": "qualified-majority-two-thirds",
-								"quorumFraction": null,
-								"article": "MR 2006 art. 59"
-							},
-							{
-								"decisionCategory": "other",
-								"voteThreshold": "simple-majority",
-								"quorumFraction": null,
-								"article": "MR 2006 hoofdregel gewone meerderheid"
-							}
-						]
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "modelreglement-preset"
-						},
-						"slug": "modelreglement-2017",
-						"name": "Modelreglement 2017",
-						"description": "Modelreglement bij splitsing in appartementsrechten, versie 2017. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-						"builtIn": true,
-						"categoryRules": [
-							{
-								"decisionCategory": "authorisation-above-threshold",
-								"voteThreshold": "qualified-majority-two-thirds",
-								"quorumFraction": "2/3",
-								"article": "MR 2017 art. 56 lid 5"
-							},
-							{
-								"decisionCategory": "amendment-internal-regulations",
-								"voteThreshold": "qualified-majority-two-thirds",
-								"quorumFraction": null,
-								"article": "MR 2017 art. 60"
-							},
-							{
-								"decisionCategory": "other",
-								"voteThreshold": "simple-majority",
-								"quorumFraction": null,
-								"article": "MR 2017 hoofdregel gewone meerderheid"
-							}
-						]
-					}
-				],
-				"participant": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "participant"
-						},
-						"slug": "ans-rutten",
-						"displayName": "Ans Rutten",
-						"role": "observer",
-						"email": "a.rutten@vng.nl",
-						"joinedAt": "2024-01-10T00:00:00Z",
-						"votingWeight": 0
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "participant"
-						},
-						"slug": "jan-de-vries",
-						"displayName": "Jan de Vries",
-						"role": "secretary",
-						"email": "j.devries@waterschap.nl",
-						"joinedAt": "2021-01-15T00:00:00Z",
-						"votingWeight": 1
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "participant"
-						},
-						"slug": "marie-janssen",
-						"displayName": "Marie Janssen",
-						"role": "member",
-						"party": "D66",
-						"email": "m.janssen@amsterdam.nl",
-						"joinedAt": "2022-03-16T00:00:00Z",
-						"votingWeight": 1
-					}
-				],
-				"pc-cyclus": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "pc-cyclus"
-						},
-						"slug": "jaarcyclus-2026-vereniging",
-						"name": "Jaarcyclus 2026",
-						"year": 2026,
-						"governanceBody": "00000000-0000-0000-0000-000000000000",
-						"template": "association-jaarstukken",
-						"stepCount": 5,
-						"completedStepCount": 0,
-						"overdueStepCount": 0
-					}
-				],
-				"person": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "person"
-						},
-						"slug": "jan-de-vries",
-						"name": "Jan de Vries",
-						"givenName": "Jan",
-						"familyName": "de Vries",
-						"gender": "male",
-						"email": "j.devries@waterschap.nl",
-						"biography": "Secretaris / griffier."
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "person"
-						},
-						"slug": "marie-janssen",
-						"name": "Marie Janssen",
-						"givenName": "Marie",
-						"familyName": "Janssen",
-						"gender": "female",
-						"email": "m.janssen@amsterdam.nl",
-						"biography": "Raadslid en lid van de VNG-ledenraad."
-					}
-				],
-				"process-template": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "process-template"
-						},
-						"slug": "association-alv",
-						"name": "Association ALV",
-						"description": "Standard decision process for a Dutch association general meeting (ALV), BW Book 2.",
-						"context": "association",
-						"builtIn": true,
-						"initialState": "draft",
-						"stateMachine": {
-							"states": [
-								{
-									"name": "draft"
-								},
-								{
-									"name": "proposed"
-								},
-								{
-									"name": "deliberating"
-								},
-								{
-									"name": "voting"
-								},
-								{
-									"name": "decided"
-								},
-								{
-									"name": "enacted"
-								},
-								{
-									"name": "archived"
-								}
-							],
-							"transitions": [
-								{
-									"name": "propose",
-									"from": "draft",
-									"to": "proposed"
-								},
-								{
-									"name": "deliberate",
-									"from": "proposed",
-									"to": "deliberating"
-								},
-								{
-									"name": "openVoting",
-									"from": "deliberating",
-									"to": "voting",
-									"chairOnly": true,
-									"guards": [
-										"quorum_met"
-									]
-								},
-								{
-									"name": "decide",
-									"from": "voting",
-									"to": "decided"
-								},
-								{
-									"name": "enact",
-									"from": "decided",
-									"to": "enacted"
-								},
-								{
-									"name": "archive",
-									"from": "enacted",
-									"to": "archived"
-								}
-							]
-						},
-						"votingRule": {
-							"voteThreshold": "simple-majority",
-							"abstentionHandling": "exclude",
-							"tieBreakRule": "rejected"
-						},
-						"quorumRequired": true,
-						"quorumRule": "50%+1 of members present or represented",
-						"allowDecideWithoutVote": false
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "process-template"
+							"schema": "decision-template"
 						},
 						"slug": "association-alv-statutaire-volmacht",
 						"name": "ALV met statutaire volmachtgrens",
@@ -1161,83 +529,530 @@
 						"@self": {
 							"configuration": "decidiq",
 							"register": "decidiq",
-							"schema": "process-template"
+							"schema": "decision-template"
 						},
-						"slug": "association-board",
-						"name": "Association Board",
-						"description": "Decision process for an association board (bestuur).",
+						"slug": "machtiging-boven-drempel-mr1992",
+						"name": "Machtiging boven drempel (Modelreglement 1992)",
+						"description": "Machtiging van het bestuur voor uitgaven boven de drempel, voor een VvE die onder het Modelreglement 1992 valt. Dat reglement vraagt drie kwart van de stemmen waar de reglementen van 2006 en 2017 twee derde vragen; dat verschil is de enige reden dat dit een eigen sjabloon is.",
+						"context": "association",
+						"decisionType": "resolution",
+						"templateCategory": "authorisation-above-threshold",
+						"builtIn": true,
+						"proposedText": "De vergadering machtigt het bestuur tot het aangaan van de onderhoudsverplichting {omschrijving} voor een bedrag van {bedrag}, welk bedrag de reglementaire drempel overschrijdt.",
+						"regulationSource": "MR 1992 art. 38 lid 5",
+						"votingRule": {
+							"voteThreshold": "qualified-majority-three-quarters"
+						},
+						"quorumRule": "2/3 van de stemmen (MR 1992 art. 38 lid 5)",
+						"checklist": [],
+						"quorumRequired": true
+					}
+				],
+				"goal": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "goal"
+						},
+						"slug": "goal-vng-digitale-dienstverlening-2026",
+						"title": "Digitale dienstverlening leden",
+						"description": "Alle VNG-leden kunnen digitaal diensten afnemen bij de vereniging.",
+						"horizon": "annual",
+						"body": "ledenraad-vng",
+						"startDate": "2026-01-01",
+						"deadline": "2026-12-31",
+						"status": "draft"
+					}
+				],
+				"governance-body": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "ledenraad-vng",
+						"name": "Ledenraad VNG",
+						"bodyType": "association",
+						"domain": "association",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2024-01-01T00:00:00Z",
+						"termEnd": "2025-12-31T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "vve-parkstaete",
+						"name": "VvE Parkstaete",
+						"bodyType": "association",
+						"domain": "association",
+						"workflowTemplate": "association",
+						"votingDefault": "for-against-abstain"
+					}
+				],
+				"governance-consultation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "ledenraadpleging-alv-contributie",
+						"subject": "Welke contributieverhoging heeft uw voorkeur voor 2027?",
+						"askingBody": "00000000-0000-0000-0000-000000000000",
+						"audienceType": "body-members",
+						"audienceBody": "00000000-0000-0000-0000-000000000000",
+						"binding": false,
+						"deadline": "2026-04-01T17:00:00Z",
+						"description": "Peiling onder de leden ter voorbereiding op de ALV; het bestuur legt het definitieve voorstel voor aan de vergadering.",
+						"responseType": "multi-choice",
+						"choiceOptions": [
+							"Geen verhoging",
+							"+2%",
+							"+5%",
+							"Gedifferentieerd naar leeftijd"
+						],
+						"agendaItem": "rondvraag",
+						"opensAt": "2026-03-01T09:00:00Z",
+						"anonymousResponses": true,
+						"lifecycle": "draft"
+					}
+				],
+				"governing-document": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "splitsingsakte-vve-parkstaete",
+						"type": "deed-of-division",
+						"citationTitle": "Splitsingsakte VvE Parkstaete",
+						"description": "Splitsingsakte (BW 5:111), constitutief bij notariële akte; geen verband met een besluit.",
+						"governingBody": "vve-parkstaete",
+						"isPublic": false,
+						"status": "in-force"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "statuten-vng",
+						"type": "articles-of-association",
+						"citationTitle": "Statuten Vereniging van Nederlandse Gemeenten",
+						"description": "Statuten van de vereniging (BW 2:27), constitutief bij notariële akte en gewijzigd bij besluit tot statutenwijziging van de ledenraad.",
+						"governingBody": "ledenraad-vng",
+						"isPublic": true,
+						"status": "in-force"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "huishoudelijk-reglement-vng",
+						"type": "regulations",
+						"citationTitle": "Huishoudelijk reglement ledenraad VNG",
+						"officialTitle": "Huishoudelijk reglement van de ledenraad van de Vereniging van Nederlandse Gemeenten",
+						"statutoryBasis": [
+							"Statuten VNG art. 12"
+						],
+						"governingBody": "ledenraad-vng",
+						"status": "adopted"
+					}
+				],
+				"governing-document-versie": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "splitsingsakte-parkstaete-v1",
+						"document": "splitsingsakte-vve-parkstaete",
+						"versionNumber": 1,
+						"effectiveDate": "2005-06-01",
+						"notes": "Constitutieve splitsingsakte bij notariële akte; geen verband met een besluit.",
+						"deedDate": "2005-05-20",
+						"notary": "mr. B. Jansen",
+						"status": "in-effect"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "statuten-vng-v1",
+						"document": "statuten-vng",
+						"versionNumber": 1,
+						"effectiveDate": "1990-05-01",
+						"notes": "Constitutieve versie bij oprichting van de vereniging; opgericht bij notariële akte, geen verband met een besluit in Decidiq.",
+						"deedDate": "1990-04-12",
+						"notary": "mr. C. van Dam",
+						"status": "replaced"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "statuten-vng-v2",
+						"document": "statuten-vng",
+						"versionNumber": 2,
+						"determinedBy": "besluit-statutenwijziging-vng-2021",
+						"effectiveDate": "2022-01-01",
+						"notes": "Statutenwijziging 2021: aanpassing van de bevoegdheden van de ledenraad (art. 20).",
+						"deedDate": "2021-12-15",
+						"notary": "mr. A. de Wit",
+						"status": "in-effect"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "hr-vng-v1",
+						"document": "huishoudelijk-reglement-vng",
+						"versionNumber": 1,
+						"determinedBy": "00000000-0000-0000-0000-000000000000",
+						"effectiveDate": "2026-09-01",
+						"notes": "Concept eerste huishoudelijk reglement; treedt in werking na vaststelling door de ledenraad.",
+						"status": "draft"
+					}
+				],
+				"meeting": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "ledenvergadering-vng-voorjaar-2025",
+						"title": "Algemene Ledenvergadering VNG. Voorjaar 2025",
+						"meetingType": "public hearing",
+						"scheduledDate": "2025-06-18T13:00:00Z",
+						"endDate": "2025-06-18T17:00:00Z",
+						"location": "World Forum Den Haag",
+						"meetingMode": "in-person",
+						"lifecycle": "scheduled",
+						"quorumRequired": 50
+					}
+				],
+				"membership": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-marie-vng",
+						"role": "member",
+						"label": "Lid ledenraad",
+						"votingWeight": 1,
+						"startDate": "2024-01-01T00:00:00Z",
+						"person": "marie-janssen",
+						"governanceBody": "ledenraad-vng"
+					}
+				],
+				"participant": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "ans-rutten",
+						"displayName": "Ans Rutten",
+						"role": "observer",
+						"email": "a.rutten@vng.nl",
+						"joinedAt": "2024-01-10T00:00:00Z",
+						"votingWeight": 0
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "jan-de-vries",
+						"displayName": "Jan de Vries",
+						"role": "secretary",
+						"email": "j.devries@waterschap.nl",
+						"joinedAt": "2021-01-15T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "marie-janssen",
+						"displayName": "Marie Janssen",
+						"role": "member",
+						"party": "D66",
+						"email": "m.janssen@amsterdam.nl",
+						"joinedAt": "2022-03-16T00:00:00Z",
+						"votingWeight": 1
+					}
+				],
+				"person": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "jan-de-vries",
+						"name": "Jan de Vries",
+						"givenName": "Jan",
+						"familyName": "de Vries",
+						"gender": "male",
+						"email": "j.devries@waterschap.nl",
+						"biography": "Secretaris / griffier."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "marie-janssen",
+						"name": "Marie Janssen",
+						"givenName": "Marie",
+						"familyName": "Janssen",
+						"gender": "female",
+						"email": "m.janssen@amsterdam.nl",
+						"biography": "Raadslid en lid van de VNG-ledenraad."
+					}
+				],
+				"planning-cycle": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle"
+						},
+						"slug": "jaarcyclus-2026-vereniging",
+						"name": "Jaarcyclus 2026",
+						"year": 2026,
+						"governanceBody": "00000000-0000-0000-0000-000000000000",
+						"template": "association-jaarstukken",
+						"stepCount": 5,
+						"completedStepCount": 0,
+						"overdueStepCount": 0
+					}
+				],
+				"planning-cycle-step": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "begroting-2027-vereniging",
+						"sequence": 5,
+						"stepType": "begroting",
+						"label": "Begroting",
+						"concernsYear": 2027,
+						"deliveryDeadline": "2026-10-01",
+						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
+						"handlingDate": "2026-11-25",
+						"documentSlots": [
+							{
+								"name": "Begroting",
+								"required": true
+							}
+						],
+						"status": "planned",
+						"cycle": "jaarcyclus-2026-vereniging"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "decharge-2025-vereniging",
+						"sequence": 2,
+						"stepType": "decharge",
+						"label": "Decharge bestuur",
+						"concernsYear": 2025,
+						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
+						"handlingDate": "2026-04-15",
+						"documentSlots": [],
+						"status": "planned",
+						"cycle": "jaarcyclus-2026-vereniging"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "jaarplan-2027-vereniging",
+						"sequence": 4,
+						"stepType": "jaarplan",
+						"label": "Jaarplan",
+						"concernsYear": 2027,
+						"deliveryDeadline": "2026-10-01",
+						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
+						"handlingDate": "2026-11-25",
+						"documentSlots": [
+							{
+								"name": "Jaarplan",
+								"required": true
+							}
+						],
+						"status": "planned",
+						"cycle": "jaarcyclus-2026-vereniging"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "jaarstukken-2025-vereniging",
+						"sequence": 1,
+						"stepType": "jaarstukken",
+						"label": "Jaarstukken",
+						"concernsYear": 2025,
+						"deliveryDeadline": "2026-03-01",
+						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
+						"handlingDate": "2026-04-15",
+						"documentSlots": [
+							{
+								"name": "Jaarrekening",
+								"required": true,
+								"file": "Jaarstukken 2025.pdf"
+							},
+							{
+								"name": "Bestuursverslag",
+								"required": true
+							},
+							{
+								"name": "Kascommissieverslag",
+								"required": true
+							}
+						],
+						"status": "documents-received",
+						"cycle": "jaarcyclus-2026-vereniging"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "tussenrapportage-2026-vereniging",
+						"sequence": 3,
+						"stepType": "berap",
+						"label": "Tussenrapportage",
+						"concernsYear": 2026,
+						"deliveryDeadline": "2026-05-15",
+						"decisionMakingBody": "00000000-0000-0000-0000-000000000000",
+						"handlingDate": "2026-06-20",
+						"documentSlots": [
+							{
+								"name": "Tussenrapportage",
+								"required": true
+							}
+						],
+						"status": "planned",
+						"cycle": "jaarcyclus-2026-vereniging"
+					}
+				],
+				"planning-cycle-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-template"
+						},
+						"slug": "association-jaarstukken",
+						"name": "Verenigings-/jaarstukkencyclus",
 						"context": "association",
 						"builtIn": true,
-						"initialState": "draft",
-						"stateMachine": {
-							"states": [
-								{
-									"name": "draft"
-								},
-								{
-									"name": "proposed"
-								},
-								{
-									"name": "deliberating"
-								},
-								{
-									"name": "voting"
-								},
-								{
-									"name": "decided"
-								},
-								{
-									"name": "enacted"
-								},
-								{
-									"name": "archived"
-								}
-							],
-							"transitions": [
-								{
-									"name": "propose",
-									"from": "draft",
-									"to": "proposed"
-								},
-								{
-									"name": "deliberate",
-									"from": "proposed",
-									"to": "deliberating"
-								},
-								{
-									"name": "openVoting",
-									"from": "deliberating",
-									"to": "voting",
-									"chairOnly": true,
-									"guards": [
-										"quorum_met"
-									]
-								},
-								{
-									"name": "decide",
-									"from": "voting",
-									"to": "decided"
-								},
-								{
-									"name": "enact",
-									"from": "decided",
-									"to": "enacted"
-								},
-								{
-									"name": "archive",
-									"from": "enacted",
-									"to": "archived"
-								}
-							]
-						},
-						"votingRule": {
-							"voteThreshold": "simple-majority",
-							"abstentionHandling": "exclude",
-							"tieBreakRule": "chair-decides"
-						},
-						"quorumRequired": true,
-						"quorumRule": "Majority of board members present",
-						"allowDecideWithoutVote": false
+						"steps": [
+							{
+								"stepType": "jaarstukken",
+								"label": "Jaarstukken",
+								"subjectYearOffset": -1,
+								"deliveryDeadline": "03-01",
+								"handlingDate": "04-15",
+								"documentSlots": [
+									{
+										"name": "Jaarrekening",
+										"required": true
+									},
+									{
+										"name": "Bestuursverslag",
+										"required": true
+									},
+									{
+										"name": "Kascommissieverslag",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "decharge",
+								"label": "Decharge bestuur",
+								"subjectYearOffset": -1,
+								"handlingDate": "04-15",
+								"documentSlots": []
+							},
+							{
+								"stepType": "berap",
+								"label": "Tussenrapportage",
+								"subjectYearOffset": 0,
+								"deliveryDeadline": "05-15",
+								"handlingDate": "06-20",
+								"documentSlots": [
+									{
+										"name": "Tussenrapportage",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "jaarplan",
+								"label": "Jaarplan",
+								"subjectYearOffset": 1,
+								"deliveryDeadline": "10-01",
+								"handlingDate": "11-25",
+								"documentSlots": [
+									{
+										"name": "Jaarplan",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "begroting",
+								"label": "Begroting",
+								"subjectYearOffset": 1,
+								"deliveryDeadline": "10-01",
+								"handlingDate": "11-25",
+								"documentSlots": [
+									{
+										"name": "Begroting",
+										"required": true
+									}
+								]
+							}
+						]
 					}
 				],
 				"proxy-authorization": [
@@ -1267,182 +1082,6 @@
 						"signedAt": "2026-04-10T08:30:00Z",
 						"signingReference": "docudesk:sign:seed-jansen-alv-2026",
 						"proxyStatus": "active"
-					}
-				],
-				"regeling": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "regeling"
-						},
-						"slug": "huishoudelijk-reglement-vng",
-						"type": "regulations",
-						"citationTitle": "Huishoudelijk reglement ledenraad VNG",
-						"officialTitle": "Huishoudelijk reglement van de ledenraad van de Vereniging van Nederlandse Gemeenten",
-						"statutoryBasis": [
-							"Statuten VNG art. 12"
-						],
-						"determiningBody": "ledenraad-vng",
-						"status": "adopted"
-					}
-				],
-				"regeling-versie": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "regeling-versie"
-						},
-						"slug": "hr-vng-v1",
-						"regulation": "huishoudelijk-reglement-vng",
-						"versionNumber": 1,
-						"determinedBy": "00000000-0000-0000-0000-000000000000",
-						"effectiveDate": "2026-09-01",
-						"notes": "Concept eerste huishoudelijk reglement; treedt in werking na vaststelling door de ledenraad.",
-						"status": "draft"
-					}
-				],
-				"vve-configuration": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-configuration"
-						},
-						"slug": "vve-parkstaete-configuratie",
-						"governanceBody": "vve-parkstaete",
-						"modelRegulation": "modelreglement-2017",
-						"modelReglementVersion": "2017",
-						"fractionDenominator": 10000,
-						"deedOfDivisionDocument": "splitsingsakte-vve-parkstaete",
-						"majorityOverrides": [
-							{
-								"decisionCategory": "amendment-internal-regulations",
-								"templateCategory": "amendment-internal-regulations",
-								"voteThreshold": "qualified-majority-three-quarters",
-								"quorumFraction": null,
-								"deedArticle": "splitsingsakte VvE Parkstaete art. 62"
-							}
-						]
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-configuration"
-						},
-						"slug": "vve-zeewaarts-configuratie",
-						"governanceBody": "00000000-0000-0000-0000-000000000000",
-						"modelRegulation": "modelreglement-2017",
-						"fractionDenominator": 10000,
-						"deedOfDivisionDocument": "00000000-0000-0000-0000-000000000000",
-						"majorityOverrides": [
-							{
-								"decisionCategory": "amendment-internal-regulations",
-								"voteThreshold": "qualified-majority-three-quarters",
-								"quorumFraction": null,
-								"deedArticle": "splitsingsakte 2019 art. 62"
-							}
-						]
-					}
-				],
-				"vve-decision-template": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "decharge-bestuur",
-						"name": "Decharge bestuur",
-						"description": "Decharge van het bestuur over het afgelopen boekjaar door de algemene ledenvergadering.",
-						"decisionCategory": "discharge",
-						"proposedText": "De vergadering verleent het bestuur decharge voor het gevoerde beleid en beheer over het boekjaar {boekjaar}, gehoord de verklaring van de kascommissie.",
-						"builtIn": true,
-						"defaultVoteThreshold": "simple-majority",
-						"defaultQuorumFraction": null,
-						"regulationSource": "BW 2:48/2:49"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "dotatie-reservefonds",
-						"name": "Dotatie reservefonds",
-						"description": "Besluit tot dotatie aan het reservefonds voor groot onderhoud.",
-						"decisionCategory": "reserve-fund-contribution",
-						"proposedText": "De vergadering besluit over het boekjaar {boekjaar} een bedrag te doteren aan het reservefonds ten behoeve van toekomstig groot onderhoud, conform de MJOP-grondslag.",
-						"builtIn": true,
-						"defaultVoteThreshold": "simple-majority",
-						"defaultQuorumFraction": null,
-						"regulationSource": "Woningwet reservefonds (BW 5:126)"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "machtiging-boven-drempel",
-						"name": "Machtiging bestuur onderhoud boven drempel",
-						"description": "Machtiging aan het bestuur voor onderhoudsuitgaven boven de in het reglement bepaalde drempel.",
-						"decisionCategory": "authorisation-above-threshold",
-						"proposedText": "De vergadering machtigt het bestuur tot het aangaan van de onderhoudsverplichting {omschrijving} voor een bedrag van {bedrag}, welk bedrag de reglementaire drempel overschrijdt.",
-						"builtIn": true,
-						"defaultVoteThreshold": "qualified-majority-two-thirds",
-						"defaultQuorumFraction": "2/3",
-						"regulationSource": "MR 2017 art. 56 lid 5"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "vaststelling-jaarrekening",
-						"name": "Vaststelling jaarrekening",
-						"description": "Vaststelling van de jaarrekening (exploitatie- en balansoverzicht) van het afgelopen boekjaar.",
-						"decisionCategory": "annual-accounts",
-						"proposedText": "De vergadering stelt de jaarrekening over het boekjaar {boekjaar} vast conform het door het bestuur aangeboden exploitatie- en balansoverzicht.",
-						"builtIn": true,
-						"defaultVoteThreshold": "simple-majority",
-						"defaultQuorumFraction": null,
-						"regulationSource": "MR 2017 art. 14/15"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "vaststelling-mjop",
-						"name": "Vaststelling/actualisatie MJOP",
-						"description": "Vaststelling of actualisatie van het meerjarenonderhoudsplan (MJOP).",
-						"decisionCategory": "mjop-adoption",
-						"proposedText": "De vergadering stelt het meerjarenonderhoudsplan (MJOP) {periode} vast, respectievelijk actualiseert het geldende MJOP conform het aangeboden concept.",
-						"builtIn": true,
-						"defaultVoteThreshold": "simple-majority",
-						"defaultQuorumFraction": null,
-						"regulationSource": "MR 2017 art. 14 (MJOP-grondslag)"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "vve-decision-template"
-						},
-						"slug": "wijziging-huishoudelijk-reglement",
-						"name": "Wijziging huishoudelijk reglement",
-						"description": "Wijziging van het huishoudelijk reglement van de vereniging van eigenaars.",
-						"decisionCategory": "amendment-internal-regulations",
-						"proposedText": "De vergadering besluit het huishoudelijk reglement te wijzigen conform het aangeboden voorstel {omschrijving}.",
-						"builtIn": true,
-						"defaultVoteThreshold": "qualified-majority-two-thirds",
-						"defaultQuorumFraction": null,
-						"regulationSource": "MR 2017 art. 60"
 					}
 				]
 			}

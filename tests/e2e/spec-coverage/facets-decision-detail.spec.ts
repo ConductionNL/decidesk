@@ -4,7 +4,7 @@
  *
  * Gate-19 e2e coverage — DecisionDetail's eight decision-facet-composition
  * facets (src/manifest.json:1068-1075): public/member/WOR consultations,
- * advisory-opinion requests, zienswijzerondes, zienswijzen, commitments
+ * consultations and their responses, commitments
  * (toezeggingen) and confidentiality (geheimhouding). Before this file none
  * of these eight widgets had e2e coverage — a green suite proved nothing
  * about whether they render.
@@ -188,7 +188,7 @@ test('DecisionDetail: commitments facet lists a toezegging linked via relatedMot
 // @e2e openspec/specs/decision-management/spec.md#a-decision-with-an-open-advisory-opinion-request
 // @e2e openspec/specs/decision-management/spec.md#a-decision-is-a-shared-bodys-closing-vaststellingsbesluit
 // @e2e openspec/specs/decision-management/spec.md#a-decision-with-no-confidentiality-restriction
-test('DecisionDetail: consultation, advisory-opinion, zienswijze and confidentiality facets render their real empty states', async ({
+test('DecisionDetail: consultation, response and confidentiality facets render their real empty states', async ({
 	page,
 	playwright,
 }) => {
@@ -233,11 +233,28 @@ test('DecisionDetail: consultation, advisory-opinion, zienswijze and confidentia
 			}),
 		).toBeVisible({ timeout: 45_000 })
 
+		// 🔴 THREE FACETS BECAME ONE. one-consultation-schema folded member
+		// consultations, advisory opinions and zienswijzerondes into one
+		// `governance-consultation` schema, and all three widgets filtered on
+		// the same field, so keeping them would have listed the same rows three
+		// times under three council words.
 		await expect(
-			page.getByRole('heading', { name: 'Member consultations', exact: true }),
+			page.getByRole('heading', { name: 'Consultations', exact: true }),
 		).toBeVisible({ timeout: 45_000 })
 		await expect(
-			page.getByText('No member consultations reference this decision yet.', {
+			page.getByText('No consultations were held on this decision.', {
+				exact: true,
+			}),
+		).toBeVisible({ timeout: 45_000 })
+
+		await expect(
+			page.getByRole('heading', {
+				name: 'Consultation responses',
+				exact: true,
+			}),
+		).toBeVisible({ timeout: 45_000 })
+		await expect(
+			page.getByText('No responses were recorded for this decision.', {
 				exact: true,
 			}),
 		).toBeVisible({ timeout: 45_000 })
@@ -252,35 +269,18 @@ test('DecisionDetail: consultation, advisory-opinion, zienswijze and confidentia
 			),
 		).toBeVisible({ timeout: 45_000 })
 
-		await expect(
-			page.getByRole('heading', { name: 'Advisory opinions', exact: true }),
-		).toBeVisible({ timeout: 45_000 })
-		await expect(
-			page.getByText(
-				'No advisory-opinion requests reference this decision yet.',
-				{ exact: true },
-			),
-		).toBeVisible({ timeout: 45_000 })
-
-		await expect(
-			page.getByRole('heading', { name: 'Zienswijzerondes', exact: true }),
-		).toBeVisible({ timeout: 45_000 })
-		await expect(
-			page.getByText(
-				"This decision is not a shared body's vaststellingsbesluit for any zienswijzeronde.",
-				{ exact: true },
-			),
-		).toBeVisible({ timeout: 45_000 })
-
-		await expect(
-			page.getByRole('heading', { name: 'Zienswijzen', exact: true }),
-		).toBeVisible({ timeout: 45_000 })
-		await expect(
-			page.getByText(
-				'No zienswijzen adopted this decision as their raadsbesluit yet.',
-				{ exact: true },
-			),
-		).toBeVisible({ timeout: 45_000 })
+		// The three retired headings are asserted ABSENT, not empty. Without
+		// this a revert would repopulate them and this test would still pass.
+		for (const gone of [
+			'Member consultations',
+			'Advisory opinions',
+			'Zienswijzerondes',
+			'Zienswijzen',
+		]) {
+			await expect(
+				page.getByRole('heading', { name: gone, exact: true }),
+			).toHaveCount(0)
+		}
 
 		await expect(
 			page.getByRole('heading', { name: 'Confidentiality', exact: true }),

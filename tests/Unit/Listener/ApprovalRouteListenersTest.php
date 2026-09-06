@@ -17,13 +17,12 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Tests\Unit\Listener;
 
 use OCA\Decidiq\Event\ApprovalActionRequestedEvent;
-use OCA\Decidiq\Event\ApprovalRouteConcludedEvent;
 use OCA\Decidiq\Event\ApprovalRouteRequestedEvent;
 use OCA\Decidiq\Listener\ApprovalActionRequestedListener;
 use OCA\Decidiq\Listener\ApprovalRouteRequestedListener;
 use OCA\Decidiq\Service\ApprovalRouteCommandService;
+use OCA\Decidiq\Service\ApprovalRouteConclusionAnnouncer;
 use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -164,11 +163,11 @@ class ApprovalRouteListenersTest extends TestCase {
 		$service = $this->createMock(ApprovalRouteCommandService::class);
 		$service->method('recordAction')->willReturn(['recorded' => true, 'completed' => false]);
 
-		$dispatcher = $this->createMock(IEventDispatcher::class);
-		$dispatcher->expects($this->never())->method('dispatchTyped');
+		$announcer = $this->createMock(ApprovalRouteConclusionAnnouncer::class);
+		$announcer->expects($this->never())->method('announceIfConcluded');
 
 		$event = $this->actionEvent();
-		$listener = new ApprovalActionRequestedListener($service, $dispatcher, $this->createMock(LoggerInterface::class));
+		$listener = new ApprovalActionRequestedListener($service, $announcer, $this->createMock(LoggerInterface::class));
 		$listener->handle($event);
 
 		$this->assertTrue($event->isHandled());
@@ -178,34 +177,25 @@ class ApprovalRouteListenersTest extends TestCase {
 	}//end testNonFinalActionAnnouncesNothing()
 
 	/**
-	 * A final action announces the conclusion with the correlation.
+	 * A final action reaches the shared announcer with its correlation.
+	 *
+	 * The event's payload itself is the announcer's business and is pinned in
+	 * ApprovalRouteConclusionAnnouncerTest; what this listener owes is exactly
+	 * one announcement, through the one shared door, echoing the request's
+	 * correlation id.
 	 *
 	 * @return void
 	 */
 	public function testFinalActionAnnouncesTheConclusion(): void {
 		$service = $this->createMock(ApprovalRouteCommandService::class);
 		$service->method('recordAction')->willReturn(['recorded' => true, 'completed' => true]);
-		$service->method('finalOutcomeOf')->willReturn('approved');
 
-		$announced = [];
-		$dispatcher = $this->createMock(IEventDispatcher::class);
-		$dispatcher->method('dispatchTyped')->willReturnCallback(
-			static function (Event $e) use (&$announced): void {
-				$announced[] = $e;
-			}
-		);
+		$announcer = $this->createMock(ApprovalRouteConclusionAnnouncer::class);
+		$announcer->expects($this->once())->method('announceIfConcluded')
+			->with('voorstel-1', 'corr-9');
 
-		$listener = new ApprovalActionRequestedListener($service, $dispatcher, $this->createMock(LoggerInterface::class));
+		$listener = new ApprovalActionRequestedListener($service, $announcer, $this->createMock(LoggerInterface::class));
 		$listener->handle($this->actionEvent());
-
-		$this->assertCount(1, $announced);
-		$conclusion = $announced[0];
-		$this->assertInstanceOf(ApprovalRouteConcludedEvent::class, $conclusion);
-		$this->assertSame('corr-9', $conclusion->getCorrelationId());
-		$this->assertSame('voorstel-1', $conclusion->getSubject());
-		$this->assertSame('dossiq', $conclusion->getSourceApp());
-		$this->assertSame('approved', $conclusion->getOutcome());
-		$this->assertSame('alice', $conclusion->getActor());
 
 	}//end testFinalActionAnnouncesTheConclusion()
 
@@ -220,11 +210,11 @@ class ApprovalRouteListenersTest extends TestCase {
 			new RuntimeException('This stage is assigned to somebody else.')
 		);
 
-		$dispatcher = $this->createMock(IEventDispatcher::class);
-		$dispatcher->expects($this->never())->method('dispatchTyped');
+		$announcer = $this->createMock(ApprovalRouteConclusionAnnouncer::class);
+		$announcer->expects($this->never())->method('announceIfConcluded');
 
 		$event = $this->actionEvent();
-		$listener = new ApprovalActionRequestedListener($service, $dispatcher, $this->createMock(LoggerInterface::class));
+		$listener = new ApprovalActionRequestedListener($service, $announcer, $this->createMock(LoggerInterface::class));
 		$listener->handle($event);
 
 		$this->assertFalse($event->isHandled());
@@ -251,7 +241,7 @@ class ApprovalRouteListenersTest extends TestCase {
 
 		$listener = new ApprovalActionRequestedListener(
 			$service,
-			$this->createMock(IEventDispatcher::class),
+			$this->createMock(ApprovalRouteConclusionAnnouncer::class),
 			$this->createMock(LoggerInterface::class),
 		);
 		$listener->handle($this->actionEvent());
@@ -287,7 +277,7 @@ class ApprovalRouteListenersTest extends TestCase {
 		$event = new ApprovalActionRequestedEvent('dossiq', 'voorstel-1', 'alice', 'returned', 2);
 		$listener = new ApprovalActionRequestedListener(
 			$service,
-			$this->createMock(IEventDispatcher::class),
+			$this->createMock(ApprovalRouteConclusionAnnouncer::class),
 			$this->createMock(LoggerInterface::class),
 		);
 		$listener->handle($event);
@@ -312,7 +302,7 @@ class ApprovalRouteListenersTest extends TestCase {
 		(new ApprovalRouteRequestedListener($service, $this->createMock(LoggerInterface::class)))->handle($other);
 		(new ApprovalActionRequestedListener(
 			$service,
-			$this->createMock(IEventDispatcher::class),
+			$this->createMock(ApprovalRouteConclusionAnnouncer::class),
 			$this->createMock(LoggerInterface::class),
 		))->handle($other);
 

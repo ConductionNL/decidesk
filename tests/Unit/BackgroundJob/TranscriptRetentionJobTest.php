@@ -262,6 +262,14 @@ class TranscriptRetentionJobTest extends TestCase {
 		self::assertContains('transcript-t1.txt', $this->deleted);
 		self::assertSame('purged', $this->saved['retentionState']);
 		self::assertNotEmpty($this->audits);
+		// The action must be a member of the closed audit vocabulary: the job
+		// used to send the dotted 'transcript.retention.purge', which
+		// AuditLogService::ACTIONS never contained, so the real append was
+		// refused with "Unknown action" while this fake accepted anything.
+		self::assertContains(
+			$this->audits[0]['action'],
+			\OCA\Decidiq\Service\AuditLogService::ACTIONS
+		);
 
 	}//end testDeleteBothPurgesAfterWindow()
 

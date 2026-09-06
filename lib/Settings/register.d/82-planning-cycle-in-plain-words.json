@@ -1,0 +1,549 @@
+{
+	"_note": "planning-cycle-in-plain-words — a cyclus is a cycle. The planning and control cycle is not a Dutch invention: every organisation that sets a budget, reports on it and closes a year runs one, and this schema already said so, its `context` enum covering association, corporate and operations alongside legislative. The properties were already in plain words. Only the schemas were not, so this is a rename and the migration is a copy with a different schema on it.",
+	"_spec": "openspec/changes/planning-cycle-in-plain-words/specs/planning-cycle-in-plain-words/spec.md",
+	"components": {
+		"schemas": {
+			"PlanningCycle": {
+				"slug": "planning-cycle",
+				"icon": "CalendarMonthOutline",
+				"version": "0.1.0",
+				"title": "Planning cycle",
+				"description": "A Planning & Control cycle: one governance body's recurring annual decision/document cycle for a single execution year, generated from a CycleTemplate. Municipal: kadernota -> programmabegroting -> bestuursrapportage(s) -> jaarrekening; association/corporate analogue: jaarplan -> begroting -> tussenrapportage -> jaarstukken + decharge. A PCCycle binds one governanceBody, one execution year, and one template; its CycleStap objects are generated from the template step list and tracked from aanlevering through behandeling to vaststelling. This capability owns the recurring document/decision cycle; meeting-series keeps owning recurring meetings and vve-alv-pack keeps owning statutory decision templates (hard boundary). NOTE (design D4): year is the EXECUTION year (when the steps happen), not the subject year; each step's betreftJaar = year + template subjectYearOffset. NOTE (design D3): stepCount/completedStepCount/overdueStepCount are materialised progress aggregations over the child steps that consumers read and MUST NOT recompute client-side. Renamed from PCCyclus (planning-cycle-in-plain-words): a cyclus is a cycle, and every organisation that plans and reports on a year has one. Every property keeps its name; only the schema does not.",
+				"type": "object",
+				"x-schema-org": "schema:Schedule",
+				"x-openregister": {
+					"schemaType": "schema:Schedule",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"required": [
+					"name",
+					"year",
+					"governanceBody",
+					"template"
+				],
+				"properties": {
+					"name": {
+						"title": "Name",
+						"type": "string",
+						"description": "Human-readable cyclus name. Required.",
+						"example": "P&C-cyclus 2026"
+					},
+					"year": {
+						"title": "Execution year",
+						"type": "integer",
+						"facetable": true,
+						"description": "Execution year in which the cyclus steps happen (design D4). One cyclus per calendar year per governance body. Required. Not the subject year: each step's betreftJaar = year + the template step's subjectYearOffset.",
+						"example": 2026
+					},
+					"governanceBody": {
+						"title": "Governance body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the GovernanceBody (raad / ALV) that runs this cyclus. Required."
+					},
+					"template": {
+						"title": "Template",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "planning-cycle-template",
+						"description": "Reference to the CyclusTemplate the steps were generated from. Required. A template edit affects future generations only and never regenerates an in-flight cyclus (design D5)."
+					},
+					"stepCount": {
+						"title": "Step count",
+						"type": "integer",
+						"description": "Materialised aggregation (design D3): total number of CyclusStap objects in this cyclus. Consumers read this value; they SHALL NOT recompute it client-side.",
+						"example": 5
+					},
+					"completedStepCount": {
+						"title": "Completed step count",
+						"type": "integer",
+						"description": "Materialised aggregation (design D3): number of steps in a terminal status (vastgesteld or afgerond). Read, never recomputed.",
+						"example": 2
+					},
+					"overdueStepCount": {
+						"title": "Overdue step count",
+						"type": "integer",
+						"description": "Materialised aggregation (design D3): number of non-terminal steps whose aanleverDeadline lies in the past. Read, never recomputed; also surfaced by the dashboard KPI.",
+						"example": 1
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"PlanningCycleTemplate": {
+				"slug": "planning-cycle-template",
+				"icon": "ClipboardTextOutline",
+				"version": "0.1.0",
+				"title": "Planning cycle template",
+				"description": "A reusable calendar step list for a Planning & Control cycle: the ordered step types, default month/day dates, subject-year offsets, and document slots a governance body follows each year. Follows the process-configuration built-in-template pattern (builtIn seeds, read-only-but-duplicable), but is a DISTINCT schema from ProcessTemplate (43-process-config): a ProcessTemplate models a decision state machine; a CycleTemplate models a calendar step list (design D2). CONSTRAINT (design D5): editing/deleting a built-in template (builtIn true) is refused server-side; duplication into an editable copy (fresh slug, builtIn cleared) is allowed. Editing a template never regenerates an in-flight cycle. This read-only-built-in guard is enforced at save time (imperative, mirroring ProcessTemplateService), documented here. Renamed from CyclusTemplate (planning-cycle-in-plain-words): a cyclus is a cycle, and every organisation that plans and reports on a year has one. Every property keeps its name; only the schema does not.",
+				"type": "object",
+				"x-schema-org": "schema:HowTo",
+				"x-openregister": {
+					"schemaType": "schema:HowTo",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"required": [
+					"name",
+					"steps"
+				],
+				"properties": {
+					"name": {
+						"title": "Name",
+						"type": "string",
+						"description": "Human-readable template name. Required.",
+						"example": "Gemeentelijke P&C-cyclus"
+					},
+					"context": {
+						"title": "Context",
+						"type": "string",
+						"facetable": true,
+						"description": "Governance context this template is intended for.",
+						"enum": [
+							"legislative",
+							"association",
+							"corporate",
+							"operations"
+						],
+						"example": "legislative"
+					},
+					"builtIn": {
+						"title": "Built-in",
+						"type": "boolean",
+						"default": false,
+						"description": "Read-only built-in template shipped with the app (design D5). Edit and delete are refused server-side; duplicate is allowed and clears this flag.",
+						"example": true
+					},
+					"steps": {
+						"title": "Steps",
+						"type": "array",
+						"description": "Ordered list of template steps. Required. Generation resolves each step's default month/day into a concrete date within the cyclus execution year and copies the document slots.",
+						"items": {
+							"type": "object",
+							"title": "Template step",
+							"properties": {
+								"stepType": {
+									"title": "Step type",
+									"type": "string",
+									"description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge. NOT a closed enum: a duplicated template MAY declare a custom stepType."
+								},
+								"label": {
+									"title": "Label",
+									"type": "string",
+									"description": "Human-readable step label."
+								},
+								"subjectYearOffset": {
+									"title": "Subject-year offset",
+									"type": "integer",
+									"default": 0,
+									"description": "Offset added to the cyclus execution year to derive betreftJaar (design D4). kadernota/begroting +1, berap 0, jaarrekening/jaarstukken/decharge -1."
+								},
+								"deliveryDeadline": {
+									"title": "Aanlever-deadline default",
+									"type": "string",
+									"nullable": true,
+									"description": "Default month/day (MM-DD) the organisation must deliver the documents; resolved into a concrete date within the cyclus year at generation. Optional (a decharge step may have none)."
+								},
+								"technicalQuestionsStart": {
+									"title": "Technische-vragen start default",
+									"type": "string",
+									"nullable": true,
+									"description": "Default month/day (MM-DD) the technical-questions window opens. Optional."
+								},
+								"technicalQuestionsEnd": {
+									"title": "Technische-vragen end default",
+									"type": "string",
+									"nullable": true,
+									"description": "Default month/day (MM-DD) the technical-questions window closes. Optional."
+								},
+								"committeeDate": {
+									"title": "Commissie date default",
+									"type": "string",
+									"nullable": true,
+									"description": "Default month/day (MM-DD) of the behandelende-commissie target. Optional."
+								},
+								"handlingDate": {
+									"title": "Behandeling date default",
+									"type": "string",
+									"nullable": true,
+									"description": "Default month/day (MM-DD) of the raad/ALV behandeling target. Optional."
+								},
+								"documentSlots": {
+									"title": "Document slots",
+									"type": "array",
+									"description": "Document slots copied onto each generated step.",
+									"items": {
+										"type": "object",
+										"title": "Document slot",
+										"properties": {
+											"name": {
+												"title": "Slot name",
+												"type": "string",
+												"description": "Name of the document slot (e.g. Programmabegroting)."
+											},
+											"required": {
+												"title": "Required",
+												"type": "boolean",
+												"default": false,
+												"description": "Whether a delivered document is required for this slot."
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"PlanningCycleStep": {
+				"slug": "planning-cycle-step",
+				"icon": "CalendarCheckOutline",
+				"version": "0.1.0",
+				"title": "Planning cycle step",
+				"description": "One step of a Planning & Control cycle, generated from a CycleTemplate step and tracked from aanlevering through behandeling to vaststelling. Related to its parent PCCycle (one cycle -> many steps, ordered by sequence). Cross-references the ordinary AgendaItem (once behandeling is scheduled) and the ordinary Decision (once the vaststellingsbesluit exists); the step NEVER creates meetings, agenda items or decisions itself: scheduling stays with agenda-management, decision content with decision-management/decision-route. Decharge is recorded as an outcome, not a decision template (VvE statutory templates stay in vve-alv-pack). CONSTRAINT: steps carry NO financial figures or monetary properties by construction. The status workflow is declared exclusively in x-openregister-lifecycle and the rappels exclusively in x-openregister-notifications (ADR-031); no app-side state machine and no bespoke reminder BackgroundJob. Renamed from CyclusStap (planning-cycle-in-plain-words): a cyclus is a cycle, and every organisation that plans and reports on a year has one. One property is renamed with the schema: `cyclus` becomes `cycle`, because it was the one property that was itself Dutch. Every other property keeps its name.",
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "status",
+					"initial": "planned",
+					"states": [
+						"planned",
+						"documents-received",
+						"in-progress",
+						"adopted",
+						"completed"
+					],
+					"terminal": [
+						"adopted",
+						"completed"
+					],
+					"transitions": [
+						{
+							"from": "planned",
+							"to": "documents-received"
+						},
+						{
+							"from": "documents-received",
+							"to": "in-progress"
+						},
+						{
+							"from": "documents-received",
+							"to": "completed"
+						},
+						{
+							"from": "in-progress",
+							"to": "adopted"
+						},
+						{
+							"from": "in-progress",
+							"to": "completed"
+						}
+					],
+					"_note": "Declarative guarded transition map (ADR-031, REQ-PCC-005). Canonical dialect verbatim (keyword 'initial', never 'initialState'/'states'-only/'default'). gepland -> stukken-ontvangen -> in-behandeling -> vastgesteld | afgerond, plus stukken-ontvangen -> afgerond for steps without a formal vaststelling (e.g. a berap ter kennisname). vastgesteld and afgerond terminal. No app-side state machine."
+				},
+				"x-openregister-notifications": {
+					"aanleveringLate": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 604800,
+							"filter": {
+								"status": "planned"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: aanlevering P&C-stap te laat — {{label}}",
+							"en": "Reminder: P&C step delivery overdue — {{label}}"
+						},
+						"_note": "Late-aanlevering rappel (REQ-PCC-006). intervalSec 604800 (weekly) is PROVISIONAL (design open question — admin-configurable tuning deferred). Filter targets status 'gepland' only, so no rappel fires for terminal (vastgesteld/afgerond) or in-progress steps. LIMITATION: the 'aanleverDeadline is past' predicate is not expressible in this filter shape; the scheduled engine's window semantics carry it — verify OR's scheduled-notification engine interprets this as an after-deadline rappel during live import. Recipients approximate the griffie via object-acl(read) + the decidesk-members group."
+					},
+					"behandelingApproachingUnscheduled": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 604800,
+							"filter": {
+								"status": [
+									"gepland",
+									"stukken-ontvangen",
+									"in-behandeling"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: behandeling P&C-stap nog niet geagendeerd — {{label}}",
+							"en": "Reminder: P&C step behandeling not yet scheduled — {{label}}"
+						},
+						"_note": "Behandeling-approaching-unscheduled rappel (REQ-PCC-006). intervalSec 604800 (weekly) is PROVISIONAL. Filter targets non-terminal status only, so no rappel fires for vastgesteld/afgerond. LIMITATION (design D6/open question): the 'behandelingDatum within the rappel window' and 'agendaItem reference empty' predicates are not expressible in this filter shape; the scheduled engine's window semantics carry the date, and the empty-agendaItem condition is a documented apply-time concern — verify against OR's scheduled-notification engine during live import; never a silent gap and never an imperative reminder BackgroundJob."
+					}
+				},
+				"required": [
+					"cycle",
+					"sequence",
+					"label",
+					"status"
+				],
+				"properties": {
+					"cycle": {
+						"title": "Cyclus",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "planning-cycle",
+						"description": "Reference to the parent PCCyclus. Required. One cyclus -> many steps, ordered by sequence."
+					},
+					"sequence": {
+						"title": "Sequence",
+						"type": "integer",
+						"facetable": true,
+						"description": "Ordinal position within the cyclus, following the template step order. Required.",
+						"example": 1
+					},
+					"stepType": {
+						"title": "Step type",
+						"type": "string",
+						"facetable": true,
+						"description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge. NOT a closed enum: a duplicated template MAY declare a custom stepType, so this property is deliberately not constrained by an enum.",
+						"example": "begroting"
+					},
+					"label": {
+						"title": "Label",
+						"type": "string",
+						"description": "Human-readable step label. Required.",
+						"example": "Programmabegroting"
+					},
+					"concernsYear": {
+						"title": "Subject year",
+						"type": "integer",
+						"facetable": true,
+						"description": "Subject year the step concerns, derived at generation from the cyclus execution year + the template step's subjectYearOffset (design D4). E.g. in execution year 2026 a begroting step betreft 2027 and a jaarrekening step betreft 2025.",
+						"example": 2027
+					},
+					"deliveryDeadline": {
+						"title": "Aanlever-deadline",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"facetable": true,
+						"description": "Date by which the organisation must deliver the documents. Drives the late-aanlevering rappel and the overdue dashboard KPI. Optional (a decharge step may have none).",
+						"example": "2026-09-15"
+					},
+					"technicalQuestionsStart": {
+						"title": "Technische-vragen start",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "Start of the technical-questions window. Optional.",
+						"example": "2026-09-16"
+					},
+					"technicalQuestionsEnd": {
+						"title": "Technische-vragen end",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "End of the technical-questions window. Optional.",
+						"example": "2026-10-05"
+					},
+					"handlingCommittee": {
+						"title": "Behandelende commissie",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"nullable": true,
+						"description": "Optional reference to the GovernanceBody (commissie) that pre-advises on this step."
+					},
+					"committeeDate": {
+						"title": "Commissie date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"description": "Optional target date for the behandelende-commissie treatment.",
+						"example": "2026-10-20"
+					},
+					"decisionMakingBody": {
+						"title": "Besluitvormend orgaan",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"nullable": true,
+						"description": "Reference to the decision-making GovernanceBody (raad / ALV) that treats this step."
+					},
+					"handlingDate": {
+						"title": "Behandeling date",
+						"type": "string",
+						"format": "date",
+						"nullable": true,
+						"facetable": true,
+						"description": "Target date of the raad/ALV behandeling. Drives the behandeling-approaching-unscheduled rappel when agendaItem is still empty.",
+						"example": "2026-11-05"
+					},
+					"documentSlots": {
+						"title": "Document slots",
+						"type": "array",
+						"description": "Document slots copied from the template step. Each slot carries a name, a required flag, and the delivered file attached via OpenRegister's FileService: no app-local file storage.",
+						"items": {
+							"type": "object",
+							"title": "Document slot",
+							"properties": {
+								"name": {
+									"title": "Slot name",
+									"type": "string",
+									"description": "Name of the document slot (e.g. Programmabegroting)."
+								},
+								"required": {
+									"title": "Required",
+									"type": "boolean",
+									"default": false,
+									"description": "Whether a delivered document is required for this slot."
+								},
+								"file": {
+									"title": "Delivered file",
+									"type": "string",
+									"nullable": true,
+									"description": "Reference to the delivered file attached via FileService. Empty until the document is delivered."
+								}
+							}
+						}
+					},
+					"agendaItem": {
+						"title": "Agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"nullable": true,
+						"description": "Reference to the actual AgendaItem once behandeling is scheduled. Set once the item is placed on a meeting agenda; the step never creates the AgendaItem itself. Empty means behandeling is not yet scheduled (drives the unscheduled rappel)."
+					},
+					"decision": {
+						"title": "Decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Reference to the actual Decision (vaststellingsbesluit / decharge-besluit) once it exists. The step never creates the Decision itself; decision content stays in decision-management/decision-route."
+					},
+					"status": {
+						"title": "Status",
+						"type": "string",
+						"facetable": true,
+						"description": "Step status (declared in x-openregister-lifecycle, ADR-031): gepland -> stukken-ontvangen -> in-behandeling -> vastgesteld | afgerond, plus stukken-ontvangen -> afgerond. vastgesteld and afgerond are terminal.",
+						"enum": [
+							"planned",
+							"documents-received",
+							"in-progress",
+							"adopted",
+							"completed"
+						],
+						"example": "gepland"
+					},
+					"outcome": {
+						"title": "Outcome",
+						"type": "string",
+						"nullable": true,
+						"description": "Optional step outcome. For a decharge step: decharge-verleend or decharge-geweigerd; the resulting besluit lives in the normal Decision model via the decision reference. This capability defines no statutory decision templates.",
+						"example": "decharge-verleend"
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"PCCyclus": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (planning-cycle-in-plain-words): the same thing as PlanningCycle (slug planning-cycle). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"CyclusTemplate": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (planning-cycle-in-plain-words): the same thing as PlanningCycleTemplate (slug planning-cycle-template). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"CyclusStap": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (planning-cycle-in-plain-words): the same thing as PlanningCycleStep (slug planning-cycle-step). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Consultation": {
+				"slug": "governance-consultation",
+				"version": "0.2.0",
+				"description": "Repointed by planning-cycle-in-plain-words: `cycleStep` now references planning-cycle-step, because cyclus-stap is retired.",
+				"properties": {
+					"cycleStep": {
+						"title": "Cycle step",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "planning-cycle-step",
+						"nullable": true,
+						"description": "The planning-cycle step this consultation belongs to."
+					}
+				}
+			}
+		}
+	}
+}

@@ -9,7 +9,7 @@
         "icon": "CalendarClockOutline",
         "version": "0.1.0",
         "title": "TermijnRegeling",
-        "description": "A term rule per body-role: term length (termijnDuurMaanden) and an optional maximum number of consecutive terms (maxAansluitendeTermijnen), from which term numbers and end-of-term dates are DERIVED per Membership (REQ-APT-006, never written onto Membership — design D2). At most one regeling is effective per body-role combination, and a role-specific regeling overrides the body-wide one; this uniqueness/override rule is NOT expressible in the schema (no unique-constraint dialect) and is enforced at save time by the imperative layer per REQ-APT-005. An empty role means the rule applies to all roles in the body.",
+        "description": "A term rule per body-role: term length (termijnDuurMaanden) and an optional maximum number of consecutive terms (maxAansluitendeTermijnen), from which term numbers and end-of-term dates are DERIVED per Membership (never written onto Membership, design D2). At most one regeling is effective per body-role combination, and a role-specific regeling overrides the body-wide one; this uniqueness/override rule is NOT expressible in the schema (no unique-constraint dialect) and is enforced at save time by the imperative layer. An empty role means the rule applies to all roles in the body.",
         "type": "object",
         "x-schema-org": "schema:CreativeWork",
         "x-openregister": {
@@ -35,7 +35,7 @@
             "title": "Role",
             "type": "string",
             "facetable": true,
-            "description": "Membership role the rule applies to (enum pinned to person-and-membership REQ-PMB-011). Optional — empty means the rule applies to all roles in the body; a role-specific regeling overrides the body-wide one.",
+            "description": "Membership role the rule applies to (enum pinned to person-and-membership). Optional: empty means the rule applies to all roles in the body; a role-specific regeling overrides the body-wide one.",
             "enum": [
               "chair",
               "vice-chair",
@@ -59,7 +59,7 @@
             "type": "integer",
             "minimum": 1,
             "nullable": true,
-            "description": "Maximum number of consecutive terms. Optional — empty means unlimited. Drives the advisory (non-blocking, design D5) max-term warning on the rooster and on voordrachten.",
+            "description": "Maximum number of consecutive terms. Optional: empty means unlimited. Drives the advisory (non-blocking, design D5) max-term warning on the rooster and on voordrachten.",
             "example": 2
           },
           "notes": {
@@ -74,7 +74,7 @@
         "icon": "CalendarMonthOutline",
         "version": "0.1.0",
         "title": "RoosterVanAftreden",
-        "description": "One live rooster van aftreden (retirement schedule) object per governance body — a regeneratable projection (design D3), never hand-maintained truth. Carries generation metadata (gegenereerdOp/gegenereerdDoor) and the publication predicate for the rooster as a whole; the ordered term entries live as first-class RoosterRegel objects referencing this rooster. Publication is predicate-on-live-object (design D4, REQ-APT-009) justified against public-publication's derived-payload rule because the rooster is ALREADY an allow-list projection (name, role, term number, term dates, herbenoembaar — never contact details, NC UIDs, addresses, or vote data). Setting publicationDate grants the public group read while publicationDate <= $now; clearing it withdraws.",
+        "description": "One live rooster van aftreden (retirement schedule) object per governance body: a regeneratable projection (design D3), never hand-maintained truth. Carries generation metadata (gegenereerdOp/gegenereerdDoor) and the publication predicate for the rooster as a whole; the ordered term entries live as first-class RoosterRegel objects referencing this rooster. Publication is predicate-on-live-object (design D4) justified against public-publication's derived-payload rule because the rooster is ALREADY an allow-list projection (name, role, term number, term dates, herbenoembaar: never contact details, NC UIDs, addresses, or vote data). Setting publicationDate grants the public group read while publicationDate <= $now; clearing it withdraws.",
         "type": "object",
         "x-schema-org": "schema:ItemList",
         "x-openregister": {
@@ -113,7 +113,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Timestamp of the most recent generation/regeneration (REQ-APT-007). Shown prominently so a stale rooster is visibly stale, never silently wrong.",
+            "description": "Timestamp of the most recent generation/regeneration. Shown prominently so a stale rooster is visibly stale, never silently wrong.",
             "example": "2026-07-01T09:00:00Z"
           },
           "generatedBy": {
@@ -127,7 +127,7 @@
             "format": "date-time",
             "facetable": true,
             "nullable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live rooster and its regels are anonymously readable through the OR published-predicate (public-group authorization.read rule publicationDate <= $now). Opt-in per rooster; withdraw by clearing (REQ-APT-009, design D4)."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live rooster and its regels are anonymously readable through the OR published-predicate (public-group authorization.read rule publicationDate <= $now). Opt-in per rooster; withdraw by clearing (design D4)."
           },
           "depublicationDate": {
             "title": "Depublication date",
@@ -144,7 +144,7 @@
         "icon": "CalendarClock",
         "version": "0.1.0",
         "title": "RoosterRegel",
-        "description": "One first-class term entry (design D3) per active Membership under an effective TermijnRegeling, materialized on generation of its RoosterVanAftreden (REQ-APT-007). Carries derived term data (termijnNummer, eindeTermijnDatum, herbenoembaar) computed by RoosterService::deriveTerm() from Membership startDate/endDate history and the effective regeling (REQ-APT-006, design D2) — the derived values are materialized here, visible/auditable/regeneratable, never written onto the Membership schema. First-class (not an array on the rooster) so eindeTermijnDatum can drive declarative scheduled herbenoemingsrappels (x-openregister-notifications) and the expiring-terms KPI (widget aggregation over objects). persoonNaam is an allow-list projection field (no contact details / NC UIDs / vote data), so a published rooster exposes only name/role/term data.",
+        "description": "One first-class term entry (design D3) per active Membership under an effective TermijnRegeling, materialized on generation of its RoosterVanAftreden. Carries derived term data (termijnNummer, eindeTermijnDatum, herbenoembaar) computed by RoosterService:deriveTerm from Membership startDate/endDate history and the effective regeling (design D2), the derived values are materialized here, visible/auditable/regeneratable, never written onto the Membership schema. First-class (not an array on the rooster) so eindeTermijnDatum can drive declarative scheduled herbenoemingsrappels (x-openregister-notifications) and the expiring-terms KPI (widget aggregation over objects). persoonNaam is an allow-list projection field (no contact details / NC UIDs / vote data), so a published rooster exposes only name/role/term data.",
         "type": "object",
         "x-schema-org": "schema:ListItem",
         "x-openregister": {
@@ -262,7 +262,7 @@
             "title": "Role",
             "type": "string",
             "facetable": true,
-            "description": "Membership role for this term entry (enum pinned to person-and-membership REQ-PMB-011). Required.",
+            "description": "Membership role for this term entry (enum pinned to person-and-membership). Required.",
             "enum": [
               "chair",
               "vice-chair",
@@ -279,7 +279,7 @@
             "type": "integer",
             "minimum": 1,
             "facetable": true,
-            "description": "Derived 1-based count of the person's consecutive terms in the same body-role (REQ-APT-006). A reappointment without a gap increments; a gap or role change resets to 1. When it exceeds maxAansluitendeTermijnen an advisory warning is surfaced (non-blocking, design D5).",
+            "description": "Derived 1-based count of the person's consecutive terms in the same body-role. A reappointment without a gap increments; a gap or role change resets to 1. When it exceeds maxAansluitendeTermijnen an advisory warning is surfaced (non-blocking, design D5).",
             "example": 2
           },
           "endTermDate": {
@@ -287,7 +287,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Derived end-of-term date: start of the current term plus termijnDuurMaanden (REQ-APT-006). Drives the declarative herbenoemingsrappels and the expiring-terms KPI, ordered ascending on the rooster. Required.",
+            "description": "Derived end-of-term date: start of the current term plus termijnDuurMaanden. Drives the declarative herbenoemingsrappels and the expiring-terms KPI, ordered ascending on the rooster. Required.",
             "example": "2026-11-01"
           },
           "reappointable": {

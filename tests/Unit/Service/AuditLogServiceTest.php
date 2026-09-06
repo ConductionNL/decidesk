@@ -22,348 +22,446 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Tests\Unit\Service;
 
+use DateTime;
 use OCA\Decidiq\Service\AuditLogService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\AuditHashService;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for AuditLogService.
+ * Tests for AuditLogService consuming OR's audit-trail surface.
+ *
+ * The service used to save into an app-local `audit-trail` schema that NO
+ * register carries ("Schema slug audit-trail is not carried by register
+ * decidiq"), so every governance action silently produced no audit row.
+ * These tests pin the two properties the fix must hold: a write lands as an
+ * OR audit entry that can be read back (verifiable), and a broken audit
+ * surface fails LOUDLY (error log + success=false), never silently.
+ *
+ * @covers \OCA\Decidiq\Service\AuditLogService
  *
  * @spec openspec/changes/board-meeting-resolutions/tasks.md#task-2.1
  */
 class AuditLogServiceTest extends TestCase {
 
 	/**
-	 * Build a service wired against a captured ObjectService double.
+	 * Entries "persisted" by the in-memory mapper double.
 	 *
-	 * Both arrays are passed by reference so callers can observe state
-	 * mutations made by saveObject() callbacks and tamper with rows between
-	 * verify() runs.
+	 * @var array<int, AuditTrail>
+	 */
+	private array $trail = [];
+
+	/**
+	 * Mock logger, exposed so tests can assert loud failures.
 	 *
-	 * @param array<int, array<string, mixed>> &$existing Rows the stub returns from findAll()
-	 * @param array<int, array<string, mixed>> &$saved Captured saveObject() arguments
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * Mock OR chain-verification service.
+	 *
+	 * @var AuditHashService&MockObject
+	 */
+	private AuditHashService&MockObject $hashService;
+
+	/**
+	 * Set up per-test state.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->trail = [];
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->hashService = $this->createMock(AuditHashService::class);
+
+	}//end setUp()
+
+	/**
+	 * Build the service against an object service that resolves the given
+	 * uids and an in-memory mapper that stores entries in $this->trail.
+	 *
+	 * The mapper double implements the exact production signatures (named
+	 * arguments included) — a double with looser parameter names would go
+	 * green on calls production rejects (#399).
+	 *
+	 * @param string[] $resolvableUids Object uids that resolve to an ObjectEntity
 	 *
 	 * @return AuditLogService
 	 */
-	private function makeService(array &$existing, array &$saved): AuditLogService {
-		$logger = $this->createMock(LoggerInterface::class);
-
+	private function makeService(array $resolvableUids = []): AuditLogService {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
-		$objectService->method('findAll')->willReturnCallback(
-			static function (array $config) use (&$existing): array {
-				// Honour 'order' (timestamp ASC/DESC, stable for ties per PHP 8
-				// sort stability) and 'limit' so tests can assert on the bounded
-				// "last row only" query path introduced by
-				// audit-log-chain-tail-hash, without disturbing the existing
-				// whole-chain ASC callers (verify/export/query).
-				$rows = $existing;
-				usort(
-					$rows,
-					static function (array $a, array $b): int {
-						return strcmp((string)($a['timestamp'] ?? ''), (string)($b['timestamp'] ?? ''));
-					}
-				);
+		$objectService->method('find')->willReturnCallback(
+			function (int|string $id) use ($resolvableUids): ?ObjectEntity {
+				if (in_array((string)$id, $resolvableUids, true) === false) {
+					return null;
+				}
 
-				if (strtoupper((string)($config['order']['timestamp'] ?? 'ASC')) === 'DESC') {
+				$entity = $this->createMock(ObjectEntity::class);
+				return $entity;
+			}
+		);
+
+		$trail = &$this->trail;
+		$mapper = new class($trail) extends AuditTrailMapper {
+			/**
+			 * @param array<int, AuditTrail> $trail Shared entry store
+			 */
+			public function __construct(private array &$trail) {
+			}
+
+			/**
+			 * In-memory createAuditTrailEntry (production signature).
+			 *
+			 * @param ObjectEntity $object The object the entry relates to
+			 * @param string $action The namespaced action string
+			 * @param array $context Context payload
+			 *
+			 * @return AuditTrail
+			 */
+			public function createAuditTrailEntry(ObjectEntity $object, string $action, array $context = [],): AuditTrail {
+				$entry = new AuditTrail();
+				$entry->setId(count($this->trail) + 1);
+				$entry->setUuid('trail-' . (count($this->trail) + 1));
+				$entry->setAction($action);
+				$entry->setChanged($context);
+				$entry->setUser('session-user');
+				$entry->setCreated(new DateTime('2026-09-01T10:0' . count($this->trail) . ':00Z'));
+				$this->trail[] = $entry;
+				return $entry;
+			}
+
+			/**
+			 * In-memory findAll honouring the comma-separated action filter,
+			 * the uuid filter and created-order (production signature).
+			 *
+			 * @param int|null $limit Maximum rows
+			 * @param int|null $offset Pagination offset
+			 * @param array|null $filters Column equality filters
+			 * @param array|null $sort Column => direction map
+			 * @param string|null $search LIKE search
+			 *
+			 * @return array
+			 */
+			public function findAll(?int $limit = null, ?int $offset = null, ?array $filters = [], ?array $sort = ['created' => 'DESC'], ?string $search = null,): array {
+				$rows = $this->trail;
+
+				$actionFilter = ($filters['action'] ?? null);
+				if ($actionFilter !== null) {
+					$allowed = array_map('trim', explode(',', (string)$actionFilter));
+					$rows = array_values(
+						array_filter(
+							$rows,
+							static fn (AuditTrail $row): bool => in_array((string)$row->getAction(), $allowed, true)
+						)
+					);
+				}
+
+				$uuidFilter = ($filters['uuid'] ?? null);
+				if ($uuidFilter !== null) {
+					$rows = array_values(
+						array_filter(
+							$rows,
+							static fn (AuditTrail $row): bool => ((string)$row->getUuid() === (string)$uuidFilter)
+						)
+					);
+				}
+
+				if (strtoupper((string)($sort['created'] ?? 'DESC')) === 'DESC') {
 					$rows = array_reverse($rows);
 				}
 
-				if (($config['limit'] ?? null) !== null) {
-					$rows = array_slice($rows, 0, (int)$config['limit']);
+				if ($limit !== null) {
+					$rows = array_slice($rows, (int)$offset, $limit);
 				}
 
 				return $rows;
 			}
-		);
-		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null) use (&$saved, &$existing): ObjectEntity {
-				$saved[] = $object;
-				// Mirror persistence so subsequent verify() sees the new row.
-				$row = array_merge(['id' => 'row-' . count($existing)], $object);
-				$existing[] = $row;
-				$entity = $this->createMock(ObjectEntity::class);
-				$entity->method('jsonSerialize')->willReturn($row);
-				return $entity;
-			}
-		);
+		};
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
-
-		return new AuditLogService($logger,
+		return new AuditLogService(
+			logger: $this->logger,
 			objectService: $objectService,
+			auditTrailMapper: $mapper,
+			auditHashService: $this->hashService,
 		);
 	}//end makeService()
 
 	/**
-	 * Append from an empty chain uses GENESIS as previousHash and produces a
-	 * sha256 currentHash.
+	 * A decision transition append lands as a namespaced OR audit entry and
+	 * can be read back through query() — the verifiable audit row a
+	 * transition must produce.
+	 *
+	 * @spec openspec/specs/decision-management/spec.md
 	 *
 	 * @return void
 	 */
-	public function testAppendFromEmptyChainUsesGenesisAndHashesCorrectly(): void {
-		$existing = [];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+	public function testAppendLandsAsNamespacedOrAuditEntryAndIsQueryable(): void {
+		$service = $this->makeService(resolvableUids: ['dec-1']);
 
 		$result = $service->append(
 			actor: 'alice',
-			action: 'vote',
-			objectUids: ['resolution-1']
+			action: 'decision-transition',
+			objectUids: ['dec-1'],
+			payload: ['transition' => 'decide', 'from' => 'deliberating', 'to' => 'decided']
 		);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(AuditLogService::GENESIS_HASH, $saved[0]['previousHash']);
-		$this->assertSame(64, strlen($saved[0]['currentHash']));
-		$this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $saved[0]['currentHash']);
+		self::assertTrue($result['success']);
+		self::assertCount(1, $this->trail);
+		self::assertSame('decidiq.audit.decision-transition', $this->trail[0]->getAction());
+		self::assertSame(
+			['actorUuid' => 'alice', 'objectUids' => ['dec-1'], 'payload' => ['transition' => 'decide', 'from' => 'deliberating', 'to' => 'decided']],
+			$this->trail[0]->getChanged()
+		);
 
-	}//end testAppendFromEmptyChainUsesGenesisAndHashesCorrectly()
+		$query = $service->query(['objectUuid' => 'dec-1']);
+		self::assertTrue($query['success']);
+		self::assertCount(1, $query['entries']);
+		self::assertSame('decision-transition', $query['entries'][0]['action']);
+		self::assertSame('alice', $query['entries'][0]['actorUuid']);
+		self::assertSame(['dec-1'], $query['entries'][0]['objectUids']);
+
+	}//end testAppendLandsAsNamespacedOrAuditEntryAndIsQueryable()
 
 	/**
-	 * Unknown action is rejected.
+	 * An unknown action is still refused before anything is written.
 	 *
 	 * @return void
 	 */
 	public function testAppendRejectsUnknownAction(): void {
-		$existing = [];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+		$service = $this->makeService(resolvableUids: ['dec-1']);
 
-		$result = $service->append(actor: 'alice', action: 'unknown', objectUids: []);
+		$result = $service->append(actor: 'alice', action: 'no-such-action', objectUids: ['dec-1']);
 
-		$this->assertFalse($result['success']);
-		$this->assertStringContainsString('Unknown action', $result['message']);
-		$this->assertSame([], $saved);
+		self::assertFalse($result['success']);
+		self::assertStringContainsString('Unknown action', $result['message']);
+		self::assertCount(0, $this->trail);
 
 	}//end testAppendRejectsUnknownAction()
 
 	/**
-	 * Append chains the new previousHash to the last currentHash on the chain.
+	 * The three action names whose callers were silently rejected for the
+	 * whole life of the old chain (integration-create, integration-subscribe
+	 * and the retention purge) are members of the vocabulary now.
 	 *
 	 * @return void
 	 */
-	public function testAppendChainsToPreviousEntry(): void {
-		$existing = [
-			[
-				'id' => 'row-0',
-				'timestamp' => '2026-01-01T00:00:00Z',
-				'actorUuid' => 'alice',
-				'action' => 'vote',
-				'objectUids' => ['resolution-1'],
-				'previousHash' => AuditLogService::GENESIS_HASH,
-				'currentHash' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-			],
-		];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+	public function testPreviouslyRejectedCallerActionsAreAccepted(): void {
+		foreach (['integration-create', 'integration-subscribe', 'transcript-retention-purge'] as $action) {
+			$this->trail = [];
+			$service = $this->makeService(resolvableUids: ['obj-1']);
 
-		$result = $service->append(actor: 'bob', action: 'signature', objectUids: ['minutes-1']);
+			$result = $service->append(actor: 'alice', action: $action, objectUids: ['obj-1']);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(
-			'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-			$saved[0]['previousHash']
+			self::assertTrue($result['success'], "Action '{$action}' must be appendable");
+			self::assertSame('decidiq.audit.' . $action, $this->trail[0]->getAction());
+		}
+	}//end testPreviouslyRejectedCallerActionsAreAccepted()
+
+	/**
+	 * When the audit surface throws (the failure mode observed live: the
+	 * write target does not exist), append() logs at ERROR level and returns
+	 * success=false — loud, never a silent no-op.
+	 *
+	 * @return void
+	 */
+	public function testAppendFailsLoudlyWhenTheAuditSurfaceThrows(): void {
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('find')->willReturn($this->createMock(ObjectEntity::class));
+
+		$mapper = $this->createMock(AuditTrailMapper::class);
+		$mapper->method('createAuditTrailEntry')->willThrowException(
+			new \RuntimeException('audit surface unavailable')
 		);
 
-	}//end testAppendChainsToPreviousEntry()
+		$this->logger->expects(self::once())->method('error');
+
+		$service = new AuditLogService(
+			logger: $this->logger,
+			objectService: $objectService,
+			auditTrailMapper: $mapper,
+			auditHashService: $this->hashService,
+		);
+
+		$result = $service->append(actor: 'alice', action: 'decision-transition', objectUids: ['dec-1']);
+
+		self::assertFalse($result['success']);
+		self::assertStringContainsString('audit surface unavailable', $result['message']);
+
+	}//end testAppendFailsLoudlyWhenTheAuditSurfaceThrows()
 
 	/**
-	 * Verify a clean chain succeeds; tampering one row marks it.
+	 * When no referenced uid resolves to an OR object there is nothing to
+	 * attach the entry to: error log + failure, not a dropped row.
 	 *
 	 * @return void
 	 */
-	public function testVerifyDetectsTamperedRow(): void {
-		$existing = [];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+	public function testAppendFailsLoudlyWhenNoObjectResolves(): void {
+		$this->logger->expects(self::once())->method('error');
 
-		// Append two entries.
-		$service->append(actor: 'alice', action: 'vote', objectUids: ['res-1']);
-		$service->append(actor: 'bob', action: 'signature', objectUids: ['min-1']);
+		$service = $this->makeService(resolvableUids: []);
 
-		$verifyClean = $service->verify();
-		$this->assertTrue($verifyClean['valid']);
-		$this->assertSame(2, $verifyClean['checked']);
+		$result = $service->append(actor: 'alice', action: 'decision-transition', objectUids: ['ghost-1']);
 
-		// Tamper with the first row's currentHash.
-		$existing[0]['currentHash'] = str_repeat('0', 64);
+		self::assertFalse($result['success']);
+		self::assertCount(0, $this->trail);
 
-		$verifyDirty = $service->verify();
-		$this->assertFalse($verifyDirty['valid']);
-		$this->assertContains('row-0', $verifyDirty['tampered']);
-
-	}//end testVerifyDetectsTamperedRow()
+	}//end testAppendFailsLoudlyWhenNoObjectResolves()
 
 	/**
-	 * Query filters by actor + action.
+	 * An append with several uids attaches the entry to the first uid that
+	 * resolves and keeps the full list in the entry context (the regulator
+	 * export passes a checksum stand-in that is not an OR object).
+	 *
+	 * @return void
+	 */
+	public function testAppendAttachesToFirstResolvableUid(): void {
+		$service = $this->makeService(resolvableUids: ['board-1']);
+
+		$result = $service->append(
+			actor: 'alice',
+			action: 'material-access',
+			objectUids: ['board-1', 'sha256-checksum-not-an-object']
+		);
+
+		self::assertTrue($result['success']);
+		self::assertCount(1, $this->trail);
+		self::assertSame(
+			['board-1', 'sha256-checksum-not-an-object'],
+			$this->trail[0]->getChanged()['objectUids']
+		);
+
+	}//end testAppendAttachesToFirstResolvableUid()
+
+	/**
+	 * query() narrows to the decidiq action namespace and applies the
+	 * actor/action filters on the mapped rows.
 	 *
 	 * @return void
 	 */
 	public function testQueryFiltersByActorAndAction(): void {
-		$existing = [
-			['id' => 'a', 'actorUuid' => 'alice', 'action' => 'vote',       'timestamp' => '2026-01-01T00:00:00Z', 'objectUids' => ['r1']],
-			['id' => 'b', 'actorUuid' => 'bob',   'action' => 'vote',       'timestamp' => '2026-01-02T00:00:00Z', 'objectUids' => ['r1']],
-			['id' => 'c', 'actorUuid' => 'alice', 'action' => 'signature',  'timestamp' => '2026-01-03T00:00:00Z', 'objectUids' => ['m1']],
-		];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+		$service = $this->makeService(resolvableUids: ['dec-1', 'proxy-1']);
 
-		$result = $service->query(['actor' => 'alice', 'action' => 'vote']);
+		$service->append(actor: 'alice', action: 'decision-transition', objectUids: ['dec-1']);
+		$service->append(actor: 'bob', action: 'proxy-created', objectUids: ['proxy-1']);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(1, $result['count']);
-		$this->assertSame('a', $result['entries'][0]['id']);
+		$result = $service->query(['actor' => 'bob', 'action' => 'proxy-created']);
+
+		self::assertTrue($result['success']);
+		self::assertCount(1, $result['entries']);
+		self::assertSame('proxy-created', $result['entries'][0]['action']);
+		self::assertSame('bob', $result['entries'][0]['actorUuid']);
 
 	}//end testQueryFiltersByActorAndAction()
 
 	/**
-	 * Export produces CSV with the expected header.
+	 * export() produces the CSV header and one line per entry in range.
 	 *
 	 * @return void
 	 */
 	public function testExportCsvIncludesHeader(): void {
-		$existing = [
-			['id' => 'a', 'actorUuid' => 'alice', 'action' => 'vote', 'timestamp' => '2026-01-01T00:00:00Z', 'objectUids' => ['r1'], 'previousHash' => 'GENESIS', 'currentHash' => 'h1'],
-		];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+		$service = $this->makeService(resolvableUids: ['dec-1']);
+		$service->append(actor: 'alice', action: 'decision-transition', objectUids: ['dec-1']);
 
 		$result = $service->export('2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'csv');
 
-		$this->assertTrue($result['success']);
-		$this->assertSame('csv', $result['format']);
-		$this->assertStringContainsString('id,timestamp,actor,action,objectUids,previousHash,currentHash', $result['body']);
-		$this->assertSame(1, $result['count']);
+		self::assertTrue($result['success']);
+		self::assertSame(1, $result['count']);
+		$lines = explode("\n", $result['body']);
+		self::assertSame('id,timestamp,actor,action,objectUids,previousHash,currentHash', $lines[0]);
+		self::assertStringContainsString('decision-transition', $lines[1]);
 
 	}//end testExportCsvIncludesHeader()
 
 	/**
-	 * append() produces an unbroken hash chain across 3+ sequential calls,
-	 * using the bounded "last row only" query path (not a full-chain load).
-	 *
-	 * @spec openspec/changes/audit-log-chain-tail-hash/tasks.md#task-2
+	 * verify() delegates to the platform chain verification and maps its
+	 * result onto the decidiq shape.
 	 *
 	 * @return void
 	 */
-	public function testAppendProducesUnbrokenChainAcrossSequentialCalls(): void {
-		$existing = [];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+	public function testVerifyDelegatesToPlatformChain(): void {
+		$this->hashService->method('verifyChain')->willReturn(
+			[
+				'valid' => true,
+				'entriesVerified' => 42,
+				'brokenAt' => null,
+				'skippedNullHashes' => 0,
+				'purgedTombstones' => 0,
+			]
+		);
 
-		$service->append(actor: 'alice', action: 'vote', objectUids: ['res-1']);
-		$service->append(actor: 'bob', action: 'signature', objectUids: ['min-1']);
-		$service->append(actor: 'carol', action: 'material-access', objectUids: ['doc-1']);
+		$service = $this->makeService();
 
-		$this->assertCount(3, $saved);
-		$this->assertSame(AuditLogService::GENESIS_HASH, $saved[0]['previousHash']);
-		$this->assertSame($saved[0]['currentHash'], $saved[1]['previousHash']);
-		$this->assertSame($saved[1]['currentHash'], $saved[2]['previousHash']);
+		$result = $service->verify();
 
-	}//end testAppendProducesUnbrokenChainAcrossSequentialCalls()
+		self::assertTrue($result['valid']);
+		self::assertSame(42, $result['checked']);
+		self::assertSame([], $result['tampered']);
+
+	}//end testVerifyDelegatesToPlatformChain()
 
 	/**
-	 * Regression: with more than 1 row already on the chain, append() resolves
-	 * the TRUE last row's hash (by timestamp) — not an arbitrary row and not a
-	 * row selected by array position. Guards against a future re-introduction
-	 * of an unbounded/truncated query.
-	 *
-	 * @spec openspec/changes/audit-log-chain-tail-hash/tasks.md#task-2
+	 * A broken platform chain surfaces as invalid with the breaking row named.
 	 *
 	 * @return void
 	 */
-	public function testAppendResolvesTrueLastRowFromMultiRowChain(): void {
-		$existing = [
-			['id' => 'row-0', 'timestamp' => '2026-01-01T00:00:00Z', 'actorUuid' => 'alice', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => AuditLogService::GENESIS_HASH, 'currentHash' => str_repeat('0', 64)],
-			['id' => 'row-1', 'timestamp' => '2026-01-02T00:00:00Z', 'actorUuid' => 'bob', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => str_repeat('0', 64), 'currentHash' => str_repeat('1', 64)],
-			['id' => 'row-2', 'timestamp' => '2026-01-03T00:00:00Z', 'actorUuid' => 'carol', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => str_repeat('1', 64), 'currentHash' => str_repeat('2', 64)],
-			['id' => 'row-3', 'timestamp' => '2026-01-04T00:00:00Z', 'actorUuid' => 'dave', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => str_repeat('2', 64), 'currentHash' => str_repeat('3', 64)],
-			['id' => 'row-4', 'timestamp' => '2026-01-05T00:00:00Z', 'actorUuid' => 'eve', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => str_repeat('3', 64), 'currentHash' => str_repeat('4', 64)],
-		];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
-
-		$result = $service->append(actor: 'frank', action: 'vote', objectUids: ['r1']);
-
-		$this->assertTrue($result['success']);
-		$this->assertSame(
-			str_repeat('4', 64),
-			$saved[0]['previousHash'],
-			'previousHash must be sourced from the true last row (row-4), not an arbitrary/first row'
+	public function testVerifyReportsBrokenChain(): void {
+		$this->hashService->method('verifyChain')->willReturn(
+			[
+				'valid' => false,
+				'entriesVerified' => 10,
+				'brokenAt' => 7,
+				'skippedNullHashes' => 0,
+				'purgedTombstones' => 0,
+			]
 		);
 
-	}//end testAppendResolvesTrueLastRowFromMultiRowChain()
+		$service = $this->makeService();
+
+		$result = $service->verify();
+
+		self::assertFalse($result['valid']);
+		self::assertSame(10, $result['checked']);
+		self::assertSame(['7'], $result['tampered']);
+
+	}//end testVerifyReportsBrokenChain()
 
 	/**
-	 * append() resolving previousHash issues a bounded (limit: 1) findAll()
-	 * query rather than an unbounded/whole-chain query.
-	 *
-	 * @spec openspec/changes/audit-log-chain-tail-hash/specs/audit-trail-integrity/spec.md#requirement-req-alci-001-resolving-the-previous-hash-must-not-load-the-whole-chain
-	 *
-	 * @return void
-	 */
-	public function testResolvePreviousHashIssuesBoundedQuery(): void {
-		$logger = $this->createMock(LoggerInterface::class);
-
-		$existing = [
-			['id' => 'row-0', 'timestamp' => '2026-01-01T00:00:00Z', 'actorUuid' => 'alice', 'action' => 'vote', 'objectUids' => ['r1'], 'previousHash' => AuditLogService::GENESIS_HASH, 'currentHash' => str_repeat('a', 64)],
-		];
-		$observedLimits = [];
-		$objectService = $this->createMock(ObjectServiceInterface::class);
-		$objectService->method('findAll')->willReturnCallback(
-			function (array $config) use (&$existing, &$observedLimits): array {
-				$observedLimits[] = ($config['limit'] ?? null);
-				if (($config['limit'] ?? null) === 1) {
-					return array_slice($existing, -1);
-				}
-
-				return $existing;
-			}
-		);
-		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null) use (&$existing): ObjectEntity {
-				$row = array_merge(['id' => 'row-' . count($existing)], $object);
-				$existing[] = $row;
-				$entity = $this->createMock(ObjectEntity::class);
-				$entity->method('jsonSerialize')->willReturn($row);
-				return $entity;
-			}
-		);
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
-
-		$service = new AuditLogService($logger,
-			objectService: $objectService,
-		);
-		$result = $service->append(actor: 'bob', action: 'vote', objectUids: ['r1']);
-
-		$this->assertTrue($result['success']);
-		$this->assertContains(1, $observedLimits, 'resolvePreviousHash() must issue a findAll() call bounded to limit: 1');
-		$this->assertNotContains(10000, $observedLimits, 'resolvePreviousHash() must not issue the whole-chain (limit: 10000) query');
-
-	}//end testResolvePreviousHashIssuesBoundedQuery()
-
-	/**
-	 * loadLastEntry() (exercised indirectly via resolvePreviousHash()) returns
-	 * null for an empty chain, resolving to GENESIS_HASH.
-	 *
-	 * @spec openspec/changes/audit-log-chain-tail-hash/tasks.md#task-1
+	 * verify() with an entry uuid resolves the entry's row id and bounds the
+	 * platform verification to it; an unknown uuid is invalid without ever
+	 * calling the platform.
 	 *
 	 * @return void
 	 */
-	public function testAppendFromEmptyChainStillUsesGenesisViaBoundedQuery(): void {
-		$existing = [];
-		$saved = [];
-		$service = $this->makeService($existing, $saved);
+	public function testVerifyWithEntryUuidBoundsTheChainWalk(): void {
+		$service = $this->makeService(resolvableUids: ['dec-1']);
+		$service->append(actor: 'alice', action: 'decision-transition', objectUids: ['dec-1']);
 
-		$result = $service->append(actor: 'alice', action: 'vote', objectUids: ['r1']);
+		$this->hashService->expects(self::once())
+			->method('verifyChain')
+			->with(null, 1)
+			->willReturn(
+				[
+					'valid' => true,
+					'entriesVerified' => 1,
+					'brokenAt' => null,
+					'skippedNullHashes' => 0,
+					'purgedTombstones' => 0,
+				]
+			);
 
-		$this->assertTrue($result['success']);
-		$this->assertSame(AuditLogService::GENESIS_HASH, $saved[0]['previousHash']);
+		$result = $service->verify('trail-1');
+		self::assertTrue($result['valid']);
 
-	}//end testAppendFromEmptyChainStillUsesGenesisViaBoundedQuery()
+		$unknown = $service->verify('trail-does-not-exist');
+		self::assertFalse($unknown['valid']);
+		self::assertSame(0, $unknown['checked']);
 
+	}//end testVerifyWithEntryUuidBoundsTheChainWalk()
 }//end class

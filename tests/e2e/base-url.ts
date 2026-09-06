@@ -65,7 +65,6 @@ export function resolveBaseURL(): string {
 	}
 
 	if (process.env.CI || process.env.GITHUB_ACTIONS) {
-		// eslint-disable-next-line no-console
 		console.warn(
 			'[decidiq e2e] no PLAYWRIGHT_BASE_URL / NEXTCLOUD_URL / NC_BASE_URL / BASE_URL set; '
 				+ `using the CI-local default ${CI_DEFAULT_BASE_URL}.`,

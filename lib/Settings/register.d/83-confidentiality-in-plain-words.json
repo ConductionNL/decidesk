@@ -1,0 +1,385 @@
+{
+	"_note": "confidentiality-in-plain-words — every organisation can restrict what it circulates, and decide on what ground. Only the words were Dutch. GeheimhoudingGrond already called itself configuration (\"Grounds are DATA, not code\"), and its `category` enum contradicted that by fixing four values from one country's statutes, so the category becomes a free string with the rename.",
+	"_spec": "openspec/changes/confidentiality-in-plain-words/specs/confidentiality-in-plain-words/spec.md",
+	"components": {
+		"schemas": {
+			"ConfidentialityRestriction": {
+				"slug": "confidentiality-restriction",
+				"icon": "ShieldLockOutline",
+				"version": "0.1.0",
+				"title": "Confidentiality restriction",
+				"description": "A formal confidentiality restriction: the legal layer over the app's existing confidentiality classifiers, never a fifth vocabulary. A body imposes it on a document, an agenda item or a decision, on a stated ground, and it is ratified or dissolved. Renamed from Geheimhouding (confidentiality-in-plain-words): every organisation can restrict what it circulates, and only the word for it was Dutch. Every property keeps its name.",
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "imposed",
+					"states": [
+						"imposed",
+						"ratified",
+						"dissolved"
+					],
+					"terminal": [
+						"dissolved"
+					],
+					"transitions": [
+						{
+							"from": "imposed",
+							"to": "ratified"
+						},
+						{
+							"from": "imposed",
+							"to": "dissolved"
+						},
+						{
+							"from": "ratified",
+							"to": "dissolved"
+						}
+					],
+					"_note": "Declarative guarded transition map (ADR-031, REQ-EMB-001). Canonical dialect verbatim from the existing Decision schema (keyword 'initial', never 'initialState'/'default' — the silently-ignored drift dialect). opgelegd -> bekrachtigd -> opgeheven with the direct opgelegd -> opgeheven shortcut; opgeheven is terminal. LIMITATION: the map cannot itself restrict opgelegd -> opgeheven to grounds where requiresBekrachtiging is false (a transition guard cannot dereference the referenced GeheimhoudingGrond) — that conditional is a save-time check in the imperative GeheimhoudingService (REQ-EMB-001 scenario 'Lifecycle transitions are guarded declaratively' covers the map; the ground-conditional is the service's job). The app does NOT implement an imperative state machine for the transition map."
+				},
+				"x-openregister-notifications": {
+					"geheimhoudingBekrachtigingDue": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 86400,
+							"filter": {
+								"lifecycle": "imposed"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Bekrachtiging geheimhouding nadert/verstreken: {{scope}} — {{lifecycle}}",
+							"en": "Geheimhouding confirmation due/overdue: {{scope}} — {{lifecycle}}"
+						},
+						"_note": "Bekrachtiging-due/overdue notification (REQ-EMB-008 trigger 1). Scheduled trigger on non-bekrachtigd geheimhoudingen (lifecycle opgelegd); intervalSec 86400 (daily) is PROVISIONAL. WINDOW-SEMANTICS CAVEAT (same as the toezeggingen/advies rappels): the 'deadline approaching' vs 'deadline passed' distinction rides bekrachtigingDeadline and is interpreted by OR's scheduled-notification engine, not expressible in this equality filter — verify at live import. The filter cannot itself read the referenced ground's requiresBekrachtiging, so this fires for every opgelegd record; the register-overview layer narrows to bekrachtiging-requiring grounds. RECIPIENTS: no dedicated griffie group exists in the register; object-acl(read) + decidesk-members is the proven approximation (see advisory-opinion-workflow). Declarative only; never an imperative dispatch path (gate-18)."
+					},
+					"geheimhoudingOpgeheven": {
+						"trigger": {
+							"type": "updated",
+							"condition": {
+								"field": "lifecycle",
+								"operator": "equals",
+								"value": "dissolved"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Geheimhouding opgeheven — object kan de publicatiestroom in: {{scope}}",
+							"en": "Geheimhouding lifted — object can enter the publish flow: {{scope}}"
+						},
+						"_note": "Opheffing-recorded notification (REQ-EMB-008 trigger 3): reminds the griffie that the object is now publication-ELIGIBLE (never auto-published — a griffie member runs the publish flow). Event-shaped 'updated' trigger firing on the transition to opgeheven. Declarative only; never imperative (gate-18). NB: REQ-EMB-008 trigger 2 (embargo-released, riding the DigitalDocument.embargoActive flip) belongs on the DigitalDocument schema in the base register (out of this fragment's scope) and is NOT declared here."
+					}
+				},
+				"authorization": {
+					"read": [
+						"authenticated"
+					]
+				},
+				"required": [
+					"scope",
+					"ground",
+					"imposedBy",
+					"imposedByBody",
+					"imposedAt",
+					"lifecycle"
+				],
+				"properties": {
+					"scope": {
+						"title": "Scope",
+						"type": "string",
+						"facetable": true,
+						"description": "Which kind of object this geheimhouding targets: document (DigitalDocument), item (AgendaItem), or decision (Decision). MUST match the single populated target reference (save-time rule in GeheimhoudingService, not a schema constraint). Required.",
+						"enum": [
+							"document",
+							"item",
+							"decision"
+						],
+						"example": "document"
+					},
+					"targetDocument": {
+						"title": "Target document",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "digital-document",
+						"nullable": true,
+						"description": "Reference to the target DigitalDocument. Populated (and only populated) when scope is 'document'; the document is excluded from every publication surface while the geheimhouding is active."
+					},
+					"targetAgendaItem": {
+						"title": "Target agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"nullable": true,
+						"description": "Reference to the target AgendaItem. Populated (and only populated) when scope is 'item'; imposing drives the EXISTING AgendaItem.confidentiality classifier to 'confidential' (meeting-pack-board-book REQ-005 enum), never a new field."
+					},
+					"targetDecision": {
+						"title": "Target decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Reference to the target Decision. Populated (and only populated) when scope is 'decision'; imposing drives the EXISTING Decision.isPublished classifier to 'confidential' (p3-citizen-participation enum). The structured ground supersedes the free-text Decision.legalBasis for new records; existing legalBasis values stay untouched."
+					},
+					"ground": {
+						"title": "Ground",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "confidentiality-ground",
+						"description": "Reference to the structured GeheimhoudingGrond (the legal basis: never free text). The ground's requiresBekrachtiging flag drives the bekrachtiging workflow and the opgelegd -> opgeheven shortcut guard. Required."
+					},
+					"imposedBy": {
+						"title": "Imposed by",
+						"type": "string",
+						"facetable": true,
+						"description": "Which organ imposed the geheimhouding: body (the raad/algemeen bestuur/ledenvergadering), chair (voorzitter), or college (dagelijks bestuur). Combined with imposedByBody. Required.",
+						"enum": [
+							"body",
+							"chair",
+							"executive-board"
+						],
+						"example": "college"
+					},
+					"imposedByBody": {
+						"title": "Imposing body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the GovernanceBody whose organ imposed the geheimhouding (the Schema.org Action agent). Also the register-scoping key for the per-body geheimhoudingenregister aggregations. Required.",
+						"example": "gemeenteraad-amsterdam"
+					},
+					"imposedAt": {
+						"title": "Imposed at",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Datetime the geheimhouding was imposed (Schema.org Action startTime). Required.",
+						"example": "2026-06-08T10:00:00Z"
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Geheimhouding state (declared in x-openregister-lifecycle, ADR-031): opgelegd -> bekrachtigd -> opgeheven, with the direct opgelegd -> opgeheven shortcut permitted only when the ground does not require bekrachtiging (save-time guard). opgeheven is terminal. An overdue bekrachtiging NEVER changes this state: it is flagged fail-visible, the organ decides.",
+						"enum": [
+							"imposed",
+							"ratified",
+							"dissolved"
+						],
+						"example": "opgelegd"
+					},
+					"ratificationDeadline": {
+						"title": "Bekrachtiging deadline",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"nullable": true,
+						"description": "Date by which the confirming body must bekrachtig the geheimhouding, defaulting to the confirming body's next scheduled meeting date (manually overridable). When it passes without a linked bekrachtigingsbesluit the geheimhouding is flagged overdue (fail-visible KPI + notification) and MUST NOT auto-lift or auto-expire. Only meaningful while lifecycle is opgelegd on a bekrachtiging-requiring ground.",
+						"example": "2026-09-30"
+					},
+					"ratificationDecision": {
+						"title": "Bekrachtigingsbesluit",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Reference to the confirming body's Decision that bekrachtigt the geheimhouding. Set alongside the transition to bekrachtigd."
+					},
+					"ratificationDate": {
+						"title": "Bekrachtiging date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"nullable": true,
+						"description": "Datetime the bekrachtigingsbesluit was recorded and the lifecycle transitioned to bekrachtigd."
+					},
+					"ratificationAgendaItem": {
+						"title": "Bekrachtiging agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"nullable": true,
+						"description": "Reference to the AgendaItem created on the confirming body's next scheduled meeting for the bekrachtiging (created imperatively by GeheimhoudingService). Its confidentiality respects the underlying stukken."
+					},
+					"dissolutionDecision": {
+						"title": "Opheffingsbesluit",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Reference to the opheffingsbesluit Decision by the imposing or confirming body (required to lift). Set alongside the transition to opgeheven; on opheffing the target becomes publication-ELIGIBLE again but is never auto-published."
+					},
+					"liftingDate": {
+						"title": "Opheffing date",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"nullable": true,
+						"description": "Date the geheimhouding was lifted (Schema.org Action endTime). Set alongside the transition to opgeheven.",
+						"example": "2026-06-25"
+					},
+					"liftingConditions": {
+						"title": "Opheffing conditions",
+						"type": "string",
+						"nullable": true,
+						"description": "Optional free-text conditions attached to the opheffing (e.g. 'openbaar na afronding onderhandelingen'). Recorded on opheffing.",
+						"example": "openbaar na afronding onderhandelingen"
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"ConfidentialityGround": {
+				"slug": "confidentiality-ground",
+				"icon": "ScaleBalance",
+				"version": "0.1.0",
+				"title": "Confidentiality ground",
+				"description": "A configurable legal ground for restricting confidentiality. Grounds are DATA, not code: an administrator adds the ones their own law or statutes give them. Renamed from GeheimhoudingGrond (confidentiality-in-plain-words).",
+				"type": "object",
+				"x-schema-org": "schema:DefinedTerm",
+				"x-openregister": {
+					"schemaType": "schema:DefinedTerm",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"authorization": {
+					"read": [
+						"authenticated"
+					]
+				},
+				"required": [
+					"name",
+					"citation",
+					"category",
+					"requiresRatification",
+					"active"
+				],
+				"properties": {
+					"name": {
+						"title": "Name",
+						"type": "string",
+						"description": "Human-readable name of the ground (DefinedTerm name). Required.",
+						"example": "Geheimhouding raadsstukken"
+					},
+					"citation": {
+						"title": "Citation",
+						"type": "string",
+						"facetable": true,
+						"description": "Statutory article reference for this ground, in the current (post-2023) labelling. Required.",
+						"example": "Gemeentewet art. 87-89"
+					},
+					"legacyCitation": {
+						"title": "Legacy citation",
+						"type": "string",
+						"nullable": true,
+						"description": "Optional pre-2023 article reference (voorheen art. 25/55/86 for the Gemeentewet geheimhoudingsartikelen). Null for grounds without a legacy labelling (e.g. Woo).",
+						"example": "voorheen art. 25"
+					},
+					"category": {
+						"title": "Category",
+						"type": "string",
+						"facetable": true,
+						"description": "How this ground is classified, in whatever terms the organisation's own law or statutes use.",
+						"example": "absolute",
+						"x-notes": "Was an enum of four values from Dutch statute (municipalities-act, woo-absolute, woo-relative, other). A ground is configuration by this schema's own description, so the way grounds are grouped is configuration too. Existing values remain valid because the field no longer constrains them."
+					},
+					"requiresRatification": {
+						"title": "Requires bekrachtiging",
+						"type": "boolean",
+						"facetable": true,
+						"description": "Whether a geheimhouding on this ground must be bekrachtigd by the confirming body. A per-ground property, NEVER hardcoded: the imperative bekrachtiging workflow keys off this flag, and the declarative lifecycle only permits the direct opgelegd -> opgeheven shortcut when this is false. Required.",
+						"example": true
+					},
+					"description": {
+						"title": "Description",
+						"type": "string",
+						"nullable": true,
+						"description": "Explanatory description of when this ground applies.",
+						"example": "Geheimhouding opgelegd op stukken bestemd voor of behandeld door de raad."
+					},
+					"builtIn": {
+						"title": "Built-in",
+						"type": "boolean",
+						"nullable": true,
+						"description": "True for grounds shipped as seed data (ADR-016). Admin-added grounds are false/absent. Built-in grounds remain admin-editable.",
+						"example": true
+					},
+					"active": {
+						"title": "Active",
+						"type": "boolean",
+						"facetable": true,
+						"description": "Whether the ground is selectable for new geheimhoudingen. Deactivated grounds (false) stay resolvable on existing records but disappear from the ground picker for new ones (enforced in the picker, not as a schema constraint). Required.",
+						"example": true
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"Geheimhouding": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (confidentiality-in-plain-words): the same thing as ConfidentialityRestriction (slug confidentiality-restriction). Every property keeps its name; only the schema does not, and `category` stopped being an enum of one country's statutes. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"GeheimhoudingGrond": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (confidentiality-in-plain-words): the same thing as ConfidentialityGround (slug confidentiality-ground). Every property keeps its name; only the schema does not, and `category` stopped being an enum of one country's statutes. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

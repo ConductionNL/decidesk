@@ -1,36 +1,36 @@
 {
 	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "Member onboarding + offboarding trajecten (member-onboarding) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail pages for both registers; schema refs BY SLUG (onboarding-traject / offboarding-traject), never PascalCase. DECLARATIVE CORE ONLY: the griffie progress dashboard widgets of REQ-MOB-011 (trajecten-per-lifecycle + overdue-steps KPI) belong in the base src/manifest.json Dashboard page (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it) and are DEFERRED here to keep this change to the two allowed files. The detail-page checklist actions (complete/skip/execute provisioning) and the raadswisseling suggestion-list are imperative surfaces also out of core scope; these pages render the traject + steps + references declaratively.",
+	"_note": "Member onboarding and offboarding (member-onboarding-in-plain-words) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail pages for both registers; schema refs BY SLUG (member-onboarding / member-offboarding), never PascalCase. DECLARATIVE CORE ONLY: the progress dashboard widgets of REQ-MOB-011 (records-per-lifecycle + overdue-steps KPI) belong in the base src/manifest.json Dashboard page (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it) and are DEFERRED here to keep this change to the two allowed files. The detail-page checklist actions (complete/skip/execute provisioning) and the bulk-intake suggestion list are imperative surfaces also out of core scope; these pages render the record, its steps and its references declaratively.",
 	"_spec": "openspec/changes/member-onboarding/specs/member-onboarding/spec.md",
 	"menu": [
 		{
-			"id": "OnboardingTrajecten",
+			"id": "MemberOnboarding",
 			"label": "Onboarding",
 			"icon": "AccountPlusOutline",
-			"route": "OnboardingTrajecten",
+			"route": "MemberOnboarding",
 			"order": 71
 		},
 		{
-			"id": "OffboardingTrajecten",
+			"id": "MemberOffboarding",
 			"label": "Offboarding",
 			"icon": "AccountMinusOutline",
-			"route": "OffboardingTrajecten",
+			"route": "MemberOffboarding",
 			"order": 72
 		}
 	],
 	"pages": [
 		{
-			"id": "OnboardingTrajecten",
-			"route": "/onboarding-trajecten",
+			"id": "MemberOnboarding",
+			"route": "/member-onboarding",
 			"type": "index",
 			"title": "Onboarding",
 			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Onboarding index; columns person/targetBody/targetRole/trigger/lifecycle; quick filters on lifecycle, trigger and batch. The dashboard overdue-KPI/status widgets (REQ-MOB-011) deep-link here pre-filtered.",
 			"config": {
 				"register": "decidiq",
-				"schema": "onboarding-traject",
+				"schema": "member-onboarding",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
-				"_note": "Onboardinglijst (REQ-MOB-012). Schema BY SLUG onboarding-traject.",
+				"_note": "Onboarding list (REQ-MOB-012). Schema BY SLUG member-onboarding.",
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
@@ -39,7 +39,7 @@
 					{ "label": "In progress", "filter": { "lifecycle": "in-execution" } },
 					{ "label": "Completed", "filter": { "lifecycle": "completed" } },
 					{ "label": "Lapsed", "filter": { "lifecycle": "lapsed" } },
-					{ "label": "Raadswisseling batch", "filter": { "trigger": "council-turnover-batch" } }
+					{ "label": "Bulk turnover", "filter": { "trigger": "council-turnover-batch" } }
 				],
 				"columns": [
 					{ "key": "person", "label": "Person", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "person", "labelField": "name" } },
@@ -49,7 +49,7 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "OnboardingTrajectDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "MemberOnboardingDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -57,17 +57,17 @@
 			}
 		},
 		{
-			"id": "OnboardingTrajectDetail",
-			"route": "/onboarding-trajecten/:id",
+			"id": "MemberOnboardingDetail",
+			"route": "/member-onboarding/:id",
 			"type": "detail",
-			"title": "Onboarding traject",
-			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Traject data leads 8-wide (person/targetBody/targetRole/trigger/beëdiging fields/lifecycle); the checklist steps render inside the data widget; person/targetBody/beëdigingsVergadering/membership render as resolved references in the Related widget. Audit trail is a sidebar tab. The per-step complete/skip/execute-provisioning actions and the induction-pack delivery are imperative surfaces DEFERRED (design D3/D6, out of declarative core).",
+			"title": "Member onboarding",
+			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Record data leads 8-wide (person/targetBody/targetRole/trigger/installation fields/lifecycle); the checklist steps render inside the data widget; person/targetBody/installationMeeting/membership render as resolved references in the Related widget. Audit trail is a sidebar tab. The per-step complete/skip/execute-provisioning actions and the induction-pack delivery are imperative surfaces DEFERRED (design D3/D6, out of declarative core).",
 			"config": {
 				"register": "decidiq",
-				"schema": "onboarding-traject",
-				"_note": "OnboardingTrajectDetail (REQ-MOB-012). Schema BY SLUG onboarding-traject.",
+				"schema": "member-onboarding",
+				"_note": "MemberOnboardingDetail (REQ-MOB-012). Schema BY SLUG member-onboarding.",
 				"widgets": [
-					{ "id": "onboarding-data", "type": "data", "title": "Onboarding traject", "icon": "AccountGroup", "content": { "columns": 2 } },
+					{ "id": "onboarding-data", "type": "data", "title": "Member onboarding", "icon": "AccountGroup", "content": { "columns": 2 } },
 					{ "id": "onboarding-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
 				],
 				"layout": [
@@ -85,17 +85,17 @@
 			}
 		},
 		{
-			"id": "OffboardingTrajecten",
-			"route": "/offboarding-trajecten",
+			"id": "MemberOffboarding",
+			"route": "/member-offboarding",
 			"type": "index",
 			"title": "Offboarding",
-			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Offboarding index; columns person/body/eindeReden/trigger/eindeDatum/lifecycle; quick filters on lifecycle, trigger and batch.",
+			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Offboarding index; columns person/body/endReason/trigger/endDate/lifecycle; quick filters on lifecycle, trigger and batch.",
 			"config": {
 				"register": "decidiq",
-				"schema": "offboarding-traject",
+				"schema": "member-offboarding",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
-				"_note": "Offboardinglijst (REQ-MOB-012). Schema BY SLUG offboarding-traject.",
+				"_note": "Offboarding list (REQ-MOB-012). Schema BY SLUG member-offboarding.",
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
@@ -104,7 +104,7 @@
 					{ "label": "In progress", "filter": { "lifecycle": "in-execution" } },
 					{ "label": "Completed", "filter": { "lifecycle": "completed" } },
 					{ "label": "Lapsed", "filter": { "lifecycle": "lapsed" } },
-					{ "label": "Raadswisseling batch", "filter": { "trigger": "council-turnover-batch" } }
+					{ "label": "Bulk turnover", "filter": { "trigger": "council-turnover-batch" } }
 				],
 				"columns": [
 					{ "key": "person", "label": "Person", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "person", "labelField": "name" } },
@@ -114,7 +114,7 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "OffboardingTrajectDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "MemberOffboardingDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -122,17 +122,17 @@
 			}
 		},
 		{
-			"id": "OffboardingTrajectDetail",
-			"route": "/offboarding-trajecten/:id",
+			"id": "MemberOffboardingDetail",
+			"route": "/member-offboarding/:id",
 			"type": "detail",
-			"title": "Offboarding traject",
-			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Traject data leads 8-wide (person/body/membership/trigger/eindeDatum/eindeReden/exit-confirmation/lifecycle); the checklist steps render inside the data widget; person/body/membership render as resolved references in the Related widget. Audit trail is a sidebar tab. The per-step revocation/end-date execution is an imperative surface DEFERRED (design D3, out of declarative core).",
+			"title": "Member offboarding",
+			"_note": "spec: openspec/changes/member-onboarding/specs/member-onboarding/spec.md (REQ-MOB-012). Record data leads 8-wide (person/body/membership/trigger/endDate/endReason/exit-confirmation/lifecycle); the checklist steps render inside the data widget; person/body/membership render as resolved references in the Related widget. Audit trail is a sidebar tab. The per-step revocation/end-date execution is an imperative surface DEFERRED (design D3, out of declarative core).",
 			"config": {
 				"register": "decidiq",
-				"schema": "offboarding-traject",
-				"_note": "OffboardingTrajectDetail (REQ-MOB-012). Schema BY SLUG offboarding-traject.",
+				"schema": "member-offboarding",
+				"_note": "MemberOffboardingDetail (REQ-MOB-012). Schema BY SLUG member-offboarding.",
 				"widgets": [
-					{ "id": "offboarding-data", "type": "data", "title": "Offboarding traject", "icon": "AccountGroup", "content": { "columns": 2 } },
+					{ "id": "offboarding-data", "type": "data", "title": "Member offboarding", "icon": "AccountGroup", "content": { "columns": 2 } },
 					{ "id": "offboarding-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
 				],
 				"layout": [

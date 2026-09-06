@@ -68,8 +68,13 @@ class RegisterObjectStore {
 	/**
 	 * Write an object.
 	 *
+	 * With a uuid this is a FULL REPLACE, not a merge: OpenRegister validates
+	 * `$object` against the whole schema (a missing required property is a
+	 * 400) and drops every stored field the payload omits. A caller holding a
+	 * partial payload wants {@see self::patch()} instead.
+	 *
 	 * @param string $schema The schema slug.
-	 * @param array<string, mixed> $object The object or patch.
+	 * @param array<string, mixed> $object The COMPLETE object.
 	 * @param string|null $uuid The uuid when updating.
 	 *
 	 * @return array<string, mixed> The stored object.
@@ -88,6 +93,80 @@ class RegisterObjectStore {
 
 		return $this->normalise(row: $stored);
 	}//end save()
+
+	/**
+	 * Merge a partial payload onto an existing object.
+	 *
+	 * `save()` with a uuid is a FULL REPLACE: OpenRegister validates the payload
+	 * against the whole schema, so a partial payload 400s on every required
+	 * property it omits — and would silently erase the omitted fields on a
+	 * schema without required properties. This delegates to OpenRegister's
+	 * `patchObject()`, the sanctioned read-merge-save path: a key absent from
+	 * the payload is preserved, an explicit null clears the stored value, and
+	 * the merged result still passes schema validation, the audit trail and
+	 * event dispatch.
+	 *
+	 * @param string $schema The schema slug.
+	 * @param array<string, mixed> $data The partial data to merge.
+	 * @param string $uuid The object to patch.
+	 *
+	 * @return array<string, mixed> The patched object.
+	 *
+	 * @throws RuntimeException When OpenRegister is unavailable.
+	 *
+	 * @spec openspec/changes/approval-routes/specs/approval-routes/spec.md
+	 */
+	public function patch(string $schema, array $data, string $uuid): array {
+		$stored = $this->objectService->patchObject(
+			objectId: $uuid,
+			data: $data,
+			register: self::REGISTER,
+			schema: $schema,
+		);
+
+		return $this->normalise(row: $stored);
+	}//end patch()
+
+	/**
+	 * Read ONE object by its uuid, or null when it resolves to nothing.
+	 *
+	 * THE resolving form for "give me object X". A top-level `id` (or `uuid`)
+	 * key in a findAll() filter array is NOT: OpenRegister applies filters to
+	 * the object's own JSON properties, and an object's identity lives in
+	 * `@self`, so such a filter matches NOTHING — silently, which is how
+	 * decidiq's conclusion announcer resolved every route's provenance to
+	 * empty and skipped every cross-app announcement. Same defect class as
+	 * dossiq#1686.
+	 *
+	 * Runs as the acting user, so OR's register RBAC and multitenancy decide:
+	 * an object the caller may not reach comes back null, exactly like one
+	 * that does not exist.
+	 *
+	 * @param string $schema The schema slug.
+	 * @param string $uuid The object's uuid.
+	 *
+	 * @return array<string, mixed>|null The object, or null.
+	 *
+	 * @throws RuntimeException When OpenRegister is unavailable.
+	 *
+	 * @spec openspec/changes/parafering-route-runtime/specs/parafering-route-runtime/spec.md
+	 */
+	public function find(string $schema, string $uuid): ?array {
+		if (trim($uuid) === '') {
+			return null;
+		}
+
+		$entity = $this->objectService->find(
+			id: $uuid,
+			register: self::REGISTER,
+			schema: $schema,
+		);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->normalise(row: $entity);
+	}//end find()
 
 	/**
 	 * Read objects.

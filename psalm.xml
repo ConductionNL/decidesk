@@ -36,12 +36,39 @@
         -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectServiceInterface.php" />
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectEntityInterface.php" />
+
+        <!--
+            OpenRegister's AppHost composition-root entry point. `openregister`
+            is a sibling Nextcloud app, not a composer dependency, so
+            `OCA\OpenRegister\AppHost\Bootstrap` is genuinely absent here.
+
+            Without it psalm cannot resolve the class named in
+            `AppHostRegistrar::bindStoreController()`'s `class_exists()` guard,
+            concludes the guarded block is dead, and reports
+            `UnusedParam - Param context is never referenced in this method`
+            about a parameter passed on the very next line.
+
+            This replaces a `@psalm-suppress UnusedParam` on that method (#1145).
+            A suppression silences the finding and also silences the next
+            genuinely unused parameter in the same method; a stub answers the
+            question psalm is asking and leaves the call type-checked.
+
+            Shared, not vendored per app: filinq and planninq adopted the same
+            route table and carry the same call.
+        -->
+        <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
         <UnusedClosureParam errorLevel="suppress"/>
         <UndefinedClass>
             <errorLevel type="suppress">
+                <!-- Nextcloud's legacy bootstrap class. There is no OCP
+                     interface for registering another app's autoloader, so the
+                     ADR-040 AppHost prelude in AppInfo\OpenRegisterAutoloader
+                     has to call OC_App::registerAutoloading() directly. It is
+                     server-private and therefore absent from nextcloud/ocp. -->
+                <referencedClass name="OC_App"/>
                 <!-- Nextcloud OCP Classes -->
                 <referencedClass name="OCP\AppFramework\App"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>
@@ -82,6 +109,9 @@
                 <referencedClass name="OCP\Share\IManager"/>
                 <!-- OpenRegister cross-app classes (loaded dynamically) -->
                 <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrailMapper"/>
+                <referencedClass name="OCA\OpenRegister\Service\AuditHashService"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>

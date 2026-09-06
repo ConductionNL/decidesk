@@ -14,7 +14,7 @@
         "icon": "CalendarTextOutline",
         "version": "0.1.0",
         "title": "Meeting type",
-        "description": "A configurable KIND of meeting, owned by one GovernanceBody. This is the abstraction whose absence produced the flat, undifferentiated meeting list: Meeting.meetingType was a five-value enum with no relation to the body holding the meeting, so a gremium could not define its own meeting kinds without a developer widening the enum or, when that failed, adding a schema. Mirrors dossiq's caseType: the instance references its type and inherits the type's configuration (allowed agenda-item types, quorum and voting defaults, opening lifecycle state). Created by an administrator at runtime — adding a meeting kind costs zero code (configurable-types-domain-model REQ-CTM-001).",
+        "description": "A configurable KIND of meeting, owned by one GovernanceBody. This is the abstraction whose absence produced the flat, undifferentiated meeting list: Meeting.meetingType was a five-value enum with no relation to the body holding the meeting, so a gremium could not define its own meeting kinds without a developer widening the enum or, when that failed, adding a schema. Mirrors dossiq's caseType: the instance references its type and inherits the type's configuration (allowed agenda-item types, quorum and voting defaults, opening lifecycle state). Created by an administrator at runtime: adding a meeting kind costs zero code (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:EventSeries",
         "x-openregister": {
@@ -160,7 +160,7 @@
         "icon": "FormatListNumbered",
         "version": "0.1.0",
         "title": "Agenda item type",
-        "description": "A configurable KIND of agenda item. This is the schema that lets oral questions, interpellations, incoming documents, council information letters and kascommissie reports stop being five separate schemas with five top-level menu entries: each becomes an AgendaItem carrying one of these types. CRITICAL PROPERTY: owningBody is INDEPENDENT of the body holding the meeting the item sits on. That single decoupling expresses both halves of the kascommissie case with one model — the kascommissie can hold its OWN meeting (a MeetingType whose governanceBody is the kascommissie) AND own an agenda item on the ALV's meeting (this type's owningBody is the kascommissie). No second schema (configurable-types-domain-model REQ-CTM-002).",
+        "description": "A configurable KIND of agenda item. This is the schema that lets oral questions, interpellations, incoming documents, council information letters and kascommissie reports stop being five separate schemas with five top-level menu entries: each becomes an AgendaItem carrying one of these types. CRITICAL PROPERTY: owningBody is INDEPENDENT of the body holding the meeting the item sits on. That single decoupling expresses both halves of the kascommissie case with one model: the kascommissie can hold its OWN meeting (a MeetingType whose governanceBody is the kascommissie) AND own an agenda item on the ALV's meeting (this type's owningBody is the kascommissie). No second schema (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:ItemList",
         "x-openregister": {
@@ -228,7 +228,7 @@
                 "label": {
                   "type": "string",
                   "title": "Label",
-                  "description": "What the field is called on screen — the caption above the input when someone fills in an agenda item, and the column header where the field is listed."
+                  "description": "What the field is called on screen: the caption above the input when someone fills in an agenda item, and the column header where the field is listed."
                 },
                 "fieldType": {
                   "type": "string",
@@ -330,7 +330,7 @@
         "icon": "SeatOutline",
         "version": "0.1.0",
         "title": "Position type",
-        "description": "A position that EXISTS on a gremium — the gremium's configuration declaring, for example, that a board has a president. Carries a governanceBody back-reference, exactly as dossiq's statusType/resultType/roleType carry a caseType back-reference; a type's configuration lives in child schemas with a back-FK, never inlined as an array on the type, because an inline array cannot be referenced by uuid and PositionHold needs to reference it. Supersedes Post, whose startDate/endDate wrongly described the HOLDER rather than the position, and absorbs TermijnRegeling wholesale (configurable-types-domain-model REQ-CTM-005).",
+        "description": "A position that EXISTS on a gremium: the gremium's configuration declaring, for example, that a board has a president. Carries a governanceBody back-reference, exactly as dossiq's statusType/resultType/roleType carry a caseType back-reference; a type's configuration lives in child schemas with a back-FK, never inlined as an array on the type, because an inline array cannot be referenced by uuid and PositionHold needs to reference it. Supersedes Post, whose startDate/endDate wrongly described the HOLDER rather than the position, and absorbs TermijnRegeling wholesale (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:Role",
         "x-openregister": {
@@ -463,7 +463,7 @@
         "icon": "AccountTieOutline",
         "version": "0.1.0",
         "title": "Position hold",
-        "description": "One membership holding one position, for a duration, with a hold type. This is the object decidiq had no way to express: Membership.post was a bare string reference with no duration and no type, so 'X held the presidency, as interim, from A to B' was unsayable and successive holds were inexpressible — although there will always be a next president. It points at a MEMBERSHIP rather than a Person, so you cannot hold a position on a body you do not sit on and the referential integrity is free. Its endDate is INDEPENDENT of Membership.endDate, which is what lets one person be council member until date A but faction leader until date B (configurable-types-domain-model REQ-CTM-006, REQ-CTM-007).",
+        "description": "One membership holding one position, for a duration, with a hold type. This is the object decidiq had no way to express: Membership.post was a bare string reference with no duration and no type, so 'X held the presidency, as interim, from A to B' was unsayable and successive holds were inexpressible, although there will always be a next president. It points at a MEMBERSHIP rather than a Person, so you cannot hold a position on a body you do not sit on and the referential integrity is free. Its endDate is INDEPENDENT of Membership.endDate, which is what lets one person be council member until date A but faction leader until date B (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:Role",
         "x-openregister": {
@@ -570,7 +570,7 @@
         "icon": "SetMerge",
         "version": "0.1.0",
         "title": "Governance body composition",
-        "description": "A gremium composed of other gremia. Two kinds, and the distinction matters: 'direct' means the component's members ARE members of the composite (the same people); 'representation' means the component sends a number of representatives, and seatPosition references a PositionType on the composite — so the representation IS ITSELF A POSITION and a delegate's tenure is an ordinary PositionHold with a duration and a hold type, able to be interim like any other office-holder. DISTINCT from GovernanceBody.parentBody, which expresses HIERARCHY ('sits under') rather than composition ('is made of'); a body may have both, and keeping them apart stops parentBody becoming an overloaded field meaning three things depending on bodyType. Supersedes BodyParticipation, which had sharedBody/participant/seats but no seatPosition, so its seats were anonymous (configurable-types-domain-model REQ-CTM-009).",
+        "description": "A gremium composed of other gremia. Two kinds, and the distinction matters: 'direct' means the component's members ARE members of the composite (the same people); 'representation' means the component sends a number of representatives, and seatPosition references a PositionType on the composite, so the representation IS ITSELF A POSITION and a delegate's tenure is an ordinary PositionHold with a duration and a hold type, able to be interim like any other office-holder. DISTINCT from GovernanceBody.parentBody, which expresses HIERARCHY ('sits under') rather than composition ('is made of'); a body may have both, and keeping them apart stops parentBody becoming an overloaded field meaning three things depending on bodyType. Supersedes BodyParticipation, which had sharedBody/participant/seats but no seatPosition, so its seats were anonymous (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:OrganizationRole",
         "x-openregister": {
@@ -665,7 +665,7 @@
       "Meeting": {
         "slug": "meeting",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` reference to MeetingType. The existing `meetingType` enum is RETAINED and deprecated for one release so meetings seeded before this change keep rendering; a meeting carrying neither is invalid (REQ-CTM-001 Scenario 3).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` reference to MeetingType. The existing `meetingType` enum is RETAINED and deprecated for one release so meetings seeded before this change keep rendering; a meeting carrying neither is invalid (Scenario 3).",
         "properties": {
           "type": {
             "title": "Meeting type",
@@ -690,7 +690,7 @@
       "AgendaItem": {
         "slug": "agenda-item",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` reference to AgendaItemType. The existing `itemType` enum (informational/discussion/decision) is retained as a coarse rendering hint; `type` carries the configurable kind. An item's OWNER comes from its type's owningBody and need not be the body holding the meeting (REQ-CTM-002).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` reference to AgendaItemType. The existing `itemType` enum (informational/discussion/decision) is retained as a coarse rendering hint; `type` carries the configurable kind. An item's OWNER comes from its type's owningBody and need not be the body holding the meeting.",
         "properties": {
           "type": {
             "title": "Agenda item type",
@@ -714,7 +714,7 @@
       "Decision": {
         "slug": "decision",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` REFERENCE to a DecisionType. The reference is resolved at decision time, never copied at creation — which is the whole difference between a template and a type: a template is copied once, a type is consulted at every decision, so changing a type's voting rule governs every subsequent decision of that type (REQ-CTM-003).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` REFERENCE to a DecisionType. The reference is resolved at decision time, never copied at creation: which is the whole difference between a template and a type: a template is copied once, a type is consulted at every decision, so changing a type's voting rule governs every subsequent decision of that type.",
         "properties": {
           "type": {
             "title": "Decision type",
@@ -731,7 +731,7 @@
       "DecisionTemplate": {
         "slug": "decision-template",
         "version": "1.1.0",
-        "description": "Promoted by configurable-types-domain-model from a copy-once TEMPLATE to a live TYPE. It already carried stateMachine, votingRule, quorumRule, voteThreshold and checklist; it lacked the one thing that matters for authorisation — which gremium is competent to take the decision — and nothing referenced it. Both are added here (REQ-CTM-003, REQ-CTM-004).",
+        "description": "Promoted by configurable-types-domain-model from a copy-once TEMPLATE to a live TYPE. It already carried stateMachine, votingRule, quorumRule, voteThreshold and checklist; it lacked the one thing that matters for authorisation: which gremium is competent to take the decision, and nothing referenced it. Both are added here.",
         "properties": {
           "competentBody": {
             "title": "Competent body",

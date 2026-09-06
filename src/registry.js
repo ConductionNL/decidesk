@@ -43,12 +43,12 @@ import GovernanceBodyMembersTab from './components/tabs/GovernanceBodyMembersTab
 import GovernanceBodyRetentionTab from './components/tabs/GovernanceBodyRetentionTab.vue'
 import GovernanceBodyTemplateTab from './components/tabs/GovernanceBodyTemplateTab.vue'
 import MeetingAgendaTab from './components/tabs/MeetingAgendaTab.vue'
-import MeetingDecisionsTab from './components/tabs/MeetingDecisionsTab.vue'
 // Meeting-scoped facet composition (meeting-facet-composition): kascommissie
 // verklaringen (VvE mode-gated) and incoming documents routed onto this
 // meeting's agenda (two-hop join). See design.md Decisions 3/4 for why each
 // needs a thin wrapper rather than a pure declarative object-list widget.
-import MeetingKascommissieTab from './components/tabs/MeetingKascommissieTab.vue'
+import MeetingAuditStatementTab from './components/tabs/MeetingAuditStatementTab.vue'
+import MeetingDecisionsTab from './components/tabs/MeetingDecisionsTab.vue'
 import MeetingMinutesTab from './components/tabs/MeetingMinutesTab.vue'
 import MeetingParticipantsTab from './components/tabs/MeetingParticipantsTab.vue'
 import MeetingRoutedDocumentsTab from './components/tabs/MeetingRoutedDocumentsTab.vue'
@@ -64,6 +64,7 @@ import MotionAmendmentsTab from './components/tabs/MotionAmendmentsTab.vue'
 import MotionVotesTab from './components/tabs/MotionVotesTab.vue'
 import MotionVotingRoundTab from './components/tabs/MotionVotingRoundTab.vue'
 import RelatedDecisionsTab from './components/tabs/RelatedDecisionsTab.vue'
+import DecisionFormDialog from './dialogs/DecisionFormDialog.vue'
 import ActiveDecisionsKpiWidget from './views/dashboard/widgets/ActiveDecisionsKpiWidget.vue'
 // Dashboard v2 widgets (decidesk-dashboard-v2-widgets). Bespoke CnDashboardPage
 // slot components registered under kind: "widget".
@@ -220,7 +221,7 @@ export default {
 	MeetingVotesTab: page(MeetingVotesTab),
 	// Meeting-scoped facet composition (meeting-facet-composition): mode-gated
 	// kascommissie facet + the routed-incoming-documents two-hop join.
-	MeetingKascommissieTab: page(MeetingKascommissieTab),
+	MeetingAuditStatementTab: page(MeetingAuditStatementTab),
 	MeetingRoutedDocumentsTab: page(MeetingRoutedDocumentsTab),
 	AgendaMotionsTab: page(AgendaMotionsTab),
 	MotionAmendmentsTab: page(MotionAmendmentsTab),
@@ -243,6 +244,17 @@ export default {
 	// Nextcloud Deck cards via the OR leaf) when Deck is installed, else the
 	// table tab. The manifest decision action-items tab points here.
 	ActionItemsSurface: page(ActionItemsSurface),
+
+	// --- Form-dialog slot replacement (decision-types-as-configuration). ---
+	// Mounted into CnIndexPage's `form-dialog` slot on the Decisions and
+	// Motions pages (each page's `slots` map). Same CnFormDialog over the
+	// same schema as the built-in dialog, except the decisionType picker is
+	// fed from the `decision_types` registry via the shared decisionLink.js
+	// helpers (#1104) — the stored schema deliberately carries no enum since
+	// #1099, so the built-in picker rendered "No results". Registered with
+	// page() because slot resolution (resolveRegistryName) ignores `kind`;
+	// what matters is that the kind is one CnAppRoot's validator knows.
+	DecisionFormDialog: page(DecisionFormDialog),
 
 	// --- Dashboard v2 widgets (decidesk-dashboard-v2-widgets). ---
 	// Eleven CnDashboardPage slot components. CnPageRenderer / CnWidgetGrid

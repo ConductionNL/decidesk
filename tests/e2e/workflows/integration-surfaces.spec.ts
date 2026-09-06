@@ -52,19 +52,19 @@
  * Scenario here would be authoring the spec this suite is checked against.
  * Tracked as an issue instead.
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
-
-import { test, expect, type Page } from '@playwright/test'
-
 import {
 	BASE,
-	newLedger,
-	createObject,
 	cleanupAll,
+	createObject,
+	newLedger,
 	objId,
-	type SeedLedger,
-} from './governance-fixture'
+} from './governance-fixture.ts'
 
 /**
  * The manifest page ids these routes are served by, and the page `type` that

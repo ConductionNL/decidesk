@@ -243,6 +243,14 @@ $extra = [
         ['name' => 'health#index',           'url' => '/api/health',     'verb' => 'GET'],
         ['name' => 'health#status',          'url' => '/api/v1/health',  'verb' => 'GET'],
         ['name' => 'health#statusOptions',   'url' => '/api/v1/health',  'verb' => 'OPTIONS'],
+        // Decision-type registry (REQ-DCDH-002) — a LITERAL /api/v1 GET, so it
+        // MUST precede the api#index wildcard below. Nextcloud matches in
+        // declaration order; declared after the wildcard (where the rest of the
+        // integration-hub group sits) the wildcard swallowed it and answered
+        // 404 "Unknown resource", so the picker silently fell back to its 13
+        // shipped types and an admin-added type never appeared. The exact trap
+        // the write routes document further down.
+        ['name' => 'decisionTypes#index',    'url' => '/api/v1/decision-types',  'verb' => 'GET'],
         // CORS preflight for the whole v1 surface — must precede the catch-all GET.
         ['name' => 'api#preflight',          'url' => '/api/v1/{resource}',      'verb' => 'OPTIONS', 'requirements' => ['resource' => '[a-z\-]+']],
         ['name' => 'api#preflightItem',      'url' => '/api/v1/{resource}/{id}', 'verb' => 'OPTIONS', 'requirements' => ['resource' => '[a-z\-]+']],
@@ -272,6 +280,8 @@ $extra = [
         ['name' => 'motionCoauthor#history',        'url' => '/api/motions/{id}/history',              'verb' => 'GET'],
 
         // Integration hub endpoints — create-decision, outcome query, subscribe (REQ-DCDH-002..004).
+        // decisionTypes#index belongs to this group but is declared ABOVE the
+        // api#index wildcard, where a literal /api/v1 GET has to live.
         // @spec openspec/changes/decidesk-contract-decision-hub/tasks.md#phase-2
         ['name' => 'integration#createDecision', 'url' => '/api/v1/decisions',                   'verb' => 'POST'],
         ['name' => 'integration#getOutcome',     'url' => '/api/v1/decisions/{id}/outcome',       'verb' => 'GET'],

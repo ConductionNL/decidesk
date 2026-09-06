@@ -112,20 +112,20 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function status(): JSONResponse {
-		$picked      = $this->appConfig->getValueString(Application::APP_ID, self::PROFILE_KEY, '');
+		$picked      = $this->pickedProfiles();
 		$demoDecided = $this->appConfig->getValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
 
 		return new JSONResponse(
 			data: [
 				'version'   => self::SETUP_VERSION,
 				'completed' => true,
-				'profiles'  => $this->seedProfiles->listProfiles(),
+				'profiles'  => $this->seedProfiles->listChoices(),
 				'steps'     => [
-					'example-set' => ['done' => ($picked !== '')],
+					'example-set' => ['done' => ($picked !== [])],
 					// "None" is an ANSWER, so the load step is finished the moment
 					// it is chosen: there is nothing left for the operator to run.
 					'load-example-set' => [
-						'done' => ($demoDecided === true || $picked === SeedProfileService::NONE_PROFILE),
+						'done' => ($demoDecided === true || $picked === [SeedProfileService::NONE_PROFILE]),
 					],
 				],
 			]
@@ -157,19 +157,74 @@ class SetupController extends Controller {
 			return new JSONResponse(data: ['success' => true, 'config' => []]);
 		}
 
-		$profileId = (string)$value;
-		if ($this->isSelectableProfile(profileId: $profileId) === false) {
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'No example set is called "' . $profileId . '".'],
-				statusCode: Http::STATUS_BAD_REQUEST,
+		// The choice step is `multiple`, so the browser posts an ARRAY. A single
+		// value still arrives from an older manifest, and from anything that
+		// posts this endpoint by hand, so both shapes are read.
+		$profileIds = [];
+		$submitted  = [$value];
+		if (is_array($value) === true) {
+			$submitted = $value;
+		}
+
+		foreach ($submitted as $candidate) {
+			if (is_scalar($candidate) === false) {
+				return new JSONResponse(
+					data: ['success' => false, 'message' => 'An example set is named by a string.'],
+					statusCode: Http::STATUS_BAD_REQUEST,
+				);
+			}
+
+			$profileId = (string)$candidate;
+			if ($this->isSelectableProfile(profileId: $profileId) === false) {
+				return new JSONResponse(
+					data: ['success' => false, 'message' => 'No example set is called "' . $profileId . '".'],
+					statusCode: Http::STATUS_BAD_REQUEST,
+				);
+			}
+
+			if (in_array($profileId, $profileIds, true) === false) {
+				$profileIds[] = $profileId;
+			}
+		}
+
+		// 🔴 "NONE" ALONGSIDE A SET IS A CONTRADICTION, AND THE SET WINS.
+		// The cards are checkboxes, so an operator can tick "None" and then tick
+		// a set without unticking the first. Storing both would leave
+		// `load-example-set` reading "import nothing" and "import the
+		// municipality" from one value; dropping `none` keeps the answer the
+		// operator's LAST intent rather than a state the importer has to guess at.
+		if (count($profileIds) > 1) {
+			$profileIds = array_values(
+				array_filter($profileIds, static fn (string $id): bool => $id !== SeedProfileService::NONE_PROFILE)
 			);
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::PROFILE_KEY, $profileId);
+		$stored = implode(',', $profileIds);
+		$this->appConfig->setValueString(Application::APP_ID, self::PROFILE_KEY, $stored);
 
-		return new JSONResponse(data: ['success' => true, 'config' => [self::PROFILE_KEY => $profileId]]);
+		return new JSONResponse(data: ['success' => true, 'config' => [self::PROFILE_KEY => $stored]]);
 
 	}//end saveConfig()
+
+	/**
+	 * The example sets the operator picked, in the order they were stored.
+	 *
+	 * Stored as a comma-separated list rather than JSON so
+	 * `occ config:app:get decidiq example_profile` stays readable, and so a
+	 * value written before the step accepted several sets still reads back as
+	 * the one-element list it is.
+	 *
+	 * @return array<int, string> The picked ids, empty when nothing is picked.
+	 */
+	private function pickedProfiles(): array {
+		$stored = $this->appConfig->getValueString(Application::APP_ID, self::PROFILE_KEY, '');
+		if ($stored === '') {
+			return [];
+		}
+
+		return array_values(array_filter(array_map('trim', explode(',', $stored))));
+
+	}//end pickedProfiles()
 
 	/**
 	 * Whether a value is one the choice step may legitimately carry.
@@ -244,36 +299,57 @@ class SetupController extends Controller {
 	 * @return JSONResponse `{ success, message }`.
 	 */
 	private function loadExampleSet(): JSONResponse {
-		$profileId = $this->appConfig->getValueString(Application::APP_ID, self::PROFILE_KEY, '');
+		$profileIds = $this->pickedProfiles();
 
 		// 🔴 NO SILENT DEFAULT. Guessing a set here would plant a municipality
 		// into an operator's register because they clicked Run one step early,
 		// which is the exact failure this whole change exists to remove.
-		if ($profileId === '') {
+		if ($profileIds === []) {
 			return new JSONResponse(
 				data: ['success' => false, 'message' => 'Pick an example set first.'],
 				statusCode: Http::STATUS_BAD_REQUEST,
 			);
 		}
 
-		if ($profileId === SeedProfileService::NONE_PROFILE) {
+		if ($profileIds === [SeedProfileService::NONE_PROFILE]) {
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
 
 			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
 		}
 
-		try {
-			$imported = $this->seedProfiles->install(profileId: $profileId);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'Setup load-example-set failed for "' . $profileId . '": ' . $e->getMessage(),
-				['app' => Application::APP_ID, 'exception' => $e]
-			);
+		// 🔴 A PARTIAL IMPORT IS REPORTED AS A FAILURE, NOT AS A SUCCESS WITH A
+		// SMALLER NUMBER. Three sets were asked for; if the second throws, the
+		// operator has a register holding one of them and no reason to think so.
+		// The sets that DID land stay landed, because the import is idempotent
+		// by slug: running the step again finishes the job rather than doubling
+		// what already arrived.
+		$objects  = 0;
+		$imported = [];
+		foreach ($profileIds as $profileId) {
+			try {
+				$result = $this->seedProfiles->install(profileId: $profileId);
+			} catch (\Throwable $e) {
+				$this->logger->error(
+					'Setup load-example-set failed for "' . $profileId . '": ' . $e->getMessage(),
+					['app' => Application::APP_ID, 'exception' => $e]
+				);
 
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'Could not import the example data: ' . $e->getMessage()],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
-			);
+				$partial = '';
+				if ($imported !== []) {
+					$partial = ' Already imported: ' . implode(', ', $imported) . '.';
+				}
+
+				return new JSONResponse(
+					data: [
+						'success' => false,
+						'message' => 'Could not import the example data: ' . $e->getMessage() . $partial,
+					],
+					statusCode: Http::STATUS_INTERNAL_SERVER_ERROR,
+				);
+			}
+
+			$objects  += $result['objects'];
+			$imported[] = $profileId;
 		}
 
 		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
@@ -281,7 +357,7 @@ class SetupController extends Controller {
 		return new JSONResponse(
 			data: [
 				'success' => true,
-				'message' => 'Imported ' . $imported['objects'] . ' example object(s).',
+				'message' => 'Imported ' . $objects . ' example object(s) from ' . count($imported) . ' set(s).',
 			]
 		);
 

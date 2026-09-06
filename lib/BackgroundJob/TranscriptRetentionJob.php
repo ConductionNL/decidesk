@@ -398,9 +398,12 @@ class TranscriptRetentionJob extends TimedJob {
 	private function appendAudit(string $meetingId, array $deleted, string $policy): void {
 		try {
 			$auditLog = $this->container->get(\OCA\Decidiq\Service\AuditLogService::class);
+			// 'transcript-retention-purge' is a member of AuditLogService::ACTIONS;
+			// the dotted 'transcript.retention.purge' this used to send never was,
+			// so every retention purge audit append failed with "Unknown action".
 			$auditLog->append(
 				'system:retention',
-				'transcript.retention.purge',
+				'transcript-retention-purge',
 				[$meetingId],
 				['policy' => $policy, 'deletedFiles' => $deleted]
 			);

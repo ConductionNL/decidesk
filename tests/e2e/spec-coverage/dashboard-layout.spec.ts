@@ -15,9 +15,8 @@
  * @e2e openspec/specs/dashboard/spec.md#display-pending-votes-kpi
  * @e2e openspec/specs/dashboard/spec.md#display-overdue-actions-kpi
  */
-import { test, expect } from '@playwright/test'
-
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 
 /**
  * Navigate to the Decidiq dashboard root and wait for the SPA shell to mount.

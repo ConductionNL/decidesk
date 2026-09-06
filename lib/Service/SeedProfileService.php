@@ -143,6 +143,7 @@ class SeedProfileService {
 				'label'       => 'Every schema, generated values',
 				'description' => 'Sample values generated from the schemas themselves. Use it to exercise the data model, not to demo the app.',
 				'objectCount' => 0,
+				'icon'        => 'DatabaseOutline',
 			];
 		}
 
@@ -151,11 +152,40 @@ class SeedProfileService {
 	}//end listProfiles()
 
 	/**
+	 * Every answer the wizard may offer, declining included.
+	 *
+	 * 🔴 SEPARATE FROM `listProfiles()` ON PURPOSE. `none` is an ANSWER, not a
+	 * set: `isKnown()` must keep saying no to it, or `install()` would be asked
+	 * to import a descriptor that does not exist. This list is for the choice
+	 * step; that one is for the importer.
+	 *
+	 * @return array<int, array{id: string, label: string, description: string, objectCount: integer, icon: string}> The answers.
+	 *
+	 * @spec openspec/changes/example-set-cards/specs/example-set-cards/spec.md#requirement-the-wizard-offers-the-sets-the-app-ships
+	 */
+	public function listChoices(): array {
+		$choices = [
+			[
+				'id'          => self::NONE_PROFILE,
+				'label'       => 'None, I will set this up myself',
+				'description' => 'Nothing is imported. You start with an empty app and add your own bodies, meetings and decisions.',
+				'objectCount' => 0,
+				'icon'        => 'CloseCircleOutline',
+			],
+		];
+
+		return array_merge($choices, $this->listProfiles());
+
+	}//end listChoices()
+
+	/**
 	 * Whether an id names a set this app can actually import.
 	 *
 	 * @param string $profileId The id to test.
 	 *
 	 * @return boolean True when the id is importable.
+	 *
+	 * @spec openspec/changes/example-set-cards/specs/example-set-cards/spec.md#requirement-the-wizard-offers-the-sets-the-app-ships
 	 */
 	public function isKnown(string $profileId): bool {
 		if ($profileId === self::GENERATED_PROFILE) {
@@ -285,7 +315,7 @@ class SeedProfileService {
 	 *
 	 * @param string $path The descriptor path.
 	 *
-	 * @return array{id: string, label: string, description: string, order: integer, objectCount: integer}|null The block, or null.
+	 * @return array{id: string, label: string, description: string, order: integer, objectCount: integer, icon: string}|null The block, or null.
 	 */
 	private function readProfileMeta(string $path): ?array {
 		$raw = file_get_contents($path);
@@ -312,6 +342,7 @@ class SeedProfileService {
 			'description' => (string)($profile['description'] ?? ''),
 			'order'       => (int)($profile['order'] ?? 99),
 			'objectCount' => (int)($profile['objectCount'] ?? 0),
+			'icon'        => (string)($profile['icon'] ?? ''),
 		];
 
 	}//end readProfileMeta()

@@ -1,0 +1,604 @@
+{
+	"_note": "the-last-two-dutch-names — a termijnagenda is a forward agenda and a bevoegdheidstoedeling is an authority delegation. Both are things any organisation does: plan what it will handle, and record who may act on whose behalf. These are the last two Dutch-named schemas in the app that are not Woo/DiWoo publication plumbing, which moves to integriq separately. Grouped in one change because both are pure renames with no shared surface, and splitting them would double the migration plumbing for no reviewer benefit.",
+	"_spec": "openspec/changes/the-last-two-dutch-names/specs/the-last-two-dutch-names/spec.md",
+	"components": {
+		"schemas": {
+			"PlannedAgendaItem": {
+				"slug": "planned-agenda-item",
+				"icon": "CalendarClockOutline",
+				"version": "0.1.0",
+				"title": "Planned agenda item",
+				"description": "Something a governance body expects to handle in a future period: a proposal, a letter, a themed session, a budget document. Renamed from TermijnagendaItem (the-last-two-dutch-names): every organisation that plans its year ahead keeps one of these lists, and only the word was Dutch. Every property keeps its name.",
+				"type": "object",
+				"x-schema-org": "schema:PlanAction",
+				"x-openregister": {
+					"schemaType": "schema:PlanAction",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "planned",
+					"states": [
+						"planned",
+						"postponed",
+						"realised",
+						"lapsed"
+					],
+					"terminal": [
+						"realised",
+						"lapsed"
+					],
+					"transitions": [
+						{
+							"from": "planned",
+							"to": "postponed"
+						},
+						{
+							"from": "planned",
+							"to": "realised"
+						},
+						{
+							"from": "planned",
+							"to": "lapsed"
+						},
+						{
+							"from": "postponed",
+							"to": "postponed"
+						},
+						{
+							"from": "postponed",
+							"to": "realised"
+						},
+						{
+							"from": "postponed",
+							"to": "lapsed"
+						}
+					],
+					"_note": "Declarative guarded transition map (ADR-031, REQ-LTA-003). Canonical dialect (keyword 'initial', never 'initialState'/'states'-only/'default' — the silently-ignored drift dialect). gepland → verschoven | gerealiseerd | vervallen; verschoven → verschoven (self-transition allows repeat shifts, REQ-LTA-004) | gerealiseerd | vervallen; gerealiseerd and vervallen terminal. Entering 'vervallen' requires redenVervallen — a data-shape conditional NOT expressible in this transition map nor in the OR 'required' array (which cannot be state-dependent); enforced at the UI layer (vervallen dialog cannot confirm without a reason) and documented on the redenVervallen property (REQ-LTA-003). No app-side state machine."
+				},
+				"x-openregister-notifications": {
+					"termijnagendaRappelPeriodeAangebroken": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 604800,
+							"filter": {
+								"lifecycle": [
+									"gepland",
+									"verschoven"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: termijnagenda-onderwerp over termijn — {{onderwerp}}",
+							"en": "Reminder: termijnagenda item past its planned period — {{onderwerp}}"
+						},
+						"_note": "Period-arrival rappel (REQ-LTA-008). intervalSec 604800 (weekly) is PROVISIONAL (design open question — provisional 'once at period arrival + weekly while overdue'; griffie-configurable tuning deferred to a future admin-settings change). Filter targets non-terminal lifecycle only (gepland/verschoven) so gerealiseerd and vervallen items never rappel. DIALECT CAVEAT (mirrors the toezeggingen rappel): the 'planned period has arrived AND no realisation link' distinction is a period-last-day-vs-now comparison plus a realisedAgendaItem/realisedDecision null-check that the simple equality filter shape shown here cannot express; the scheduled-notification engine's window semantics must interpret it — verify OR's scheduled-notification engine during live import (open question: exact relative-date token for 'period last day vs now'). Recipients approximate 'owner + griffie' via object-acl (read) + the decidesk-members group, because no recipient kind targets the owner Person reference directly."
+					}
+				},
+				"authorization": {
+					"read": [
+						{
+							"group": "public",
+							"match": {
+								"publicationDate": {
+									"$lte": "$now"
+								}
+							}
+						},
+						"authenticated"
+					]
+				},
+				"required": [
+					"subject",
+					"governanceBody",
+					"plannedPeriod",
+					"expectedType",
+					"ownerType",
+					"lifecycle"
+				],
+				"properties": {
+					"subject": {
+						"title": "Subject",
+						"type": "string",
+						"description": "The expected proposal or topic (subject of the plan). Required.",
+						"example": "Herziening parkeerbeleid binnenstad"
+					},
+					"governanceBody": {
+						"title": "Governance body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"facetable": true,
+						"description": "Reference to the GovernanceBody (council/committee) the item is planned for. Required; drives the per-body board scoping."
+					},
+					"plannedPeriod": {
+						"title": "Planned period",
+						"type": "string",
+						"facetable": true,
+						"pattern": "^\\d{4}-(Q[1-4]|(0[1-9]|1[0-2]))$",
+						"description": "The planned period at month or quarter granularity: quarter YYYY-Qn (n 1-4, e.g. 2026-Q4) or month YYYY-MM (e.g. 2026-11). Required. Free-form text is rejected by this pattern. Sort-key convention (design D2): a period maps to its LAST DAY (2026-11 -> 2026-11-30, 2026-Q4 -> 2026-12-31); chronological order = order by last day; overdue = last day < today AND lifecycle non-terminal AND no realisation link.",
+						"example": "2026-Q4"
+					},
+					"expectedType": {
+						"title": "Expected type",
+						"type": "string",
+						"facetable": true,
+						"description": "What kind of thing the body expects, in whatever terms it uses itself.",
+						"example": "council-proposal",
+						"x-notes": "Was an enum of four council document kinds. Existing values remain valid because the field no longer constrains them."
+					},
+					"ownerType": {
+						"title": "Owner type",
+						"type": "string",
+						"facetable": true,
+						"description": "What kind of party owns the item, in whatever terms the organisation uses.",
+						"example": "executive-board",
+						"x-notes": "Was an enum of three council roles, for the same reason and with the same guarantee."
+					},
+					"owner": {
+						"title": "Owner",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"nullable": true,
+						"description": "Reference to the owning Person (portefeuillehouder). REQUIRED when ownerType is 'portefeuillehouder', otherwise null. This conditional-required rule is NOT expressible in the OR 'required' array (which cannot be value-dependent); it is enforced at save time by the UI and documented here."
+					},
+					"notes": {
+						"title": "Note",
+						"type": "string",
+						"description": "Free-text note explaining the planned item. Optional."
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Item status (declared in x-openregister-lifecycle, ADR-031): gepland -> verschoven (repeat shifts allowed) -> gerealiseerd | vervallen. gerealiseerd and vervallen are terminal. Entering vervallen requires redenVervallen; a reschedule to verschoven appends to verschuifHistorie.",
+						"enum": [
+							"planned",
+							"postponed",
+							"realised",
+							"lapsed"
+						],
+						"example": "gepland"
+					},
+					"shiftHistory": {
+						"title": "Shift history",
+						"type": "array",
+						"description": "Append-only history of reschedules. Each reschedule appends one entry (previous period, new period, mandatory reason, acting user, timestamp); existing entries are never edited or removed by the reschedule flow. Part of the public record (transparency instrument, design D4). Embedded array, not a separate schema (design D1): a shift has no independent lifecycle and never travels outside its item.",
+						"items": {
+							"type": "object",
+							"title": "Shift",
+							"properties": {
+								"van": {
+									"title": "From period",
+									"type": "string",
+									"description": "The planned period before this reschedule (same pattern as plannedPeriod)."
+								},
+								"toPeriod": {
+									"title": "To period",
+									"type": "string",
+									"description": "The planned period after this reschedule (same pattern as plannedPeriod)."
+								},
+								"reason": {
+									"title": "Reason",
+									"type": "string",
+									"description": "Mandatory reason for the reschedule."
+								},
+								"door": {
+									"title": "By",
+									"type": "string",
+									"description": "The acting user (Person reference or user id) who performed the reschedule."
+								},
+								"op": {
+									"title": "At",
+									"type": "string",
+									"format": "date-time",
+									"description": "Timestamp of the reschedule."
+								}
+							}
+						}
+					},
+					"reasonExpired": {
+						"title": "Drop reason",
+						"type": "string",
+						"nullable": true,
+						"description": "Reason the item was dropped (recorded when moving lifecycle to vervallen). REQUIRED when entering vervallen (enforced at the UI layer; not expressible as a state-dependent OR 'required' rule). Optional otherwise.",
+						"example": "Onderwerp opgegaan in omgevingsvisie"
+					},
+					"originCommitment": {
+						"title": "Origin commitment",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-commitment",
+						"nullable": true,
+						"description": "Optional reference to the Toezegging (toezeggingen-ingekomen-stukken) this planned item stems from. Renders as a navigable reference on the detail page. Nullable; degrades to an absent link if that change is not installed."
+					},
+					"originMotion": {
+						"title": "Origin motion",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Optional reference to a Decision of decisionType 'motion' (motie-amendement-administratie) this planned item stems from. The execution narrative lives EXCLUSIVELY on that motion's UitvoeringsUpdate log; the termijnagenda never duplicates it. Nullable."
+					},
+					"originDecision": {
+						"title": "Origin decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Optional reference to an earlier Decision this planned item stems from. Renders as a navigable reference on the detail page. Nullable."
+					},
+					"goal": {
+						"title": "Goal",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Goal",
+						"nullable": true,
+						"description": "Optional reference to the organisation Goal (organisation-goals change) this planned topic serves. Renders as a navigable reference on the detail page (organisation-goals REQ-008). Nullable; existing termijnagenda items created before this change remain valid with no goal set."
+					},
+					"realisedAgendaItem": {
+						"title": "Realised agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"nullable": true,
+						"description": "Reference to the actual AgendaItem that realised this planned item, set (assisted, always user-confirmed) when marking gerealiseerd. The termijnagenda NEVER creates, moves, or modifies agenda items or meetings itself. Nullable; presence means 'realised' for the overdue computation."
+					},
+					"realisedDecision": {
+						"title": "Realised decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"nullable": true,
+						"description": "Reference to the actual Decision that realised this planned item, set when marking gerealiseerd. Nullable; presence means 'realised' for the overdue computation."
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Publication date (WOO/DIWOO). When set in the past, the live item is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public termijnagenda reflects reschedules and lifecycle changes without republication (design D4)."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Depublication date (WOO/DIWOO). When set and in the past, the item is withdrawn from public access. Set by staff on withdraw."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"AuthorityDelegation": {
+				"slug": "authority-delegation",
+				"icon": "AccountKeyOutline",
+				"version": "0.1.0",
+				"title": "Authority delegation",
+				"description": "Who may exercise which authority on whose behalf: a delegation, a mandate, a power of attorney or an authorisation. Renamed from Bevoegdheidstoedeling (the-last-two-dutch-names). FOUR properties are renamed with it, because they were the only ones still in Dutch: `delegans` became `delegatingBody`, `delegansDescription` became `delegatingDescription`, `delegatarisBody` became `delegateBody`, and `beperkingen` became `restrictions`.",
+				"type": "object",
+				"x-schema-org": "schema:AuthorizeAction",
+				"x-openregister": {
+					"schemaType": "schema:AuthorizeAction",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "status",
+					"initial": "draft",
+					"states": [
+						"draft",
+						"effective",
+						"withdrawn",
+						"lapsed"
+					],
+					"terminal": [
+						"withdrawn",
+						"lapsed"
+					],
+					"transitions": [
+						{
+							"from": "draft",
+							"to": "effective"
+						},
+						{
+							"from": "effective",
+							"to": "withdrawn"
+						},
+						{
+							"from": "effective",
+							"to": "lapsed"
+						}
+					],
+					"_note": "Declarative guarded transition map (ADR-031, REQ-DMR-002). Canonical dialect verbatim from the sibling fragments (keyword 'initial', never 'initialState'/'default'). concept → van-kracht → ingetrokken | vervallen; ingetrokken and vervallen terminal. ingetrokken is an explicit intrekking (the UI action stores the revoking Decision in ingetrokkenDoor in the same save); vervallen records lapse by time (geldigTot passed) or by the underlying besluit expiring, without a revoking decision. No app-side state machine."
+				},
+				"x-openregister-notifications": {
+					"bevoegdheidExpiry60": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 5184000,
+							"filter": {
+								"status": "effective"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: bevoegdheidstoedeling verloopt binnen 60 dagen — {{onderwerp}}",
+							"en": "Reminder: authorization expires within 60 days — {{onderwerp}}"
+						},
+						"_note": "Pre-expiry rappel at ~60 days (REQ-DMR-007). intervalSec 5184000 (~60 days) is PROVISIONAL (design open question — griffie-configurable tuning deferred). Filter targets status van-kracht only, so no notification fires for concept/ingetrokken/vervallen or for a toedeling without geldigTot; the 'geldigTot within window' comparison is carried by the scheduled engine's window semantics, which the simple filter shape cannot express as a date comparison — verify OR's scheduled-notification engine interprets these two triggers as 60-day/14-day before-expiry rappels during live import."
+					},
+					"bevoegdheidExpiry14": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 1209600,
+							"filter": {
+								"status": "effective"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: bevoegdheidstoedeling verloopt binnen 14 dagen — {{onderwerp}}",
+							"en": "Reminder: authorization expires within 14 days — {{onderwerp}}"
+						},
+						"_note": "Pre-expiry rappel at ~14 days (REQ-DMR-007). intervalSec 1209600 (~14 days) is PROVISIONAL. Filters status van-kracht so no notification fires for terminal or open-ended (no geldigTot) toedelingen. Same window-semantics caveat as bevoegdheidExpiry60. Recipients approximate 'the responsible staff group' via object-acl (read) + decidesk-members group."
+					}
+				},
+				"authorization": {
+					"read": [
+						{
+							"group": "public",
+							"match": {
+								"publicationDate": {
+									"$lte": "$now"
+								}
+							}
+						},
+						"authenticated"
+					]
+				},
+				"required": [
+					"type",
+					"subject",
+					"decision",
+					"validFrom",
+					"status"
+				],
+				"properties": {
+					"type": {
+						"title": "Type",
+						"type": "string",
+						"facetable": true,
+						"description": "The nature of the authority assignment (Awb/BW). Required.",
+						"enum": [
+							"delegation",
+							"mandate",
+							"power-of-attorney",
+							"authorisation"
+						],
+						"example": "mandaat"
+					},
+					"delegatingBody": {
+						"title": "Delegating body",
+						"type": "string",
+						"format": "uuid",
+						"facetable": true,
+						"$ref": "governance-body",
+						"description": "Reference to the delegans / mandaatgever as a GovernanceBody (the authority that assigns). At least one of delegans or delegansOmschrijving MUST be present (schema-level anyOf)."
+					},
+					"delegatingDescription": {
+						"title": "Delegating party description",
+						"type": "string",
+						"facetable": true,
+						"description": "The delegans / mandaatgever as a role description where it is an eenhoofdig bestuursorgaan or not a GovernanceBody in this deployment (e.g. 'burgemeester', 'gemeentesecretaris'). At least one of delegans or delegansOmschrijving MUST be present.",
+						"example": "burgemeester"
+					},
+					"delegateBody": {
+						"title": "Delegate body",
+						"type": "string",
+						"format": "uuid",
+						"facetable": true,
+						"$ref": "governance-body",
+						"description": "Reference to the delegataris / gemandateerde as a GovernanceBody. At least one of delegatarisBody, delegatarisFunctie, or delegatarisPersoon MUST be present (schema-level anyOf)."
+					},
+					"delegateRole": {
+						"title": "Delegataris (function)",
+						"type": "string",
+						"facetable": true,
+						"description": "The delegataris / gemandateerde as a plain-text function/role description (e.g. 'afdelingshoofd Samenleving', 'teamleider Inkoop'). Plain text by design. HR/formatie management is out of scope so personnel churn never invalidates the register. At least one delegataris field MUST be present.",
+						"example": "afdelingshoofd Samenleving"
+					},
+					"delegatePerson": {
+						"title": "Delegataris (person)",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the delegataris / gemandateerde as a Popolo Person, where the authority is assigned to a named natural person. At least one delegataris field MUST be present."
+					},
+					"subject": {
+						"title": "Subject",
+						"type": "string",
+						"description": "The subject / scope of the assigned authority (what may be exercised). Required.",
+						"example": "Beslissen op subsidieaanvragen tot het genoemde plafond"
+					},
+					"financialCeiling": {
+						"title": "Financial ceiling",
+						"type": "number",
+						"facetable": true,
+						"description": "Optional monetary ceiling on the assigned authority (amount in euro).",
+						"example": 25000
+					},
+					"restrictions": {
+						"title": "Restrictions",
+						"type": "string",
+						"description": "Optional subject constraints / conditions on the assigned authority.",
+						"example": "Geen subsidies met precedentwerking"
+					},
+					"subMandatePermitted": {
+						"title": "Ondermandaat allowed",
+						"type": "boolean",
+						"facetable": true,
+						"default": false,
+						"description": "Whether ondermandaat (a further sub-assignment under this toedeling) is permitted. A child toedeling MAY reference this one via parentToedeling only when this flag is true: enforced server-side on save by OndermandaatGuardService (Tasks 3, imperative), not by a schema constraint."
+					},
+					"statutoryBasis": {
+						"title": "Legal basis",
+						"type": "array",
+						"description": "Legal-basis citations for the assignment (same citation vocabulary as the verordeningenregister capability, e.g. 'Awb art. 10:3').",
+						"items": {
+							"type": "string"
+						},
+						"example": [
+							"Awb art. 10:3",
+							"Asv 2026 art. 4"
+						]
+					},
+					"decision": {
+						"title": "Authorizing decision",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"description": "Required reference to the authorizing delegatie-/mandaatbesluit (Decision). The besluit document itself (routes, content, publication) stays entirely in decision-management; this register holds only the relation the besluit establishes."
+					},
+					"parentAllocation": {
+						"title": "Parent toedeling",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "authority-delegation",
+						"description": "Optional self-reference to the parent toedeling this one is an ondermandaat of (hoofdmandaat = no parent, depth 0). Accepted only when the parent exists and has ondermandaatToegestaan true, and only when the ancestor chain stays acyclic: both enforced server-side, fail-closed, by OndermandaatGuardService (Tasks 3, imperative; cross-object graph validation is not expressible as a schema constraint). Depth is displayed by walking the loaded chain, never stored."
+					},
+					"validFrom": {
+						"title": "Valid from",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date from which the toedeling is valid. Required. Drives the 'geldig op' in-force-on-date register view.",
+						"example": "2026-01-01"
+					},
+					"validTo": {
+						"title": "Valid until",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Optional date until which the toedeling is valid. Empty means open-ended. Drives the declarative expiry rappels and the 'geldig op' view; a toedeling without geldigTot never triggers an expiry notification.",
+						"example": "2026-08-15"
+					},
+					"withdrawnBy": {
+						"title": "Revoked by",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"description": "Optional reference to the revoking Decision (intrekkingsbesluit). Set together with the transition to status ingetrokken in the same save, so every ingetrokken toedeling traces to the besluit that revoked it. Absent for a vervallen lapse."
+					},
+					"status": {
+						"title": "Status",
+						"type": "string",
+						"facetable": true,
+						"description": "Assignment status (declared in x-openregister-lifecycle, ADR-031): concept → van-kracht → ingetrokken | vervallen. ingetrokken and vervallen are terminal. Transitioning to ingetrokken SHOULD carry an ingetrokkenDoor reference.",
+						"enum": [
+							"draft",
+							"effective",
+							"withdrawn",
+							"lapsed"
+						],
+						"example": "van-kracht"
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Publication date (WOO/DIWOO). When set in the past, the live toedeling is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public register reflects status changes (an intrekking, a vervallen lapse) without republication (design D4)."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Depublication date (WOO/DIWOO). When set and in the past, the toedeling is withdrawn from public access. Set by staff on withdraw."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"TermijnagendaItem": {
+				"version": "0.3.0",
+				"description": "SUPERSEDED (the-last-two-dutch-names): the same thing as PlannedAgendaItem (slug planned-agenda-item). Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Bevoegdheidstoedeling": {
+				"version": "0.3.0",
+				"description": "SUPERSEDED (the-last-two-dutch-names): the same thing as AuthorityDelegation (slug authority-delegation). Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

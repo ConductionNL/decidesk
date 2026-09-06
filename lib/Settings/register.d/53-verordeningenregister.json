@@ -9,7 +9,8 @@
         "icon": "ScaleBalance",
         "version": "0.1.1",
         "title": "Regeling",
-        "description": "A local regulation (regeling): verordening, beleidsregel, nadere regel, reglement, or externe statuut. Schema.org Legislation, Akoma Ntoso 'act' work level (FRBR work): the stable legal identity that a chain of immutable RegelingVersie expressions hangs off. It carries the citeertitel and officiële titel, the wettelijke grondslag, the vaststellend orgaan (a GovernanceBody), the CVDR identifier assigned by the national register after first publication (stored, never minted — REQ-VOR-001/006), and a declarative status lifecycle (ADR-031). In-werking regelingen are anonymously readable through the OpenRegister published-predicate (public register of regelingen in force, REQ-VOR-005); in-voorbereiding/vastgesteld/vervallen regelingen are not public. The regeling never stores consolidated text — that is an attached document on the RegelingVersie via the OR file abstraction. Publication of the regeling to DROP/CVDR runs through the RegelingExportPackage, whose STOP/TPOD build + OpenConnector delivery is the imperative slice (deferred).",
+        "description": "A local regulation (regeling): verordening, beleidsregel, nadere regel, reglement, or externe statuut. Schema.org Legislation, Akoma Ntoso 'act' work level (FRBR work): the stable legal identity that a chain of immutable RegelingVersie expressions hangs off. It carries the citeertitel and officiële titel, the wettelijke grondslag, the vaststellend orgaan (a GovernanceBody), the CVDR identifier assigned by the national register after first publication (stored, never minted: 006), and a declarative status lifecycle (ADR-031). In-werking regelingen are anonymously readable through the OpenRegister published-predicate (public register of regelingen in force); in-voorbereiding/vastgesteld/vervallen regelingen are not public. The regeling never stores consolidated text: that is an attached document on the RegelingVersie via the OR file abstraction. Publication of the regeling to DROP/CVDR runs through the RegelingExportPackage, whose STOP/TPOD build + OpenConnector delivery is the imperative slice (deferred).",
+        "_statusNote": "Regulation status, and the field x-openregister-lifecycle on this schema drives (field: status). It was REQUIRED and named by the lifecycle map from the day this fragment shipped, but never declared as a property, so OpenRegister created no magic-table column for it. Measured on a live instance: oc_openregister_table_21_262 (and its two duplicates) carried every other Regeling property and no status column at all, which means the declared in-preparation -> adopted -> in-effect -> lapsed transition map could never advance a regulation and the required field could never be satisfied. Enum mirrors x-openregister-lifecycle.states exactly; RegelingVersie.status is the per-version sibling and carries two extra states (draft, replaced) that a regulation as a whole does not have.",
         "type": "object",
         "x-schema-org": "schema:Legislation",
         "x-openregister": {
@@ -82,7 +83,7 @@
           "citationTitle": {
             "title": "Citeertitel",
             "type": "string",
-            "description": "The citation title (citeertitel) by which the regulation is officially cited. Required (REQ-VOR-001 scenario 'Citeertitel is required').",
+            "description": "The citation title (citeertitel) by which the regulation is officially cited. Required (scenario 'Citeertitel is required').",
             "example": "Afvalstoffenverordening Amsterdam"
           },
           "officialTitle": {
@@ -115,7 +116,7 @@
             "title": "Status",
             "type": "string",
             "facetable": true,
-            "description": "Regulation status, and the field x-openregister-lifecycle on this schema drives (field: status). It was REQUIRED and named by the lifecycle map from the day this fragment shipped, but never declared as a property, so OpenRegister created no magic-table column for it. Measured on a live instance: oc_openregister_table_21_262 (and its two duplicates) carried every other Regeling property and no status column at all, which means the declared in-preparation -> adopted -> in-effect -> lapsed transition map could never advance a regulation and the required field could never be satisfied. Enum mirrors x-openregister-lifecycle.states exactly; RegelingVersie.status is the per-version sibling and carries two extra states (draft, replaced) that a regulation as a whole does not have.",
+            "description": "The current status of this regulation. The lifecycle moves it from in preparation to adopted, in effect and lapsed.",
             "enum": [
               "in-preparation",
               "adopted",
@@ -129,14 +130,14 @@
             "title": "CVDR identifier",
             "type": "string",
             "facetable": true,
-            "description": "The CVDR (Centrale Voorziening Decentrale Regelgeving) identifier assigned by the national register after first publication. Stored, never minted by Decidiq — captured manually or from the DROP delivery acknowledgement (REQ-VOR-001/006). Optional (absent until first publication).",
+            "description": "The CVDR (Centrale Voorziening Decentrale Regelgeving) identifier assigned by the national register after first publication. Stored, never minted by Decidiq: captured manually or from the DROP delivery acknowledgement. Optional (absent until first publication).",
             "example": "CVDR641871"
           },
           "currentVersionNumber": {
             "title": "Current version number",
             "type": "integer",
             "nullable": true,
-            "description": "Convenience field: the versienummer of the RegelingVersie currently in force (REQ-VOR-004). Intended to be maintained by the RegelingConsolidationService (imperative slice) so the register list page renders the current version without a per-row N+1 resolution. Null until a version is in force. NOTE: no x-openregister-calculations dialect is declared here (unproven in this register) — the field is populated by the imperative slice; see dialect-gaps note."
+            "description": "Convenience field: the versienummer of the RegelingVersie currently in force. Intended to be maintained by the RegelingConsolidationService (imperative slice) so the register list page renders the current version without a per-row N+1 resolution. Null until a version is in force. NOTE: no x-openregister-calculations dialect is declared here (unproven in this register), the field is populated by the imperative slice; see dialect-gaps note."
           },
           "currentEffectiveDate": {
             "title": "Current inwerkingtreding",
@@ -144,7 +145,7 @@
             "format": "date",
             "nullable": true,
             "facetable": true,
-            "description": "Convenience field: the inwerkingtreding date of the RegelingVersie currently in force (REQ-VOR-004). Same maintenance/dialect caveat as currentVersienummer. Null until a version is in force.",
+            "description": "Convenience field: the inwerkingtreding date of the RegelingVersie currently in force. Same maintenance/dialect caveat as currentVersienummer. Null until a version is in force.",
             "example": "2025-06-01"
           }
         }
@@ -154,7 +155,7 @@
         "icon": "FileDocumentOutline",
         "version": "0.1.0",
         "title": "RegelingVersie",
-        "description": "An immutable version (expression) of a Regeling. Schema.org LegislationObject, Akoma Ntoso expression level (FRBR expression). Every version traces to the Decision (wijzigingsbesluit) that enacted it via vastgesteldDoor (REQ-VOR-002): creating a version without a resolvable amending decision MUST be rejected. versienummer is a positive integer unique per regeling (uniqueness is a cross-object rule not expressible in the schema 'required' array — enforced at save time, documented on the field). The consolidated text is an attached document via the OR file abstraction (Files leaf), not a schema property. Once a version transitions to in-werking it is SEALED (REQ-VOR-003): its versienummer, vastgesteldDoor, inwerkingtreding, and consolidated-text document become immutable, enforced server-side by OpenRegister's immutable-after-state semantics on the in-werking state — see the lifecycle _note for the dialect-gap caveat. Corrections are made as a new RegelingVersie traced to its own rectification decision, never by editing a sealed version. Sealed versions form the stable reference target that commissievergaderingen REQ-CVG-013 references by UUID.",
+        "description": "An immutable version (expression) of a Regeling. Schema.org LegislationObject, Akoma Ntoso expression level (FRBR expression). Every version traces to the Decision (wijzigingsbesluit) that enacted it via vastgesteldDoor: creating a version without a resolvable amending decision MUST be rejected. versienummer is a positive integer unique per regeling (uniqueness is a cross-object rule not expressible in the schema 'required' array: enforced at save time, documented on the field). The consolidated text is an attached document via the OR file abstraction (Files leaf), not a schema property. Once a version transitions to in-werking it is SEALED: its versienummer, vastgesteldDoor, inwerkingtreding, and consolidated-text document become immutable, enforced server-side by OpenRegister's immutable-after-state semantics on the in-werking state, see the lifecycle _note for the dialect-gap caveat. Corrections are made as a new RegelingVersie traced to its own rectification decision, never by editing a sealed version. Sealed versions form the stable reference target that commissievergaderingen references by UUID.",
         "type": "object",
         "x-schema-org": "schema:Legislation",
         "x-openregister": {
@@ -285,7 +286,7 @@
             "title": "Version number",
             "type": "integer",
             "facetable": true,
-            "description": "Positive integer version number, UNIQUE per regeling. Required. Uniqueness is a cross-object rule not expressible in the schema 'required' array (no per-scope-unique dialect is invented here); it is enforced at save time (REQ-VOR-002 scenario 'Version numbers are unique per regeling'). Immutable once the version is sealed (in-werking, REQ-VOR-003).",
+            "description": "Positive integer version number, UNIQUE per regeling. Required. Uniqueness is a cross-object rule not expressible in the schema 'required' array (no per-scope-unique dialect is invented here); it is enforced at save time (scenario 'Version numbers are unique per regeling'). Immutable once the version is sealed (in-werking).",
             "example": 2
           },
           "determinedBy": {
@@ -293,14 +294,14 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
-            "description": "Reference to the Decision (wijzigingsbesluit / vaststellingsbesluit / rectification decision) that enacted this version. Required — creating a version without a resolvable amending decision MUST be rejected (REQ-VOR-002 scenario 'Version without amending decision refused'). The besluit document itself stays in decision-management; this register holds only the enactment relation. Immutable once the version is sealed (REQ-VOR-003)."
+            "description": "Reference to the Decision (wijzigingsbesluit / vaststellingsbesluit / rectification decision) that enacted this version. Required: creating a version without a resolvable amending decision MUST be rejected (scenario 'Version without amending decision refused'). The besluit document itself stays in decision-management; this register holds only the enactment relation. Immutable once the version is sealed."
           },
           "effectiveDate": {
             "title": "Inwerkingtreding",
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date on which this version takes force. Required before activation (sealing to in-werking): a concept may be drafted before its date is fixed, so it is NOT in the create-time 'required' array; it is enforced at save time before the transition to in-werking, and the activation-ordering guard (REQ-VOR-004) refuses a date not after the latest sealed version's. Drives in-force resolution (REQ-VOR-004). Immutable once the version is sealed (REQ-VOR-003).",
+            "description": "Date on which this version takes force. Required before activation (sealing to in-werking): a concept may be drafted before its date is fixed, so it is NOT in the create-time 'required' array; it is enforced at save time before the transition to in-werking, and the activation-ordering guard refuses a date not after the latest sealed version's. Drives in-force resolution. Immutable once the version is sealed.",
             "example": "2025-06-01"
           },
           "expiryDate": {
@@ -308,7 +309,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Optional date on which this version lapses. Empty means the version stays in force until superseded. When set and passed, in-force resolution (REQ-VOR-004) excludes the version.",
+            "description": "Optional date on which this version lapses. Empty means the version stays in force until superseded. When set and passed, in-force resolution excludes the version.",
             "example": "2027-01-01"
           },
           "notes": {
@@ -321,7 +322,7 @@
             "title": "Status",
             "type": "string",
             "facetable": true,
-            "description": "Version status (declared in x-openregister-lifecycle, ADR-031): concept → vastgesteld → in-werking → vervangen | vervallen. in-werking is the SEALED state (REQ-VOR-003). vervangen and vervallen are terminal. Only in-werking versions are anonymously readable via the published-predicate (REQ-VOR-005 — concept versions never leak).",
+            "description": "Version status (declared in x-openregister-lifecycle, ADR-031): concept → vastgesteld → in-werking → vervangen | vervallen. in-werking is the SEALED state. vervangen and vervallen are terminal. Only in-werking versions are anonymously readable via the published-predicate (: concept versions never leak).",
             "enum": [
               "draft",
               "adopted",
@@ -349,7 +350,7 @@
         "icon": "PackageVariantClosed",
         "version": "0.1.0",
         "title": "RegelingExportPackage",
-        "description": "A DROP/STOP-TPOD publication package for one or more sealed regeling-versies (REQ-VOR-006). Schema.org DigitalDocument. It bundles STOP/TPOD-structured XML plus the consolidated-text documents and carries a declarative build/deliver lifecycle. DECLARATIVE CORE: this fragment ships only the schema, its lifecycle, and one seed package in state ready to demonstrate the honest-degradation download path. The IMPERATIVE slice is deferred — the STOP/TPOD XML build + structural validation (document-generation exception) and delivery through an OpenConnector Source resolved lazily by slug (external-integration exception, drop-bekendmakingen convention) live in RegelingExportService (+ LogRegelingExportService fallback). When OpenConnector or the Source is absent the package stays ready and is downloadable for manual DROP submission; Decidiq never talks to DROP/officielebekendmakingen.nl directly. On acknowledged delivery the package stores the remote reference and staff record the returned CVDR identifier onto the Regeling.",
+        "description": "A DROP/STOP-TPOD publication package for one or more sealed regeling-versies. Schema.org DigitalDocument. It bundles STOP/TPOD-structured XML plus the consolidated-text documents and carries a declarative build/deliver lifecycle. DECLARATIVE CORE: this fragment ships only the schema, its lifecycle, and one seed package in state ready to demonstrate the honest-degradation download path. The IMPERATIVE slice is deferred: the STOP/TPOD XML build + structural validation (document-generation exception) and delivery through an OpenConnector Source resolved lazily by slug (external-integration exception, drop-bekendmakingen convention) live in RegelingExportService (+ LogRegelingExportService fallback). When OpenConnector or the Source is absent the package stays ready and is downloadable for manual DROP submission; Decidiq never talks to DROP/officielebekendmakingen.nl directly. On acknowledged delivery the package stores the remote reference and staff record the returned CVDR identifier onto the Regeling.",
         "type": "object",
         "x-schema-org": "schema:DigitalDocument",
         "x-openregister": {
@@ -412,7 +413,7 @@
           "versies": {
             "title": "Versies",
             "type": "array",
-            "description": "The sealed RegelingVersie objects (by UUID) bundled in this package (REQ-VOR-006 — one or more sealed versions). Structural validation refuses a package whose versie is missing its consolidated-text document (sets status failed).",
+            "description": "The sealed RegelingVersie objects (by UUID) bundled in this package (: one or more sealed versions). Structural validation refuses a package whose versie is missing its consolidated-text document (sets status failed).",
             "items": {
               "type": "string",
               "format": "uuid"
@@ -421,13 +422,13 @@
           "sourceSlug": {
             "title": "Connector source slug",
             "type": "string",
-            "description": "Slug of the OpenConnector Source used to deliver the package to DROP (convention 'drop-bekendmakingen', configurable). Resolved lazily by the deferred imperative slice; when no Source resolves, delivery degrades to a downloadable package (honest degradation, REQ-VOR-006).",
+            "description": "Slug of the OpenConnector Source used to deliver the package to DROP (convention 'drop-bekendmakingen', configurable). Resolved lazily by the deferred imperative slice; when no Source resolves, delivery degrades to a downloadable package (honest degradation).",
             "example": "drop-bekendmakingen"
           },
           "validationErrors": {
             "title": "Validation errors",
             "type": "string",
-            "description": "Structural-validation errors stored when the build fails (status failed). Blocks delivery while the package is not ready (REQ-VOR-006)."
+            "description": "Structural-validation errors stored when the build fails (status failed). Blocks delivery while the package is not ready."
           },
           "remoteReference": {
             "title": "Remote reference",

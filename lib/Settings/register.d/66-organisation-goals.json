@@ -9,7 +9,7 @@
         "icon": "TargetVariant",
         "version": "0.1.0",
         "title": "Goal",
-        "description": "An organisation goal (quality objective, ISO 9001 §6.2): a measurable, owned, deadlined objective set at a governance body's level (council, board, department, commission — via GovernanceBody.bodyType), monitored via a declarative progress rollup from linked Toezegging commitments and ActionItem tasks, and optionally cascaded from a parent Goal (single-level only — see parentGoal). Goal is the target end of the accountability chain that Toezegging and ActionItem already track day-to-day (organisation-goals REQ-001).",
+        "description": "An organisation goal (quality objective, ISO 9001 §6.2): a measurable, owned, deadlined objective set at a governance body's level (council, board, department, commission, via GovernanceBody.bodyType), monitored via a declarative progress rollup from linked Toezegging commitments and ActionItem tasks, and optionally cascaded from a parent Goal (single-level only, see parentGoal). Goal is the target end of the accountability chain that Toezegging and ActionItem already track day-to-day (organisation-goals REQ-001).",
         "type": "object",
         "x-schema-org": "schema:PlanAction",
         "x-openregister": {
@@ -108,7 +108,7 @@
             "format": "uuid",
             "$ref": "Person",
             "nullable": true,
-            "description": "Reference to the Person responsible for the goal. Optional — a goal may be collectively owned by its body before an individual is assigned (organisation-goals REQ-002 Scenario 2)."
+            "description": "Reference to the Person responsible for the goal. Optional: a goal may be collectively owned by its body before an individual is assigned (organisation-goals REQ-002 Scenario 2)."
           },
           "body": {
             "title": "Governance body",
@@ -166,7 +166,7 @@
             "title": "Unit",
             "type": "string",
             "nullable": true,
-            "description": "Unit of measure for targetValue/currentValue (free text — e.g. '% omzetgroei', '% CO2-reductie behaald'). Optional.",
+            "description": "Unit of measure for targetValue/currentValue (free text: e.g. '% omzetgroei', '% CO2-reductie behaald'). Optional.",
             "example": "% omzetgroei"
           },
           "parentGoal": {
@@ -175,7 +175,25 @@
             "format": "uuid",
             "$ref": "Goal",
             "nullable": true,
-            "description": "Optional, self-referential reference to a parent Goal, enabling an org-wide -> department -> quarterly cascade. Single-level only: childGoalCount on the parent counts DIRECT children only, never grandchildren (organisation-goals REQ-005 Scenario 2, design.md D3) — a deeper cascade is out of scope for this change."
+            "description": "Optional, self-referential reference to a parent Goal, enabling an org-wide -> department -> quarterly cascade. Single-level only: childGoalCount on the parent counts DIRECT children only, never grandchildren (organisation-goals REQ-005 Scenario 2, design.md D3), a deeper cascade is out of scope for this change."
+          },
+          "commitmentSettlementRate": {
+            "title": "Commitment settlement rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's linked commitments that are settled, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "actionItemCompletionRate": {
+            "title": "Action item completion rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's linked action items that are completed, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "childGoalAchievedRate": {
+            "title": "Child goal achieved rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's direct child goals that are achieved, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
           }
         },
         "x-openregister-aggregations": {
@@ -226,6 +244,54 @@
             }
           }
         },
+        "x-openregister-aggregate-refs": {
+          "linkedCommitmentCount": {
+            "metric": "count",
+            "schema": "toezegging",
+            "filters": {
+              "goal": "@self.id"
+            }
+          },
+          "settledCommitmentCount": {
+            "metric": "count",
+            "schema": "toezegging",
+            "filters": {
+              "goal": "@self.id",
+              "lifecycle": "disposed"
+            }
+          },
+          "linkedActionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "goal": "@self.id"
+            }
+          },
+          "completedActionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "goal": "@self.id",
+              "taskStatus": "completed"
+            }
+          },
+          "childGoalCount": {
+            "metric": "count",
+            "schema": "goal",
+            "filters": {
+              "parentGoal": "@self.id"
+            },
+            "_note": "Self-referential by design: Goal counts its DIRECT children via parentGoal, never grandchildren (organisation-goals REQ-005 Scenario 2). Declared here as well as under x-openregister-aggregations because the two blocks feed different readers. AggregationController serves the reporting block, and CalculationPayloadBuilder reads only this one, injecting each result as @aggregate.<name>."
+          },
+          "achievedChildGoalCount": {
+            "metric": "count",
+            "schema": "goal",
+            "filters": {
+              "parentGoal": "@self.id",
+              "status": "achieved"
+            }
+          }
+        },
         "x-openregister-calculations": {
           "commitmentSettlementRate": {
             "type": "number",
@@ -235,20 +301,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "linkedCommitmentCount"
+                      "prop": "@aggregate.linkedCommitmentCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "settledCommitmentCount"
+                          "prop": "@aggregate.settledCommitmentCount"
                         },
                         {
-                          "prop": "linkedCommitmentCount"
+                          "prop": "@aggregate.linkedCommitmentCount"
                         }
                       ]
                     },
@@ -267,20 +333,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "linkedActionItemCount"
+                      "prop": "@aggregate.linkedActionItemCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "completedActionItemCount"
+                          "prop": "@aggregate.completedActionItemCount"
                         },
                         {
-                          "prop": "linkedActionItemCount"
+                          "prop": "@aggregate.linkedActionItemCount"
                         }
                       ]
                     },
@@ -299,20 +365,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "childGoalCount"
+                      "prop": "@aggregate.childGoalCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "achievedChildGoalCount"
+                          "prop": "@aggregate.achievedChildGoalCount"
                         },
                         {
-                          "prop": "childGoalCount"
+                          "prop": "@aggregate.childGoalCount"
                         }
                       ]
                     },

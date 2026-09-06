@@ -1,0 +1,503 @@
+{
+	"_note": "integrity-disclosures-in-plain-words — a nevenfunctie is an ancillary position and a geschenk is a gift. Every organisation with a board has both; only the words were Dutch, and the properties were already English, so this is a rename and not a reshape. Integriteitsbeleid is different: it was a SECOND per-body configuration keyed on the same body as BodyGovernanceConfiguration, so it folds in rather than being renamed. Two configurations per body meant two places to look and two to keep in step.",
+	"_spec": "openspec/changes/integrity-disclosures-in-plain-words/specs/integrity-disclosures-in-plain-words/spec.md",
+	"components": {
+		"schemas": {
+			"AncillaryPosition": {
+				"slug": "ancillary-position",
+				"icon": "BriefcaseAccountOutline",
+				"version": "0.1.0",
+				"title": "Ancillary position",
+				"description": "A role a member holds OUTSIDE this organisation, declared so the body can see where its members have other interests. Every organisation with a board has this; only the word for it was Dutch. Renamed from Nevenfunctie (integrity-disclosures-in-plain-words); every property keeps its name.",
+				"type": "object",
+				"x-schema-org": "schema:Role",
+				"x-openregister": {
+					"schemaType": "schema:Role",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "reported",
+					"states": [
+						"reported",
+						"public",
+						"internal",
+						"ended"
+					],
+					"terminal": [
+						"ended"
+					],
+					"transitions": [
+						{
+							"from": "reported",
+							"to": "public"
+						},
+						{
+							"from": "reported",
+							"to": "internal"
+						},
+						{
+							"from": "internal",
+							"to": "public"
+						},
+						{
+							"from": "public",
+							"to": "internal"
+						},
+						{
+							"from": "public",
+							"to": "ended"
+						},
+						{
+							"from": "internal",
+							"to": "ended"
+						}
+					],
+					"_note": "Declarative guarded disclosure workflow (ADR-031, REQ-INT-002). Canonical dialect verbatim (keyword 'initial', never 'initialState'/'default'). gemeld → openbaar | intern (griffie/staff verification sets the disclosure state; the per-body Integriteitsbeleid.nevenfunctieDisclosureDefault only PRESELECTS the target, never bypasses the explicit transition — REQ-INT-003); openbaar ↔ intern rectification; openbaar/intern → beëindigd (ending records endDate). beëindigd is terminal. No app-side state machine."
+				},
+				"x-openregister-notifications": {
+					"nevenfunctieGemeld": {
+						"trigger": {
+							"type": "created"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-integrity"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Nieuwe nevenfunctie gemeld: {{organisatie}}",
+							"en": "New other-position declared: {{organisatie}}"
+						},
+						"_note": "Integrity notification on a new declaration (REQ-INT-009). Recipient SHOULD be the body's configured integrity group (Integriteitsbeleid.integriteitsNotificatieGroep — burgemeester/voorzitter/compliance). The notification dialect cannot read a recipient group from a RELATED policy object, so per design D3 / Risk 3 this uses one literal integrity group ('decidesk-integriteit') with per-body routing handled by group membership (documented, never silent); verify against OR during apply whether a policy-object lookup is supported."
+					},
+					"nevenfunctieGewijzigd": {
+						"trigger": {
+							"type": "updated"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-integrity"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Nevenfunctie gewijzigd: {{organisatie}}",
+							"en": "Other-position declaration updated: {{organisatie}}"
+						},
+						"_note": "Integrity notification on a changed declaration (REQ-INT-009 updated trigger). Same literal-group fallback as nevenfunctieGemeld."
+					},
+					"nevenfunctieJaarlijkseReview": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 2592000,
+							"filter": {
+								"lifecycle": [
+									"gemeld",
+									"openbaar",
+									"intern"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							}
+						],
+						"subject": {
+							"nl": "Rappel: controleer uw nevenfuncties",
+							"en": "Reminder: review your other-position declarations"
+						},
+						"_note": "Annual review rappel (REQ-INT-008). intervalSec 2592000 (~30 days evaluation cadence) is the trigger's re-evaluation period, NOT the review window. The 'reviewedAt (or declaredAt when never reviewed) more than 12 months in the past' condition is a relative-date filter the simple filter shape cannot express — this filter targets only non-terminal lifecycle (beëindigd excluded); verify OR's scheduled-notification engine supports the 12-month relative-date cutoff during live import (design Open Questions; fallback: index quick-filter carries the cutoff, documented not silent). Recipient approximates the object's Person via object-acl (read), because no recipient kind targets the person reference field directly. The member confirms via self-service (REQ-INT-010), writing reviewedAt (saveObject PUT-semantic)."
+					}
+				},
+				"authorization": {
+					"read": [
+						{
+							"group": "public",
+							"match": {
+								"publicationDate": {
+									"$lte": "$now"
+								}
+							}
+						},
+						"authenticated"
+					]
+				},
+				"required": [
+					"person",
+					"governanceBody",
+					"organisation",
+					"role",
+					"remunerated",
+					"startDate",
+					"declaredAt",
+					"lifecycle"
+				],
+				"properties": {
+					"person": {
+						"title": "Person",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the Person who holds the nevenfunctie (schema:Role holder). Required."
+					},
+					"governanceBody": {
+						"title": "Governance body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the GovernanceBody under whose disclosure regime the declaration is made (its Integriteitsbeleid sets the disclosure default and integrity recipient). Required: a person holding roles in two bodies faces two regimes and declares once per body (design D5)."
+					},
+					"organisation": {
+						"title": "Organisation",
+						"type": "string",
+						"facetable": true,
+						"description": "Name of the organisation where the position is held. Required. A plain string (not a UID field) so the object stays fully publishable (design D4).",
+						"example": "Stichting Welzijn Noord"
+					},
+					"role": {
+						"title": "Function",
+						"type": "string",
+						"description": "Description of the function / role held (e.g. bestuurslid, docent). Required.",
+						"example": "bestuurslid"
+					},
+					"remunerated": {
+						"title": "Remunerated",
+						"type": "boolean",
+						"facetable": true,
+						"description": "Whether the position is bezoldigd (paid) or onbezoldigd. Required. The schema deliberately carries NO remuneration AMOUNT (design D4 publishability constraint); only the paid/unpaid fact.",
+						"default": false,
+						"example": false
+					},
+					"hoursIndication": {
+						"title": "Hours indication",
+						"type": "string",
+						"description": "Free-text indication of the time commitment (e.g. '4 uur/week'). Optional.",
+						"example": "4 uur/week"
+					},
+					"qualitateQua": {
+						"title": "Ex officio (q.q.)",
+						"type": "boolean",
+						"facetable": true,
+						"description": "Whether the position is held uit hoofde van het ambt (qualitate qua) rather than personally: a q.q. marker distinguishes it in the register.",
+						"default": false,
+						"example": false
+					},
+					"startDate": {
+						"title": "Start date",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the position started. Required.",
+						"example": "2024-03-01"
+					},
+					"endDate": {
+						"title": "End date",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the position ended. Set when the lifecycle moves to beëindigd. Optional.",
+						"example": "2025-12-31"
+					},
+					"declaredAt": {
+						"title": "Declared at",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the nevenfunctie was declared. Required. Drives the annual-review rappel when reviewedAt is never set.",
+						"example": "2024-03-05"
+					},
+					"reviewedAt": {
+						"title": "Reviewed at",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date of the last annual self-review confirmation. Set by the member via self-service, carrying all other fields forward (saveObject PUT-semantic). Optional; when older than 12 months (or absent) the object counts toward the overdue-review KPI and the annual rappel.",
+						"example": "2025-05-15"
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Disclosure status (declared in x-openregister-lifecycle, ADR-031): gemeld → openbaar | intern → beëindigd. beëindigd is terminal. Legislative bodies default the target to openbaar (Gemeentewet), other body types to intern (design).",
+						"enum": [
+							"reported",
+							"public",
+							"internal",
+							"ended"
+						],
+						"example": "gemeld"
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Publication date (WOO/DIWOO). When set in the past on a verified openbaar nevenfunctie, the LIVE object is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action (griffie); because the predicate sits on the live object the public register reflects lifecycle changes (e.g. beëindigd with endDate) without republication (design D4)."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Depublication date (WOO/DIWOO). When set and in the past, the nevenfunctie is withdrawn from public access. Set by staff on withdraw."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"DeclaredGift": {
+				"slug": "declared-gift",
+				"icon": "GiftOutline",
+				"version": "0.1.0",
+				"title": "Declared gift",
+				"description": "A gift or an invitation a member received and declared, with what the body decided to do about it. Renamed from Geschenk (integrity-disclosures-in-plain-words); every property keeps its name. The slug is `declared-gift` rather than `gift`: schema slugs are GLOBAL on a shared OpenRegister and a bare `gift` is broad enough that another app would reasonably claim it.",
+				"authorization": {
+					"read": [
+						{
+							"group": "public",
+							"match": {
+								"publicationDate": {
+									"$lte": "$now"
+								}
+							}
+						},
+						"authenticated"
+					]
+				},
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-notifications": {
+					"geschenkBovenDrempel": {
+						"trigger": {
+							"type": "created"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-integrity"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Geschenk boven drempelbedrag geregistreerd: {{omschrijving}}",
+							"en": "Above-threshold gift registered: {{omschrijving}}"
+						},
+						"_note": "Integrity notification on a boven-drempel gift registration (REQ-INT-009, scoped by REQ-INT-006). The 'geschatteWaarde at or above the body's geschenkDrempelbedrag (policy or EUR 50)' condition is a per-body threshold comparison the simple created-trigger filter cannot express (the threshold lives on a related Integriteitsbeleid object) — per design D3 / Risk 3 this fires on every created Geschenk to the literal integrity group ('decidesk-integriteit'); the boven-drempel badge (frontend render rule) is the authoritative visual scoping and the below-threshold-stays-quiet guarantee is enforced there. Verify against OR during apply whether a threshold-from-policy filter is expressible; fallback documented, never silent."
+					}
+				},
+				"required": [
+					"recipient",
+					"governanceBody",
+					"type",
+					"giver",
+					"description",
+					"estimatedValue",
+					"receivedOn",
+					"decision",
+					"declaredAt"
+				],
+				"properties": {
+					"recipient": {
+						"title": "Recipient",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the Person who received the gift/invitation (schema:Action agent). Required."
+					},
+					"governanceBody": {
+						"title": "Governance body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the GovernanceBody whose Integriteitsbeleid governs the threshold, notification recipient, and public-register opt-in. Required."
+					},
+					"type": {
+						"title": "Type",
+						"type": "string",
+						"facetable": true,
+						"description": "Whether the registration is a geschenk (gift) or an uitnodiging (invitation). Required.",
+						"enum": [
+							"gift",
+							"invitation"
+						],
+						"example": "geschenk"
+					},
+					"giver": {
+						"title": "Giver",
+						"type": "string",
+						"description": "The giving party as a plain display string. NEVER a Person reference, so no external-party PII enters the people register (design D4 / security). Required.",
+						"example": "Delegatie gemeente Aken"
+					},
+					"description": {
+						"title": "Description",
+						"type": "string",
+						"description": "Description of the gift or invitation. Required.",
+						"example": "Fotoboek stedenband"
+					},
+					"estimatedValue": {
+						"title": "Estimated value (EUR)",
+						"type": "number",
+						"facetable": true,
+						"description": "Estimated value in EUR. Required. Compared against the body's geschenkDrempelbedrag (policy or EUR 50 default): at-or-above-threshold drives the boven-drempel badge and integrity notification. No remuneration/monetary sub-object: a plain number so the object stays publishable (design D4).",
+						"example": 20
+					},
+					"receivedOn": {
+						"title": "Received on",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the gift/invitation was received. Required.",
+						"example": "2026-01-20"
+					},
+					"decision": {
+						"title": "Decision",
+						"type": "string",
+						"facetable": true,
+						"description": "Decision on the gift/invitation. Required. The threshold is registration policy only: the system does NOT block saving any decision value.",
+						"enum": [
+							"accepted",
+							"refused",
+							"transferred"
+						],
+						"example": "aanvaard"
+					},
+					"notes": {
+						"title": "Note",
+						"type": "string",
+						"description": "Optional note explaining the decision (e.g. why an invitation was refused or handed over)."
+					},
+					"declaredAt": {
+						"title": "Declared at",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the gift/invitation was registered. Required.",
+						"example": "2026-01-21"
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Publication date (WOO/DIWOO). When the body's Integriteitsbeleid sets geschenkenOpenbaar true and staff publish, the LIVE geschenk is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publication is an explicit staff action and off by default per body policy."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Depublication date (WOO/DIWOO). When set and in the past, the geschenk is withdrawn from public access. Set by staff on withdraw."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"BodyGovernanceConfiguration": {
+				"version": "0.4.0",
+				"description": "Per-body governance context, for ANY kind of organisation. Absorbed Integriteitsbeleid (integrity-disclosures-in-plain-words), which was a second per-body configuration keyed on the same body: an integrity policy is governance context, not a separate record, and two configurations per body meant two places to look and two to keep in step.",
+				"properties": {
+					"ancillaryPositionDisclosureDefault": {
+						"title": "Nevenfunctie disclosure default",
+						"type": "string",
+						"facetable": true,
+						"description": "The disclosure target PRESELECTED when a gemeld nevenfunctie is processed for this body (openbaar for councils per Gemeentewet, intern for corporate boards). It preselects only: it does NOT bypass the explicit x-openregister-lifecycle transition. Required.",
+						"enum": [
+							"public",
+							"internal"
+						],
+						"example": "openbaar"
+					},
+					"giftThresholdAmount": {
+						"title": "Gift threshold (EUR)",
+						"type": "number",
+						"description": "Gift threshold in EUR: geschenken with geschatteWaarde at or above this value are badged boven-drempel and trigger the integrity notification. Defaults to EUR 50 (model-gedragscode) when no policy object exists for the body.",
+						"default": 50,
+						"example": 50
+					},
+					"giftsPublic": {
+						"title": "Public gift register",
+						"type": "boolean",
+						"description": "Whether this body's geschenkenregister is public: when true, published geschenken are anonymously readable via the same public-predicate as nevenfuncties; when false (default) no publish action is offered and no geschenk of this body is anonymously readable.",
+						"default": false,
+						"example": false
+					},
+					"integrityNotificationGroup": {
+						"title": "Integrity notification group",
+						"type": "string",
+						"description": "The NC group receiving this body's integrity notifications (mapped to burgemeester, voorzitter, or compliance officer as configured per body). Optional. Note (design D3 / Risk 3): the x-openregister-notifications dialect cannot currently read this per-body value from the related policy object, so the notification triggers use one literal integrity group with per-body routing via group membership until a policy-object lookup is verified against OR.",
+						"example": "decidiq-chair"
+					}
+				}
+			},
+			"Nevenfunctie": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (integrity-disclosures-in-plain-words): the same thing as AncillaryPosition (slug ancillary-position). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Geschenk": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (integrity-disclosures-in-plain-words): the same thing as DeclaredGift (slug declared-gift). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Integriteitsbeleid": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (integrity-disclosures-in-plain-words): the same thing as BodyGovernanceConfiguration (slug body-governance-configuration). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

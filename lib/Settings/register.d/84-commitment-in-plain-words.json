@@ -1,0 +1,343 @@
+{
+	"_note": "commitment-in-plain-words — a toezegging is a commitment. Every organisation whose officers answer to a body has them: a portfolio holder promises the council a memo, a director promises the works council a figure, a board member promises the ALV a report. The properties were already in plain words. Only the schema was not.",
+	"_spec": "openspec/changes/commitment-in-plain-words/specs/commitment-in-plain-words/spec.md",
+	"components": {
+		"schemas": {
+			"Commitment": {
+				"slug": "governance-commitment",
+				"icon": "HandshakeOutline",
+				"version": "0.1.0",
+				"title": "Commitment",
+				"description": "A commitment somebody made to a governance body in a meeting, tracked from the moment it is made through to settlement. A portfolio holder promises the council a memo; a director promises the works council a figure; a board member promises the ALV a report. Renamed from Toezegging (commitment-in-plain-words): every organisation whose officers answer to a body has these, and only the word was Dutch. Every property keeps its name. The slug is `governance-commitment` rather than `commitment`, which shillinq owns: schema slugs are GLOBAL on a shared OpenRegister.",
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "open",
+					"states": [
+						"open",
+						"in-execution",
+						"disposed",
+						"lapsed"
+					],
+					"terminal": [
+						"disposed",
+						"lapsed"
+					],
+					"transitions": [
+						{
+							"from": "open",
+							"to": "in-execution"
+						},
+						{
+							"from": "open",
+							"to": "lapsed"
+						},
+						{
+							"from": "in-execution",
+							"to": "disposed"
+						},
+						{
+							"from": "in-execution",
+							"to": "lapsed"
+						}
+					],
+					"_note": "Declarative guarded transition map (ADR-031, REQ-002). Canonical dialect verbatim from the Decision schema (keyword 'initial', never 'initialState'/'default'). open → in-uitvoering → afgedaan | vervallen; afgedaan and vervallen terminal. Afdoening (afgedaan) always passes through in-uitvoering; a not-yet-started commitment may lapse directly (open → vervallen). No app-side state machine."
+				},
+				"x-openregister-notifications": {
+					"toezeggingRegistered": {
+						"trigger": {
+							"type": "created"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Nieuwe toezegging geregistreerd: {{text}}",
+							"en": "New commitment registered: {{text}}"
+						}
+					},
+					"toezeggingAfgedaan": {
+						"trigger": {
+							"type": "updated",
+							"condition": {
+								"field": "lifecycle",
+								"operator": "equals",
+								"value": "disposed",
+								"from": "in-execution"
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Toezegging afgedaan: {{text}}",
+							"en": "Commitment settled: {{text}}"
+						}
+					},
+					"toezeggingRappelBeforeDeadline": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 1209600,
+							"filter": {
+								"lifecycle": [
+									"open",
+									"in-uitvoering"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: deadline toezegging nadert — {{text}}",
+							"en": "Reminder: commitment deadline approaching — {{text}}"
+						},
+						"_note": "Pre-deadline rappel (REQ-004). intervalSec 1209600 (~14 days) is PROVISIONAL (design open question — griffie-configurable tuning deferred). Filter targets non-terminal lifecycle only; the 'deadline within window' vs 'deadline past' distinction is carried by the scheduled engine's window semantics, which the simple filter shape shown for Meeting cannot express as a deadline comparison — verify OR's scheduled-notification engine interprets these two triggers as before/after-deadline rappels during live import."
+					},
+					"toezeggingRappelOverdue": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 604800,
+							"filter": {
+								"lifecycle": [
+									"open",
+									"in-uitvoering"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: toezegging over deadline — {{text}}",
+							"en": "Reminder: commitment past deadline — {{text}}"
+						},
+						"_note": "Overdue rappel (REQ-004). intervalSec 604800 (weekly) is PROVISIONAL. Filters non-terminal lifecycle so no notification fires for afgedaan/vervallen. Same window-semantics caveat as toezeggingRappelBeforeDeadline. Recipients approximate 'madeBy + griffie' via object-acl (read) + decidesk-members group, because no recipient kind targets the madeBy Person reference directly."
+					}
+				},
+				"authorization": {
+					"read": [
+						{
+							"group": "public",
+							"match": {
+								"publicationDate": {
+									"$lte": "$now"
+								}
+							}
+						},
+						"authenticated"
+					]
+				},
+				"required": [
+					"text",
+					"madeBy",
+					"meeting",
+					"directedTo",
+					"lifecycle"
+				],
+				"properties": {
+					"text": {
+						"title": "Commitment",
+						"type": "string",
+						"description": "The commitment itself (what was promised, by whom, on what).",
+						"example": "Wethouder Van Dijk zegt toe de raad vóór 1 maart per raadsbrief te informeren over de wachtlijsten jeugdzorg."
+					},
+					"madeBy": {
+						"title": "Made by",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the portefeuillehouder / college member who made the commitment (schema:Action agent). Required."
+					},
+					"meeting": {
+						"title": "Meeting",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Meeting",
+						"description": "Reference to the Meeting in which the commitment was made. Required."
+					},
+					"agendaItem": {
+						"title": "Agenda item",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "agenda-item",
+						"description": "Reference to the AgendaItem the commitment relates to. Optional."
+					},
+					"directedTo": {
+						"title": "Directed to",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the GovernanceBody the commitment is directed to (council/committee). Required."
+					},
+					"deadline": {
+						"title": "Deadline",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date by which the commitment should be settled. Optional; drives the declarative rappels and the overdue dashboard KPI.",
+						"example": "2026-03-01"
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Commitment status (declared in x-openregister-lifecycle, ADR-031): open → in-uitvoering → afgedaan | vervallen. afgedaan and vervallen are terminal. Marking afgedaan SHOULD carry an afdoeningsToelichting.",
+						"enum": [
+							"open",
+							"in-execution",
+							"disposed",
+							"lapsed"
+						],
+						"example": "open"
+					},
+					"settlementNotes": {
+						"title": "Afdoening note",
+						"type": "string",
+						"description": "Note explaining how the commitment was settled (recorded when moving to afgedaan). Optional."
+					},
+					"settlementEvidence": {
+						"title": "Afdoening evidence",
+						"type": "string",
+						"description": "Link or reference to evidence of afdoening (e.g. the raadsbrief). Optional. A plain URL/reference string: not a UID field, so the object stays fully publishable (design D4).",
+						"example": "https://gemeente-voorbeeldingen.nl/raadsbrieven/evaluatie-afvalbeleid-2026.pdf"
+					},
+					"relatedMotion": {
+						"title": "Related motion",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Decision",
+						"description": "Optional reference to a Decision of decisionType 'motion' this commitment stems from. When set, the execution narrative lives ONLY on that motion's UitvoeringsUpdate log (motie-amendement-administratie); this register creates no second execution-update log (REQ-003)."
+					},
+					"goal": {
+						"title": "Goal",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Goal",
+						"nullable": true,
+						"description": "Optional reference to the organisation Goal (organisation-goals change) this commitment serves. When set, this commitment is counted in that Goal's declarative linkedCommitmentCount/settledCommitmentCount rollup (organisation-goals REQ-006). Nullable; existing toezeggingen created before this change remain valid with no goal set."
+					},
+					"publicationDate": {
+						"title": "Publication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Publication date (WOO/DIWOO). When set in the past, the live toezegging is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public list reflects lifecycle changes without republication (REQ-005 / design D4)."
+					},
+					"depublicationDate": {
+						"title": "Depublication date",
+						"type": "string",
+						"format": "date-time",
+						"facetable": true,
+						"description": "Depublication date (WOO/DIWOO). When set and in the past, the toezegging is withdrawn from public access. Set by staff on withdraw."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"Toezegging": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (commitment-in-plain-words): the same thing as Commitment (slug governance-commitment). Every property keeps its name; only the schema does not. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Raadsinformatiebrief": {
+				"slug": "raadsinformatiebrief",
+				"version": "0.2.0",
+				"description": "Repointed by commitment-in-plain-words: `settledCommitment` now references governance-commitment, because Toezegging is retired.",
+				"properties": {
+					"settledCommitment": {
+						"title": "Settled commitment",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-commitment",
+						"nullable": true,
+						"description": "The commitment this letter settles, when it settles one."
+					}
+				}
+			},
+			"TermijnagendaItem": {
+				"slug": "termijnagenda-item",
+				"version": "0.2.0",
+				"description": "Repointed by commitment-in-plain-words: `commitment` now references governance-commitment, because Toezegging is retired.",
+				"properties": {
+					"originCommitment": {
+						"title": "Origin commitment",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-commitment",
+						"nullable": true,
+						"description": "The commitment this planned item follows up, when it follows one."
+					}
+				}
+			}
+		}
+	}
+}

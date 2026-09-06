@@ -9,7 +9,7 @@
         "icon": "FileSign",
         "version": "0.2.0",
         "title": "ProxyAuthorization",
-        "description": "A signed machtiging instrument (Schema.org AuthorizeAction over a DigitalDocument) evidencing that an absent member (grantor) authorized another member (holder) to cast their proxy vote for a meeting. It is a sibling of the proxy row on the unified vote schema, never a replacement: the vote row stays the ballot machinery (proxy-voting REQ-PRX-001/002, the REQ-BPV guard, cap counting) and back-references its instrument via the nullable authorizationRef property; this object owns the evidentiary lifecycle (generated -> getekend | geweigerd, plus a later signed revocation act). Signature status (signatureStatus) is a declarative guarded state machine (x-openregister-lifecycle, ADR-031): getekend is writable ONLY from a signing-provider completion through the reused eIDAS/docudesk seam (decidesk-contract-decision-hub REQ-DCDH-005) — Decidiq never marks a machtiging signed on its own authority (no signature theatre; fail closed when no provider). The machtiging document, the signing/countersigning orchestration, the revocation signing act, and the per-meeting proxy register are IMPERATIVE (ProxyAuthorizationService reusing the REQ-DCDH-005 seam and the resolution-minutes markdown-fallback pattern) — out of declarative scope. All widget/filter/manifest sources reference this schema by its slug proxy-authorization, never a PascalCase key. As of model-debt-cleanup-schema (REQ-SDM-024), grantor/holder reference Person (was Participant — an identity question, not a governance-role question) and the schema additionally carries proxyStatus, the approval-workflow concept folded in from the now-retired BoardProxy schema.",
+        "description": "A signed machtiging instrument (Schema.org AuthorizeAction over a DigitalDocument) evidencing that an absent member (grantor) authorized another member (holder) to cast their proxy vote for a meeting. It is a sibling of the proxy row on the unified vote schema, never a replacement: the vote row stays the ballot machinery (proxy-voting the REQ-BPV guard, cap counting) and back-references its instrument via the nullable authorizationRef property; this object owns the evidentiary lifecycle (generated -> getekend | geweigerd, plus a later signed revocation act). Signature status (signatureStatus) is a declarative guarded state machine (x-openregister-lifecycle, ADR-031): getekend is writable ONLY from a signing-provider completion through the reused eIDAS/docudesk seam (decidesk-contract-decision-hub). Decidiq never marks a machtiging signed on its own authority (no signature theatre; fail closed when no provider). The machtiging document, the signing/countersigning orchestration, the revocation signing act, and the per-meeting proxy register are IMPERATIVE (ProxyAuthorizationService reusing the seam and the resolution-minutes markdown-fallback pattern): out of declarative scope. All widget/filter/manifest sources reference this schema by its slug proxy-authorization, never a PascalCase key. As of model-debt-cleanup-schema, grantor/holder reference Person (was Participant: an identity question, not a governance-role question) and the schema additionally carries proxyStatus, the approval-workflow concept folded in from the now-retired BoardProxy schema.",
         "type": "object",
         "x-schema-org": "schema:AuthorizeAction",
         "x-openregister": {
@@ -120,7 +120,7 @@
             "format": "uuid",
             "facetable": true,
             "$ref": "Person",
-            "description": "Required reference to the delegating Person (the absent member who authorizes the proxy). Schema.org AuthorizeAction agent. As of model-debt-cleanup-schema (REQ-SDM-024), references Person, not the deprecated Participant shim — grantor/holder identify who authorized/received the proxy, an identity question."
+            "description": "Required reference to the delegating Person (the absent member who authorizes the proxy). Schema.org AuthorizeAction agent. As of model-debt-cleanup-schema, references Person, not the deprecated Participant shim: grantor/holder identify who authorized/received the proxy, an identity question."
           },
           "holder": {
             "title": "Holder",
@@ -128,7 +128,7 @@
             "format": "uuid",
             "facetable": true,
             "$ref": "Person",
-            "description": "Required reference to the receiving Person (the member who casts the proxy vote). AuthorizeAction recipient. As of model-debt-cleanup-schema (REQ-SDM-024), references Person, not the deprecated Participant shim."
+            "description": "Required reference to the receiving Person (the member who casts the proxy vote). AuthorizeAction recipient. As of model-debt-cleanup-schema, references Person, not the deprecated Participant shim."
           },
           "meeting": {
             "title": "Meeting",
@@ -155,13 +155,13 @@
           "document": {
             "title": "Machtiging document",
             "type": "string",
-            "description": "Optional reference to the generated machtiging document (Docudesk render, or the honest markdown fallback per REQ-MPA-002). Stored in the meeting's Files folder; populated imperatively by ProxyAuthorizationService."
+            "description": "Optional reference to the generated machtiging document (Docudesk render, or the honest markdown fallback). Stored in the meeting's Files folder; populated imperatively by ProxyAuthorizationService."
           },
           "signatureStatus": {
             "title": "Signature status",
             "type": "string",
             "facetable": true,
-            "description": "Instrument signature status (declared in x-openregister-lifecycle, ADR-031): unsigned -> signed | refused. signed is writable ONLY from a signing-provider completion (REQ-MPA-003, fail closed — no provider leaves it unsigned). Required; defaults to unsigned at creation.",
+            "description": "Instrument signature status (declared in x-openregister-lifecycle, ADR-031): unsigned -> signed | refused. signed is writable ONLY from a signing-provider completion (fail closed: no provider leaves it unsigned). Required; defaults to unsigned at creation.",
             "enum": [
               "unsigned",
               "signed",
@@ -180,13 +180,13 @@
           "signingReference": {
             "title": "Signing reference",
             "type": "string",
-            "description": "Optional provider reference returned by the signing seam's signingRequest (REQ-MPA-003), stored so the completion can be resolved onto this instrument."
+            "description": "Optional provider reference returned by the signing seam's signingRequest, stored so the completion can be resolved onto this instrument."
           },
           "countersignStatus": {
             "title": "Countersign status",
             "type": "string",
             "facetable": true,
-            "description": "Optional holder countersignature status through the same seam (REQ-MPA-003, provisionally optional). Same enum as signatureStatus; resolved imperatively (not the declarative lifecycle field, which governs signatureStatus only).",
+            "description": "Optional holder countersignature status through the same seam (provisionally optional). Same enum as signatureStatus; resolved imperatively (not the declarative lifecycle field, which governs signatureStatus only).",
             "enum": [
               "unsigned",
               "signed",
@@ -203,13 +203,13 @@
             "title": "Revoked at",
             "type": "string",
             "format": "date-time",
-            "description": "Optional timestamp stamped at the moment of revocation (REQ-MPA-007). The revocation EFFECT follows proxy-voting REQ-PRX-003 exactly and is NEVER gated on the revocation signature completing; this field records the act, not its signature."
+            "description": "Optional timestamp stamped at the moment of revocation. The revocation EFFECT follows proxy-voting exactly and is NEVER gated on the revocation signature completing; this field records the act, not its signature."
           },
           "revocationSignatureStatus": {
             "title": "Revocation signature status",
             "type": "string",
             "facetable": true,
-            "description": "Optional status of the revocation-act signature requested through the same seam (REQ-MPA-007). Same enum; its completion never further affects voting. No provider leaves it ongetekend with an honest notice.",
+            "description": "Optional status of the revocation-act signature requested through the same seam. Same enum; its completion never further affects voting. No provider leaves it ongetekend with an honest notice.",
             "enum": [
               "unsigned",
               "signed",
@@ -225,7 +225,7 @@
             "title": "Proxy status",
             "type": "string",
             "facetable": true,
-            "description": "Optional approval-workflow state of this proxy authorization (REQ-SDM-024), folded in from the now-retired BoardProxy schema. Distinct from signatureStatus (which governs the machtiging instrument's own provider-gated signing lifecycle, ADR-031): proxyStatus is Decidiq's own approval-transition axis (pending-approval -> active -> suspended/revoked), resolved imperatively by ProxyVoteService::transition() and never force-fit onto the signing-provider-gated signatureStatus field. Defaults to pending-approval.",
+            "description": "Optional approval-workflow state of this proxy authorization, folded in from the now-retired BoardProxy schema. Distinct from signatureStatus (which governs the machtiging instrument's own provider-gated signing lifecycle, ADR-031): proxyStatus is Decidiq's own approval-transition axis (pending-approval -> active -> suspended/revoked), resolved imperatively by ProxyVoteService::transition() and never force-fit onto the signing-provider-gated signatureStatus field. Defaults to pending-approval.",
             "enum": [
               "pending-approval",
               "active",
@@ -240,7 +240,7 @@
       "Vote": {
         "slug": "vote",
         "version": "0.2.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring the fragment-55 Decision delta): this fragment merges ONLY the nullable authorizationRef back-reference onto the existing vote schema. No required field is added and no existing property is modified, so proxy rows and ordinary ballots created before this change stay valid (REQ-MPA-001). The full vote schema remains defined in decidesk_register.json.",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring the fragment-55 Decision delta): this fragment merges ONLY the nullable authorizationRef back-reference onto the existing vote schema. No required field is added and no existing property is modified, so proxy rows and ordinary ballots created before this change stay valid. The full vote schema remains defined in decidesk_register.json.",
         "properties": {
           "authorizationRef": {
             "title": "Authorization instrument",
@@ -248,14 +248,14 @@
             "format": "uuid",
             "nullable": true,
             "$ref": "proxy-authorization",
-            "description": "Nullable back-reference from a proxy row to its ProxyAuthorization instrument, so the row resolves its machtiging (and signature status) without a reverse query. Null on ordinary ballots and on proxy rows granted before this change (REQ-MPA-001)."
+            "description": "Nullable back-reference from a proxy row to its ProxyAuthorization instrument, so the row resolves its machtiging (and signature status) without a reverse query. Null on ordinary ballots and on proxy rows granted before this change."
           }
         }
       },
       "ProcessTemplate": {
         "slug": "process-template",
         "version": "0.2.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern): this fragment merges ONLY maxProxiesPerHolder and requireSignedProxy onto the existing votingRule.properties, next to voteThreshold/abstentionHandling/tieBreakRule (fragment 43). No existing key is touched and both new keys are optional/unset on the built-in templates, so a zero-configuration upgrade is behaviour-identical: the global decidiq/max_proxies_per_holder config stays authoritative and requireSignedProxy is off everywhere until an admin sets a body-level value (REQ-MPA-005/006). The full ProcessTemplate schema remains defined in fragment 43-process-config-v1.json.",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern): this fragment merges ONLY maxProxiesPerHolder and requireSignedProxy onto the existing votingRule.properties, next to voteThreshold/abstentionHandling/tieBreakRule (fragment 43). No existing key is touched and both new keys are optional/unset on the built-in templates, so a zero-configuration upgrade is behaviour-identical: the global decidiq/max_proxies_per_holder config stays authoritative and requireSignedProxy is off everywhere until an admin sets a body-level value. The full ProcessTemplate schema remains defined in fragment 43-process-config-v1.json.",
         "properties": {
           "votingRule": {
             "title": "Voting rule",
@@ -265,14 +265,14 @@
                 "title": "Max proxies per holder",
                 "type": "integer",
                 "minimum": 1,
-                "description": "Optional per-body statutory cap on how many proxies one holder may hold in a meeting (REQ-MPA-006). When set (>=1) it supersedes the global decidiq/max_proxies_per_holder app config; when unset the global config (default 2) remains authoritative — the existing voting-system cap scenarios hold verbatim. Enforced fail-closed at proxy registration and at round open by ProxyVoteService/VotingService (imperative — cross-object counting against a resolved per-body value is beyond schema constraints).",
+                "description": "Optional per-body statutory cap on how many proxies one holder may hold in a meeting. When set (>=1) it supersedes the global decidiq/max_proxies_per_holder app config; when unset the global config (default 2) remains authoritative: the existing voting-system cap scenarios hold verbatim. Enforced fail-closed at proxy registration and at round open by ProxyVoteService/VotingService (imperative: cross-object counting against a resolved per-body value is beyond schema constraints).",
                 "example": 1
               },
               "requireSignedProxy": {
                 "title": "Require signed proxy",
                 "type": "boolean",
                 "default": false,
-                "description": "Optional per-body policy (REQ-MPA-005), default false. When false or absent, unsigned proxies remain fully usable and current behaviour is preserved bit-for-bit. When true, the round refuses proxy ballots whose instrument is not getekend (flagged at round open, rejected at cast, holder's own ballot proceeds); enforced fail-closed at cast by VotingService (imperative).",
+                "description": "Optional per-body policy, default false. When false or absent, unsigned proxies remain fully usable and current behaviour is preserved bit-for-bit. When true, the round refuses proxy ballots whose instrument is not getekend (flagged at round open, rejected at cast, holder's own ballot proceeds); enforced fail-closed at cast by VotingService (imperative).",
                 "example": false
               }
             }

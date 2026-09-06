@@ -108,12 +108,13 @@ class SeedProfileServiceTest extends TestCase {
 		}
 	}
 
-	public function testTheWizardOffersExactlyTheSetsThatShip(): void {
-		// 🔴 THE MANIFEST IS A SECOND COPY OF THE LIST, SO IT CAN DRIFT.
-		// `CnSetupWizard` reads a `choice` step's options from
-		// `manifest.setup.steps[].options` (a static array), not from the server,
-		// so adding a set without listing it there ships a set nobody can pick,
-		// and removing one leaves an option whose import fails at the next step.
+	public function testTheWizardReadsTheOfferedSetsFromTheServer(): void {
+		// 🔴 THE MANIFEST USED TO HOLD A SECOND COPY OF THE LIST, AND A SECOND
+		// COPY CAN DRIFT: adding a set without listing it shipped a set nobody
+		// could pick, and removing one left an option whose import failed at the
+		// next step. The step now names WHERE to read the list instead of
+		// restating it, so this test guards that the manifest keeps no options
+		// of its own rather than guarding that two lists still agree.
 		$manifest = json_decode(
 			(string)file_get_contents(dirname(__DIR__, 3) . '/src/manifest.json'),
 			true,
@@ -131,14 +132,53 @@ class SeedProfileServiceTest extends TestCase {
 		$this->assertNotNull($step, 'The wizard must ask which example set to load');
 		$this->assertSame('choice', $step['type']);
 		$this->assertSame('example_profile', $step['configKey']);
+		$this->assertSame('cards', $step['display'], 'The sets need their descriptions, and a dropdown has nowhere to put them');
+		$this->assertSame('profiles', $step['optionsSource']);
+		$this->assertTrue($step['multiple'], 'An operator may load more than one set');
+		$this->assertArrayNotHasKey('options', $step, 'A static list is exactly the copy that drifts');
+	}
 
+	public function testTheOfferedListLeadsWithDecliningAndThenTheShippedSets(): void {
 		$this->demoData->method('isAvailable')->willReturn(true);
-		$expected = array_merge(
-			[SeedProfileService::NONE_PROFILE],
-			array_column($this->service->listProfiles(), 'id')
+
+		$choices = $this->service->listChoices();
+
+		$this->assertSame(
+			['none', 'municipality', 'association', 'corporate', 'works-council', 'generated'],
+			array_column($choices, 'id')
 		);
 
-		$this->assertSame($expected, array_column($step['options'], 'value'));
+		// Every card has to be able to say what it is, so every entry carries the
+		// three things the card renders.
+		foreach ($choices as $choice) {
+			$this->assertNotSame('', $choice['label'], $choice['id'] . ' needs a label');
+			$this->assertNotSame('', $choice['description'], $choice['id'] . ' needs a description');
+			$this->assertNotSame('', $choice['icon'], $choice['id'] . ' needs an icon');
+		}
+	}
+
+	public function testDecliningIsOfferedButIsNotAnImportableSet(): void {
+		// 🔴 `none` IS AN ANSWER, NOT A DESCRIPTOR. It has to be on offer and it
+		// must never resolve to something the importer will try to read.
+		$this->demoData->method('isAvailable')->willReturn(false);
+
+		$this->assertContains('none', array_column($this->service->listChoices(), 'id'));
+		$this->assertNotContains('none', array_column($this->service->listProfiles(), 'id'));
+		$this->assertFalse($this->service->isKnown('none'));
+	}
+
+	public function testEveryShippedSetCarriesAnIconTheLibraryCanResolve(): void {
+		// An unresolvable name renders a help-circle, which reads as "unknown
+		// option" on a card that is meant to be recognisable at a glance.
+		$this->demoData->method('isAvailable')->willReturn(false);
+
+		foreach ($this->service->listProfiles() as $profile) {
+			$this->assertMatchesRegularExpression(
+				'/^[A-Z][A-Za-z]+$/',
+				$profile['icon'],
+				$profile['id'] . ' must name a PascalCase MDI icon'
+			);
+		}
 	}
 
 	public function testNoSeedIsReferencedByASlugTooLongToStore(): void {

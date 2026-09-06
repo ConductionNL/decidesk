@@ -3,23 +3,23 @@
 	"_note": "Termijnagenda (long-term agenda / LTA) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Declarative core only: index + detail pages for the termijnagenda-item register; schema refs BY SLUG (termijnagenda-item), never PascalCase. DEFERRED (imperative frontend, out of this declarative-core fragment): the per-body board page with drag-to-reschedule (REQ-LTA-005 — a custom component + reschedule/realise/vervallen dialogs) and the Dashboard 'Termijnagenda over termijn' stat widget (REQ-LTA-010), which lives in the base src/manifest.json (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it). This fragment does NOT edit src/manifest.json.",
 	"menu": [
 		{
-			"id": "Termijnagenda",
+			"id": "PlannedAgenda",
 			"label": "Long-term agenda",
 			"icon": "CalendarTextOutline",
-			"route": "Termijnagenda",
+			"route": "PlannedAgenda",
 			"order": 55
 		}
 	],
 	"pages": [
 		{
-			"id": "Termijnagenda",
-			"route": "/termijnagenda",
+			"id": "PlannedAgenda",
+			"route": "/planned-agenda",
 			"type": "index",
 			"title": "Long-term agenda",
 			"_note": "spec: openspec/changes/termijnagenda/specs/termijnagenda-register/spec.md",
 			"config": {
 				"register": "decidiq",
-				"schema": "termijnagenda-item",
+				"schema": "planned-agenda-item",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"_note": "Termijnagenda index (REQ-LTA-007). Columns onderwerp/governanceBody/plannedPeriod/expectedType/ownerType/lifecycle; quick filters on lifecycle (expectedType, governanceBody and plannedPeriod are facetable and available via the index sidebar facets). CSV export via the shared ExportService + CnMassExportDialog. The overdue-KPI deep-link (deferred Dashboard widget, design D6) targets this page pre-filtered to non-terminal lifecycle.",
@@ -41,7 +41,7 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "TermijnagendaDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "PlannedAgendaDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -49,14 +49,14 @@
 			}
 		},
 		{
-			"id": "TermijnagendaDetail",
-			"route": "/termijnagenda/:id",
+			"id": "PlannedAgendaDetail",
+			"route": "/planned-agenda/:id",
 			"type": "detail",
 			"title": "Long-term agenda item",
 			"_note": "spec: openspec/changes/termijnagenda/specs/termijnagenda-register/spec.md",
 			"config": {
 				"register": "decidiq",
-				"schema": "termijnagenda-item",
+				"schema": "planned-agenda-item",
 				"_note": "TermijnagendaDetail (REQ-LTA-006/007). Plan data leads 8-wide, publication stacked right; governanceBody/owner and the origin links (originToezegging/originMotie/originDecision) and realisation links (realisedAgendaItem/realisedDecision) render as resolved references in the data + Related widgets. verschuifHistorie (shift history) renders in the data widget as an embedded array. Files leaf for a startnotitie. Audit trail is a sidebar tab. Execution narrative for a linked motion stays on that motion's UitvoeringsUpdate log — never duplicated here (REQ-LTA-006).",
 				"widgets": [
 					{ "id": "termijnagenda-data", "type": "data", "title": "Long-term agenda item", "icon": "Calendar", "content": { "columns": 2 } },

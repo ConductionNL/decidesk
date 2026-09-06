@@ -8,12 +8,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-	LIFECYCLE_STAGES,
 	availableWorkflowActions,
 	canSuggestCorrections,
 	correctionCounts,
 	createAutosaver,
 	getItemNote,
+	LIFECYCLE_STAGES,
 	mergeItemNote,
 } from '../../src/components/minutesEditor/minutesEditor.js'
 

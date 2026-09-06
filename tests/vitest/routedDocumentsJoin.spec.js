@@ -6,7 +6,7 @@
  * MeetingRoutedDocumentsTab.vue (src/components/tabs/routedDocumentsJoin.js):
  * the two-hop "routed to this meeting's agenda" join.
  *
- * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
+ * @spec openspec/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
  */
 
 import { describe, expect, it } from 'vitest'

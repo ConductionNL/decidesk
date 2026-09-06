@@ -39,21 +39,36 @@ A `DecisionStage` SHALL carry the mechanism relation required by its `method`: `
 - **WHEN** the stage's completeness is evaluated
 - **THEN** it is valid, because advice requires no mechanism object
 
-### Requirement: Vote-method outcome is derived declaratively from the VotingRound
+### Requirement: Vote-method outcome comes from the VotingRound when the round closes
 
-For a `DecisionStage` with `method=vote`, the stage `outcome` SHALL be derived declaratively (`x-openregister-calculations`) from the linked `VotingRound.result`: `adopted`→`adopted`, `rejected`→`rejected`, `tied`→`rejected` (unless a tie-break resolves it), `invalid`→no outcome. No Service class SHALL compute the vote outcome; the `VotingRound` is the single source of truth.
+For a `DecisionStage` with `method=vote`, the stage `outcome` SHALL come from the linked `VotingRound.result` through a fixed map: `adopted`→`adopted`, `rejected`→`rejected`, `tied`→`rejected` (unless a tie-break resolves it), `invalid`→no outcome. The `VotingRound` is the single source of truth: nothing SHALL decide the outcome on its own. `VotingRoundCloser` SHALL apply that map when the round closes, on a stage the route has made `active`, and SHALL leave a stage in any other state untouched.
+
+This was specified as an `x-openregister-calculations` derivation, and no configuration of that annotation can express it. `RenderObject::applyVirtualCalculations()` assigns unconditionally, so a virtual calculation named after a stored property replaces that property on every read, and the expression that would hand the stored value back is a self-reference `CalculationAnnotationValidator` rejects as a cycle. `CalculationOnSaveListener` writes a materialised value whenever it differs, null included, so `materialise: true` would clear every outcome the other four methods write directly. And only the save-time path resolves `@ref`, so a virtual calculation cannot read `VotingRound.result` across the relation at all. The declaration named a `switch` operator that does not exist, so the field simply never had a value.
 
 #### Scenario: Adopted voting round yields an adopted stage outcome
 
-- **GIVEN** a `method=vote` stage linked to a VotingRound with `result=adopted` (28 for, 3 against, 2 abstain)
-- **WHEN** the stage is loaded
-- **THEN** the stage `outcome` derives to `adopted` from the round
+@e2e exclude closing a round needs a live meeting, a quorum of voters and a route already at this stage; the result-to-outcome map is covered by PHPUnit (VotingRoundCloserStageOutcomeTest)
+
+- **GIVEN** an `active` `method=vote` stage linked to a VotingRound with `result=adopted` (28 for, 3 against, 2 abstain)
+- **WHEN** the round closes
+- **THEN** the stage records `outcome=adopted` with `decidedAt` stamped and status `decided`
 
 #### Scenario: Rejected voting round yields a rejected stage outcome
 
-- **GIVEN** a `method=vote` stage linked to a VotingRound with `result=rejected`
-- **WHEN** the stage is loaded
-- **THEN** the stage `outcome` derives to `rejected`
+@e2e exclude same live-round setup as the adopted case; covered by PHPUnit (VotingRoundCloserStageOutcomeTest)
+
+- **GIVEN** an `active` `method=vote` stage linked to a VotingRound with `result=rejected`
+- **WHEN** the round closes
+- **THEN** the stage records `outcome=rejected`
+
+#### Scenario: A tie rejects the stage and an invalid round decides nothing
+
+@e2e exclude a tied and an invalid tally cannot be staged through the UI without scripting the ballots; covered by PHPUnit (VotingRoundCloserStageOutcomeTest)
+
+- **GIVEN** an `active` `method=vote` stage linked to a VotingRound
+- **WHEN** the round closes with `result=tied`
+- **THEN** the stage records `outcome=rejected`
+- **AND** a round closing with `result=invalid` records no outcome at all
 
 ### Requirement: Chair-register, advice, and manual outcomes are set directly
 

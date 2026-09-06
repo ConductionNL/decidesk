@@ -4,17 +4,17 @@
 	"_spec": "openspec/changes/works-council-consultation/specs/works-council-consultation/spec.md",
 	"menu": [
 		{
-			"id": "WorTrajecten",
+			"id": "WorksCouncilConsultations",
 			"label": "Works-council consultations",
 			"icon": "CommentQuestionOutline",
-			"route": "WorTrajecten",
+			"route": "WorksCouncilConsultations",
 			"order": 47
 		}
 	],
 	"pages": [
 		{
-			"id": "WorTrajecten",
-			"route": "/wor-trajecten",
+			"id": "WorksCouncilConsultations",
+			"route": "/works-council-consultations",
 			"type": "index",
 			"title": "Works-council consultations",
 			"_note": "spec: openspec/changes/works-council-consultation/specs/works-council-consultation/spec.md — WOR-trajecten index (REQ-WCC-008). Columns subject/type/worArticle/bestuurder/receivedDate/requestedResponseDate/lifecycle; quick filters on type, lifecycle and governance body. The dashboard KPI deep-links target this page pre-filtered (non-terminal lifecycle / overdue set); the KPI widgets themselves are a deferred base-manifest edit (see top _note).",
@@ -50,7 +50,7 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "WorTrajectDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "WorksCouncilConsultationDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -58,15 +58,15 @@
 			}
 		},
 		{
-			"id": "WorTrajectDetail",
-			"route": "/wor-trajecten/:id",
+			"id": "WorksCouncilConsultationDetail",
+			"route": "/works-council-consultations/:id",
 			"type": "detail",
 			"title": "Works-council consultation",
-			"_note": "spec: openspec/changes/works-council-consultation/specs/works-council-consultation/spec.md — WorTrajectDetail (REQ-WCC-008). Shows all fields and the linked overlegvergadering/agendaItem/achterbanraadpleging/relatedDecision/responseDocument as navigable references, plus the Files leaf for submitted documents. The running opschortingstermijn surfacing, the besluit-recording dialog and the 'Generate response document' action are wired when ConsultationResponseDocumentService + the besluit dialog land (imperative, out of declarative core); this core shows the fields + related refs + Files leaf.",
+			"_note": "spec: openspec/changes/works-council-consultation/specs/works-council-consultation/spec.md — WorksCouncilConsultationDetail (REQ-WCC-008). Shows all fields and the linked overlegvergadering/agendaItem/achterbanraadpleging/relatedDecision/responseDocument as navigable references, plus the Files leaf for submitted documents. The running opschortingstermijn surfacing, the besluit-recording dialog and the 'Generate response document' action are wired when ConsultationResponseDocumentService + the besluit dialog land (imperative, out of declarative core); this core shows the fields + related refs + Files leaf.",
 			"config": {
 				"register": "decidiq",
 				"schema": "consultation-request",
-				"_note": "WorTrajectDetail (REQ-WCC-008). Traject data leads 8-wide, Files stacked right; the linked bestuurder/governanceBody/overlegvergadering/agendaItem/achterbanraadpleging/relatedDecision/responseDocument render as resolved references in the data + Related widgets. Files leaf for the adviesaanvraag-brief / concept-regeling / generated advies document. Audit trail is a sidebar tab. No comms leaf: the schema declares no email/calendar linkedType.",
+				"_note": "WorksCouncilConsultationDetail (REQ-WCC-008). Traject data leads 8-wide, Files stacked right; the linked bestuurder/governanceBody/overlegvergadering/agendaItem/achterbanraadpleging/relatedDecision/responseDocument render as resolved references in the data + Related widgets. Files leaf for the adviesaanvraag-brief / concept-regeling / generated advies document. Audit trail is a sidebar tab. No comms leaf: the schema declares no email/calendar linkedType.",
 				"widgets": [
 					{ "id": "wor-traject-data", "type": "data", "title": "Works-council consultation", "icon": "ClipboardList", "content": { "columns": 2 } },
 					{ "id": "wor-traject-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },

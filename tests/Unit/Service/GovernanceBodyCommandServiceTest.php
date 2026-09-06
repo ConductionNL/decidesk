@@ -118,6 +118,14 @@ class GovernanceBodyCommandServiceTest extends TestCase {
 				$schema = $filters['schema'];
 				unset($filters['register'], $filters['schema']);
 
+				if (isset($filters['id']) === true || isset($filters['uuid']) === true) {
+					// Live OpenRegister matches filters against the object's own
+					// JSON properties; identity lives in @self, so a top-level
+					// id/uuid filter matches NOTHING. A fake resolving it would
+					// agree with the caller's bug and could not fail (dossiq#1686).
+					return [];
+				}
+
 				$out = [];
 				foreach (($this->rows[$schema] ?? []) as $row) {
 					$matches = true;

@@ -18,6 +18,7 @@
 // `subjectId == objectId`. No new schema field is needed.
 
 import axios from '@nextcloud/axios'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 
 /**
@@ -40,7 +41,7 @@ export const DECISION_TYPE = 'decision'
  */
 export const KIND_GROUPS = {
 	proposals: ['motion', 'amendment', 'policy', 'management-point'],
-	advice: ['report-adoption', 'appointment'],
+	advice: ['report-adoption', 'appointment', 'advice'],
 }
 
 /**
@@ -102,6 +103,181 @@ export async function listHostDecisions(subjectId, limit = 100) {
 export async function createHostDecision(payload) {
 	const res = await axios.post(decisionsUrl(), payload)
 	return (res && res.data) || null
+}
+
+/**
+ * The shipped decision-type seed, mirrored from
+ * `DecisionTypeRegistry::DEFAULT_TYPES`. NOT a second authority: the registry
+ * (app-config `decision_types`) decides, and this list only carries the
+ * picker through the window before {@link listDecisionTypes} has answered —
+ * or when it cannot answer at all. Failing back to the seed keeps the
+ * create-proposal form usable on a broken network, at the cost of admin-added
+ * types until the endpoint is reachable again.
+ *
+ * @type {string[]}
+ */
+export const FALLBACK_DECISION_TYPES = [
+	'motion',
+	'amendment',
+	'resolution',
+	'contract',
+	'contract-renewal',
+	'report-adoption',
+	'appointment',
+	'management-point',
+	'policy',
+	'meeting-outcome',
+	'advice',
+	'bezwaar-decision',
+	'woo-decision',
+]
+
+/**
+ * List the configured decisionType vocabulary from the registry endpoint.
+ *
+ * The pickers used to hardcode five types, so a type an administrator added
+ * to the `decision_types` app config validated fine at the write path and
+ * never appeared in any picker. This asks the registry itself, falling back
+ * to the shipped seed when the endpoint is unreachable.
+ *
+ * @return {Promise<string[]>} The configured types, or the shipped seed.
+ *
+ * @spec openspec/changes/decision-types-as-configuration/specs/decidesk-contract-decision-hub/spec.md
+ */
+export async function listDecisionTypes() {
+	try {
+		const res = await axios.get(
+			generateUrl('/apps/decidiq/api/v1/decision-types'),
+		)
+		const types = res?.data?.types
+		if (Array.isArray(types)) {
+			const clean = types.filter(
+				(v) => typeof v === 'string' && v.trim() !== '',
+			)
+			if (clean.length > 0) {
+				return clean
+			}
+		}
+	} catch {
+		// Fall through to the seed: an unreachable registry should degrade the
+		// picker to the shipped vocabulary, never block creating a proposal.
+	}
+	return FALLBACK_DECISION_TYPES
+}
+
+/**
+ * Display labels for the shipped decision types, keyed by raw value.
+ *
+ * An admin-added type has no label here and renders as its own slug — the
+ * registry stores values, not labels, so the slug IS its name.
+ *
+ * @return {Object<string, string>} Raw type value to translated label.
+ *
+ * @spec openspec/changes/decision-types-as-configuration/specs/decidesk-contract-decision-hub/spec.md
+ */
+export function decisionTypeLabels() {
+	return {
+		motion: t('decidiq', 'Motion'),
+		amendment: t('decidiq', 'Amendment'),
+		resolution: t('decidiq', 'Resolution'),
+		contract: t('decidiq', 'Contract'),
+		'contract-renewal': t('decidiq', 'Contract renewal'),
+		'report-adoption': t('decidiq', 'Report adoption'),
+		appointment: t('decidiq', 'Appointment'),
+		'management-point': t('decidiq', 'Management point'),
+		policy: t('decidiq', 'Policy'),
+		'meeting-outcome': t('decidiq', 'Meeting outcome'),
+		advice: t('decidiq', 'Advice'),
+		'bezwaar-decision': t('decidiq', 'Objection decision'),
+		'woo-decision': t('decidiq', 'Woo decision'),
+	}
+}
+
+/**
+ * The create-proposal form schema, over the given decision types.
+ *
+ * Shared by CnDecisionsTab and CnDecisionsWidget so the two pickers cannot
+ * drift. `motion` stays the default when the vocabulary carries it; a
+ * vocabulary without it defaults to its own first type.
+ *
+ * @param {string[]} types The decisionType vocabulary to offer.
+ *
+ * @return {object} A CnFormDialog schema.
+ *
+ * @spec openspec/specs/decidesk-contract-decision-hub/spec.md — REQ-DCDH-002 create-proposal form schema.
+ */
+export function proposalFormSchema(types) {
+	const offered =
+		Array.isArray(types) && types.length > 0 ? types : FALLBACK_DECISION_TYPES
+	return {
+		title: t('decidiq', 'Proposal'),
+		properties: {
+			title: { type: 'string', title: t('decidiq', 'Title') },
+			text: {
+				type: 'string',
+				title: t('decidiq', 'Rationale'),
+				widget: 'textarea',
+			},
+
+			decisionType: {
+				type: 'string',
+				title: t('decidiq', 'Type'),
+				enum: offered,
+				enumLabels: decisionTypeLabels(),
+				default: offered.includes('motion') ? 'motion' : offered[0],
+			},
+		},
+
+		required: ['title'],
+	}
+}
+
+/**
+ * Inject the registry's decisionType vocabulary into an OpenRegister
+ * decision schema.
+ *
+ * decision-types-as-configuration (#1099) deliberately dropped the `enum`
+ * from the stored schema declaration — the `decision_types` app config is
+ * the only authority. That left every schema-driven form (the built-in
+ * create/edit dialog on the Decisions and Motions index pages) rendering an
+ * empty type picker: the select widget reads `properties.decisionType.enum`
+ * and found nothing. This helper closes the gap the same way the cross-app
+ * pickers were closed in #1104: the vocabulary comes from
+ * {@link listDecisionTypes} (registry endpoint, seed fallback) and gets
+ * spliced into the schema right before the form renders. The schema on the
+ * SERVER stays enum-free; only the client-side copy driving the picker is
+ * enriched.
+ *
+ * @param {object} schema The OpenRegister decision schema (as handed to the
+ *                        form dialog).
+ * @param {?string[]} types The registry vocabulary, or null while it loads —
+ *                          the shipped seed fills in.
+ *
+ * @return {object} A shallow clone with `properties.decisionType` carrying
+ *                  the vocabulary as `enum` + translated `enumLabels`, or
+ *                  the input untouched when it has no decisionType property.
+ *
+ * @spec openspec/changes/decision-types-as-configuration/specs/decidesk-contract-decision-hub/spec.md
+ */
+export function withDecisionTypeVocabulary(schema, types) {
+	if (!schema || typeof schema !== 'object') return schema
+	const properties = schema.properties
+	if (!properties || typeof properties !== 'object' || !properties.decisionType) {
+		return schema
+	}
+	const offered =
+		Array.isArray(types) && types.length > 0 ? types : FALLBACK_DECISION_TYPES
+	return {
+		...schema,
+		properties: {
+			...properties,
+			decisionType: {
+				...properties.decisionType,
+				enum: offered,
+				enumLabels: decisionTypeLabels(),
+			},
+		},
+	}
 }
 
 /**

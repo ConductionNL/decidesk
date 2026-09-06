@@ -9,10 +9,10 @@
  * (`agendaItem`) / ingekomen-stuk (`targetAgendaItem` OR `listAgendaItem`).
  *
  * Kept in a plain .js module so Vitest can import it — see
- * kascommissieVisibility.js for why a .vue SFC is unimportable in this
+ * auditStatementVisibility.js for why a .vue SFC is unimportable in this
  * repo's vitest.config.js (no @vitejs/plugin-vue registered).
  *
- * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
+ * @spec openspec/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
  */
 
 /**
@@ -42,7 +42,7 @@ export function collectAgendaItemIds(agendaItems) {
  * @param {Array<object>} ingekomenStukken Fetched ingekomen-stuk objects.
  * @param {Array<string>} agendaItemIds The meeting's own agenda-item ids.
  * @return {Array<object>} Only the objects routed to one of those ids.
- * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
+ * @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
  */
 export function filterRoutedIngekomenStukken(ingekomenStukken, agendaItemIds) {
 	if (!Array.isArray(ingekomenStukken)) return []
@@ -72,7 +72,7 @@ export const ROUTE_BY_TYPE = {
  * @param {Array<object>} ingekomenStukken Routed ingekomen-stuk objects (already
  *   passed through {@link filterRoutedIngekomenStukken}).
  * @return {Array<object>} Combined, normalised rows for CnDataTable.
- * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
+ * @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
  */
 export function buildRoutedDocumentRows(raadsinformatiebrieven, ingekomenStukken) {
 	const ribRows = (

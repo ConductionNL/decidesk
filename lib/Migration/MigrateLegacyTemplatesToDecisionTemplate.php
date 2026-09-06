@@ -188,6 +188,7 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 	private function migrateAll(object $objectService, IOutput $output): void {
 		$this->mappingObjectService = $objectService;
 		$alreadyMigrated = $this->buildMigratedIndex(objectService: $objectService);
+		$existingNames = $this->buildExistingNameIndex(objectService: $objectService);
 
 		$migrated = 0;
 		$skipped = 0;
@@ -196,6 +197,7 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 			objectService: $objectService,
 			sourceSchema: self::SOURCE_PROCESS_TEMPLATE,
 			alreadyMigrated: $alreadyMigrated,
+			existingNames: $existingNames,
 			mapper: $this->mapProcessTemplate(...),
 			output: $output,
 			migrated: $migrated,
@@ -206,6 +208,7 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 			objectService: $objectService,
 			sourceSchema: self::SOURCE_VVE_DECISION_TEMPLATE,
 			alreadyMigrated: $alreadyMigrated,
+			existingNames: $existingNames,
 			mapper: $this->mapVveDecisionTemplate(...),
 			output: $output,
 			migrated: $migrated,
@@ -271,11 +274,119 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 	}//end buildMigratedIndex()
 
 	/**
+	 * Whether this legacy row is already represented in `decision-template`.
+	 *
+	 * TWO WAYS IT CAN BE, and both matter:
+	 *
+	 *  - it was migrated on an earlier run, matched on `migratedFrom.sourceUuid`;
+	 *  - a SEED already carries it, matched on name — see
+	 *    buildExistingNameIndex() for why that is the honest key.
+	 *
+	 * Extracted so migrateSchema() stays under the cyclomatic-complexity
+	 * threshold: adding the name check took it to exactly 10.
+	 *
+	 * @param array<string,bool> $alreadyMigrated Index keyed '<sourceSchema>|<sourceUuid>'.
+	 * @param array<string,bool> $existingNames   Lower-cased names that already exist.
+	 * @param string             $sourceSchema    The legacy schema slug.
+	 * @param string             $uuid            The legacy row's uuid.
+	 * @param string             $sourceName      The legacy row's lower-cased name.
+	 *
+	 * @return boolean True when it must be skipped.
+	 */
+	private function alreadyPresent(
+		array $alreadyMigrated,
+		array $existingNames,
+		string $sourceSchema,
+		string $uuid,
+		string $sourceName,
+	): bool {
+		if (($alreadyMigrated[$sourceSchema . '|' . $uuid] ?? false) === true) {
+			return true;
+		}
+
+		if ($sourceName !== '' && ($existingNames[$sourceName] ?? false) === true) {
+			$this->logger->info(
+				'Decidiq: skipping legacy template already present by name',
+				['sourceSchema' => $sourceSchema, 'sourceUuid' => $uuid, 'name' => $sourceName]
+			);
+
+			return true;
+		}
+
+		return false;
+
+	}//end alreadyPresent()
+
+	/**
+	 * The names of the decision-templates that already exist.
+	 *
+	 * 🔴 WITHOUT THIS, EVERY BUILT-IN TEMPLATE EXISTS TWICE.
+	 *
+	 * Two things produce the same logical template and neither knew about the
+	 * other. `68-unified-decision-templates.json` SEEDS the thirteen built-ins,
+	 * describing them in its own words as "5 ported 1:1 from ProcessTemplate, 2
+	 * ported 1:1 from the urgency-enabled custom templates, and 6 ported from
+	 * VveDecisionTemplate". This migration then reads those same legacy rows,
+	 * which supersession deliberately KEPT, and creates a decision-template for
+	 * each one.
+	 *
+	 * The existing idempotency index keys on `migratedFrom.sourceUuid`, so
+	 * re-running the migration is safe — but a seeded row carries no
+	 * `migratedFrom` at all, so it never matched, and the migration duplicated
+	 * every one of them on first run.
+	 *
+	 * Measured on a live instance 2026-08-31, once the unified schema finally got
+	 * a settings page to be seen through: 28 objects, of which 13 were
+	 * duplicates — each built-in present once WITH its seeded slug and once with
+	 * no slug at all. Nobody had noticed, because until that page existed the
+	 * schema had no surface.
+	 *
+	 * Matching on NAME is the honest key here: the seeds are ports of these very
+	 * rows, and a seeded object's `slug` is an import-time identifier that
+	 * OpenRegister does not expose as a queryable property (the same trap
+	 * `bodyUuidForSlug()` below documents), so the slug cannot be matched on.
+	 *
+	 * @param object $objectService The OR ObjectService.
+	 *
+	 * @return array<string,bool> Lower-cased template names that already exist.
+	 */
+	private function buildExistingNameIndex(object $objectService): array {
+		$names = [];
+
+		try {
+			$objectService->setRegister(self::REGISTER);
+			$objectService->setSchema(self::TARGET_SCHEMA);
+			$existing = $objectService->findAll(['limit' => 1000]);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				'Decidiq: DecisionTemplate migration could not read existing templates for name matching',
+				['error' => $e->getMessage()]
+			);
+			return $names;
+		}
+
+		foreach ($existing as $entity) {
+			$object = $this->toArray(entity: $entity);
+			if ($object === null) {
+				continue;
+			}
+
+			$name = trim((string)($object['name'] ?? ''));
+			if ($name !== '') {
+				$names[mb_strtolower($name)] = true;
+			}
+		}
+
+		return $names;
+	}//end buildExistingNameIndex()
+
+	/**
 	 * Migrate every live object of one legacy schema into `decision-template`.
 	 *
 	 * @param object $objectService The OR ObjectService.
 	 * @param string $sourceSchema The legacy schema slug being read.
 	 * @param array<string,bool> $alreadyMigrated Idempotency index built before this call (migration.md step 2).
+	 * @param array<string,bool> $existingNames Lower-cased names of decision-templates that already exist (by-ref: a row created here joins it).
 	 * @param callable $mapper Maps a source object array to a decision-template payload.
 	 * @param IOutput $output Progress reporting.
 	 * @param integer $migrated Running count of migrated objects (by-ref accumulator).
@@ -290,6 +401,7 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 		object $objectService,
 		string $sourceSchema,
 		array $alreadyMigrated,
+		array &$existingNames,
 		callable $mapper,
 		IOutput $output,
 		int &$migrated,
@@ -321,7 +433,15 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 				continue;
 			}
 
-			if (($alreadyMigrated[$sourceSchema . '|' . $uuid] ?? false) === true) {
+			$sourceName = mb_strtolower(trim((string)($source['name'] ?? '')));
+			if ($this->alreadyPresent(
+				alreadyMigrated: $alreadyMigrated,
+				existingNames: $existingNames,
+				sourceSchema: $sourceSchema,
+				uuid: $uuid,
+				sourceName: $sourceName,
+			) === true
+			) {
 				$skipped++;
 				continue;
 			}
@@ -336,6 +456,13 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 					object: $payload,
 				);
 				$migrated++;
+				// Record it, so a SECOND legacy row of the same name (a
+				// process-template and a vve-decision-template can share one)
+				// does not create a third copy in this same pass.
+				if ($sourceName !== '') {
+					$existingNames[$sourceName] = true;
+				}
+
 				$this->logger->info(
 					'Decidiq: migrated ' . $sourceSchema . ' to decision-template',
 					['sourceUuid' => $uuid]
@@ -479,7 +606,7 @@ class MigrateLegacyTemplatesToDecisionTemplate implements IRepairStep {
 
 		foreach (($rows ?? []) as $row) {
 			$body = $this->toArray(entity: $row);
-			$uuid = (string)(($body['id'] ?? $body['uuid']) ?? '');
+			$uuid = (string)($body['id'] ?? $body['uuid'] ?? '');
 			if ($uuid !== '') {
 				return $uuid;
 			}

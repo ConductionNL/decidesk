@@ -9,7 +9,7 @@
         "icon": "AccountPlusOutline",
         "version": "0.1.0",
         "title": "OnboardingTraject",
-        "description": "A guided member onboarding traject (raadswisseling/installatie and its board/association analogues): a schema:Action whose agent is the griffie and whose object is the incoming member's Person. Carries a structured checklist (steps), a declarative lifecycle (ADR-031), declarative step reminders (ADR-031), and the beëdiging outcome as data. Everything the traject references (Membership, Fractie/FractieLidmaatschap, nevenfuncties, meetings) is owned elsewhere and linked by UUID — this schema creates none of them (design D1/D5/D6). DECLARATIVE CORE ONLY: NC group provisioning (groepen-toewijzen), Files induction-pack delivery (introductiepakket), and the raadswisseling Member-Import diff are imperative side-effects DEFERRED to OnboardingProvisioningService/InductionPackService/RaadswisselingService; this schema models only the traject, its steps, and their status. The manifest and all widget/filter sources reference this schema by its slug 'onboarding-traject'.",
+        "description": "A guided member onboarding traject (raadswisseling/installatie and its board/association analogues): a schema:Action whose agent is the griffie and whose object is the incoming member's Person. Carries a structured checklist (steps), a declarative lifecycle (ADR-031), declarative step reminders (ADR-031), and the beëdiging outcome as data. Everything the traject references (Membership, Fractie/FractieLidmaatschap, nevenfuncties, meetings) is owned elsewhere and linked by UUID: this schema creates none of them (design D1/D5/D6). DECLARATIVE CORE ONLY: NC group provisioning (groepen-toewijzen), Files induction-pack delivery (introductiepakket), and the raadswisseling Member-Import diff are imperative side-effects DEFERRED to OnboardingProvisioningService/InductionPackService/RaadswisselingService; this schema models only the traject, its steps, and their status. The manifest and all widget/filter sources reference this schema by its slug 'onboarding-traject'.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -203,7 +203,7 @@
           "steps": {
             "title": "Steps",
             "type": "array",
-            "description": "The structured onboarding checklist (REQ-MOB-004). Required. Each step carries its own status; step updates SHALL write the full array carried forward from the freshly read object (OpenRegister saveObject is PUT-semantic), and updating one step SHALL NOT alter any other step. CONSTRAINT (REQ-MOB-004): a step's status may be 'overgeslagen' ONLY when verplicht is false — enforced at save time (no if/then dialect), documented here. The imperative work behind account-koppeling/groepen-toewijzen/introductiepakket is deferred (design D3/D6); this array models the checklist and status only.",
+            "description": "The structured onboarding checklist. Required. Each step carries its own status; step updates SHALL write the full array carried forward from the freshly read object (OpenRegister saveObject is PUT-semantic), and updating one step SHALL NOT alter any other step. CONSTRAINT: a step's status may be 'overgeslagen' ONLY when verplicht is false, enforced at save time (no if/then dialect), documented here. The imperative work behind account-koppeling/groepen-toewijzen/introductiepakket is deferred (design D3/D6); this array models the checklist and status only.",
             "items": {
               "type": "object",
               "title": "Onboarding step",
@@ -233,7 +233,7 @@
                   "title": "Status",
                   "type": "string",
                   "default": "open",
-                  "description": "Per-step status. 'overgeslagen' is only valid when verplicht is false (enforced at save time, REQ-MOB-004).",
+                  "description": "Per-step status. 'overgeslagen' is only valid when verplicht is false (enforced at save time).",
                   "enum": [
                     "open",
                     "in-execution",
@@ -246,7 +246,7 @@
                   "title": "Mandatory",
                   "type": "boolean",
                   "default": true,
-                  "description": "Whether the step is mandatory. A mandatory step blocks the traject from reaching 'afgerond' until it is 'afgerond' (REQ-MOB-003) and can never be 'overgeslagen' (REQ-MOB-004)."
+                  "description": "Whether the step is mandatory. A mandatory step blocks the traject from reaching 'afgerond' until it is 'afgerond' and can never be 'overgeslagen'."
                 },
                 "dueDate": {
                   "title": "Due date",
@@ -288,14 +288,14 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date the member was sworn in (REQ-MOB-005). Completing the beediging step requires beëdigingsDatum, beëdigingsType and beëdigingsVergadering. Field name aligned with the fractievoorzitter-fractie-koppeling vocabulary so that change reads it as the FractieLidmaatschap begin-datum without mapping (design D5). Optional until the oath is recorded.",
+            "description": "Date the member was sworn in. Completing the beediging step requires beëdigingsDatum, beëdigingsType and beëdigingsVergadering. Field name aligned with the fractievoorzitter-fractie-koppeling vocabulary so that change reads it as the FractieLidmaatschap begin-datum without mapping (design D5). Optional until the oath is recorded.",
             "example": "2026-03-26"
           },
           "beëdigingsType": {
             "title": "Oath type",
             "type": "string",
             "facetable": true,
-            "description": "Whether the member swore an oath (eed) or made an affirmation (belofte). Required to complete the beediging step (REQ-MOB-005).",
+            "description": "Whether the member swore an oath (eed) or made an affirmation (belofte). Required to complete the beediging step.",
             "enum": [
               "oath",
               "affirmation"
@@ -307,13 +307,13 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Meeting",
-            "description": "Reference to the Meeting (installatievergadering/raadsvergadering) where the member was sworn in (REQ-MOB-005). The ceremony itself stays with the meetings capabilities; this only records the outcome. Optional until the oath is recorded."
+            "description": "Reference to the Meeting (installatievergadering/raadsvergadering) where the member was sworn in. The ceremony itself stays with the meetings capabilities; this only records the outcome. Optional until the oath is recorded."
           },
           "ncAccount": {
             "title": "Nextcloud account",
             "type": "string",
             "nullable": true,
-            "description": "Nextcloud user id linked to the member by the account-koppeling step (REQ-MOB-006). Optional until linked; the introductiepakket step depends on it.",
+            "description": "Nextcloud user id linked to the member by the account-koppeling step. Optional until linked; the introductiepakket step depends on it.",
             "example": "mjanssen"
           },
           "membership": {
@@ -321,20 +321,20 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Membership",
-            "description": "Reference to the Membership created as an outcome of the traject (person-and-membership). Optional until created — a raadswisseling onboards a person before the Membership exists (design D1)."
+            "description": "Reference to the Membership created as an outcome of the traject (person-and-membership). Optional until created: a raadswisseling onboards a person before the Membership exists (design D1)."
           },
           "batch": {
             "title": "Batch",
             "type": "string",
             "nullable": true,
-            "description": "Free-form batch label linking trajecten created by one raadswisseling run (REQ-MOB-009). Optional; drives the batch filter and progress tracking.",
+            "description": "Free-form batch label linking trajecten created by one raadswisseling run. Optional; drives the batch filter and progress tracking.",
             "example": "raadswisseling-2026"
           },
           "lifecycle": {
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Traject status (declared in x-openregister-lifecycle, ADR-031): gestart → in-uitvoering → afgerond | vervallen. afgerond and vervallen are terminal. A traject cannot reach afgerond while a mandatory step is not afgerond (REQ-MOB-003).",
+            "description": "Traject status (declared in x-openregister-lifecycle, ADR-031): gestart → in-uitvoering → afgerond | vervallen. afgerond and vervallen are terminal. A traject cannot reach afgerond while a mandatory step is not afgerond.",
             "enum": [
               "started",
               "in-execution",
@@ -350,7 +350,7 @@
         "icon": "AccountRemoveOutline",
         "version": "0.1.0",
         "title": "OffboardingTraject",
-        "description": "A guided member offboarding traject (raadswisseling departure or an individual leave): a schema:Action recording the departure of a member from a governance body as data — the membership to end-date, the exit reason, a structured checklist (steps), a declarative lifecycle (ADR-031) and declarative step reminders. The offboarding checklist always includes end-dating the Membership (person-and-membership endDate), revoking Nextcloud groups and OR RBAC scopes (fail-closed, always mandatory — REQ-MOB-008), a personal-data note that references the document-annotations author export (GDPR — no bespoke export here), and the exit confirmation. DECLARATIVE CORE ONLY: the group revocation and membership end-dating are imperative side-effects DEFERRED to OnboardingProvisioningService/RaadswisselingService; this schema models the traject, its steps and their status. The manifest and all widget/filter sources reference this schema by its slug 'offboarding-traject'.",
+        "description": "A guided member offboarding traject (raadswisseling departure or an individual leave): a schema:Action recording the departure of a member from a governance body as data, the membership to end-date, the exit reason, a structured checklist (steps), a declarative lifecycle (ADR-031) and declarative step reminders. The offboarding checklist always includes end-dating the Membership (person-and-membership endDate), revoking Nextcloud groups and OR RBAC scopes (fail-closed, always mandatory: ), a personal-data note that references the document-annotations author export (GDPR, no bespoke export here), and the exit confirmation. DECLARATIVE CORE ONLY: the group revocation and membership end-dating are imperative side-effects DEFERRED to OnboardingProvisioningService/RaadswisselingService; this schema models the traject, its steps and their status. The manifest and all widget/filter sources reference this schema by its slug 'offboarding-traject'.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -538,7 +538,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date the membership ends (REQ-MOB-002). The lidmaatschap-beeindigen step sets Membership.endDate = eindeDatum (person-and-membership). Required.",
+            "description": "Date the membership ends. The lidmaatschap-beeindigen step sets Membership.endDate = eindeDatum (person-and-membership). Required.",
             "example": "2026-03-29"
           },
           "endReason": {
@@ -558,7 +558,7 @@
           "steps": {
             "title": "Steps",
             "type": "array",
-            "description": "The structured offboarding checklist (REQ-MOB-004). Required. Includes at minimum lidmaatschap-beeindigen, groepen-intrekken (always verplicht — REQ-MOB-008), persoonsgegevens-notitie (references the document-annotations author export, no bespoke export), and exit-bevestiging. Each step carries its own status; step updates SHALL write the full array carried forward from the freshly read object (saveObject is PUT-semantic), and updating one step SHALL NOT alter any other step. CONSTRAINT (REQ-MOB-004): status 'overgeslagen' only when verplicht is false — enforced at save time. The imperative revocation/end-dating behind these steps is deferred (design D3); this array models the checklist and status only.",
+            "description": "The structured offboarding checklist. Required. Includes at minimum lidmaatschap-beeindigen, groepen-intrekken (always verplicht: ), persoonsgegevens-notitie (references the document-annotations author export, no bespoke export), and exit-bevestiging. Each step carries its own status; step updates SHALL write the full array carried forward from the freshly read object (saveObject is PUT-semantic), and updating one step SHALL NOT alter any other step. CONSTRAINT: status 'overgeslagen' only when verplicht is false, enforced at save time. The imperative revocation/end-dating behind these steps is deferred (design D3); this array models the checklist and status only.",
             "items": {
               "type": "object",
               "title": "Offboarding step",
@@ -566,7 +566,7 @@
                 "stepType": {
                   "title": "Step type",
                   "type": "string",
-                  "description": "Kind of offboarding step. lidmaatschap-beeindigen = end-date the Membership (imperative, deferred); groepen-intrekken = revoke body-role groups + RBAC scopes (imperative, deferred, always mandatory — REQ-MOB-008); persoonsgegevens-notitie = GDPR note referencing the document-annotations author export (reference-only); exit-bevestiging = griffie exit confirmation; custom = a griffie-defined step.",
+                  "description": "Kind of offboarding step. lidmaatschap-beeindigen = end-date the Membership (imperative, deferred); groepen-intrekken = revoke body-role groups + RBAC scopes (imperative, deferred, always mandatory: ); persoonsgegevens-notitie = GDPR note referencing the document-annotations author export (reference-only); exit-bevestiging = griffie exit confirmation; custom = a griffie-defined step.",
                   "enum": [
                     "end-membership",
                     "revoke-groups",
@@ -586,7 +586,7 @@
                   "title": "Status",
                   "type": "string",
                   "default": "open",
-                  "description": "Per-step status. 'overgeslagen' is only valid when verplicht is false (enforced at save time, REQ-MOB-004). The groepen-intrekken step is always verplicht and can never be skipped.",
+                  "description": "Per-step status. 'overgeslagen' is only valid when verplicht is false (enforced at save time). The groepen-intrekken step is always verplicht and can never be skipped.",
                   "enum": [
                     "open",
                     "in-execution",
@@ -599,7 +599,7 @@
                   "title": "Mandatory",
                   "type": "boolean",
                   "default": true,
-                  "description": "Whether the step is mandatory. A mandatory step blocks the traject from reaching 'afgerond' until it is 'afgerond' (REQ-MOB-003); groepen-intrekken is always verplicht (REQ-MOB-008)."
+                  "description": "Whether the step is mandatory. A mandatory step blocks the traject from reaching 'afgerond' until it is 'afgerond'; groepen-intrekken is always verplicht."
                 },
                 "dueDate": {
                   "title": "Due date",
@@ -640,7 +640,7 @@
             "title": "Exit confirmed by",
             "type": "string",
             "nullable": true,
-            "description": "Nextcloud UID of the griffie member who confirmed the exit (REQ-MOB-002). Optional until confirmed.",
+            "description": "Nextcloud UID of the griffie member who confirmed the exit. Optional until confirmed.",
             "example": "griffier"
           },
           "exitConfirmedOn": {
@@ -648,20 +648,20 @@
             "type": "string",
             "format": "date-time",
             "nullable": true,
-            "description": "When the exit was confirmed by the griffie (REQ-MOB-002). Optional until confirmed."
+            "description": "When the exit was confirmed by the griffie. Optional until confirmed."
           },
           "batch": {
             "title": "Batch",
             "type": "string",
             "nullable": true,
-            "description": "Free-form batch label linking trajecten created by one raadswisseling run (REQ-MOB-009). Optional; drives the batch filter and progress tracking.",
+            "description": "Free-form batch label linking trajecten created by one raadswisseling run. Optional; drives the batch filter and progress tracking.",
             "example": "raadswisseling-2026"
           },
           "lifecycle": {
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Traject status (declared in x-openregister-lifecycle, ADR-031): gestart → in-uitvoering → afgerond | vervallen. afgerond and vervallen are terminal. Cannot reach afgerond while the always-mandatory groepen-intrekken step is not afgerond (REQ-MOB-003/008).",
+            "description": "Traject status (declared in x-openregister-lifecycle, ADR-031): gestart → in-uitvoering → afgerond | vervallen. afgerond and vervallen are terminal. Cannot reach afgerond while the always-mandatory groepen-intrekken step is not afgerond.",
             "enum": [
               "started",
               "in-execution",

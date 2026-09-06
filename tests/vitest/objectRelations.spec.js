@@ -17,9 +17,9 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-	RELATION_CONTAINS_FILTER,
 	matching,
 	references,
+	RELATION_CONTAINS_FILTER,
 	relationFilterFor,
 } from '../../src/utils/objectRelations.js'
 

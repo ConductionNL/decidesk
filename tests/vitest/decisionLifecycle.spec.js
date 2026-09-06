@@ -5,11 +5,11 @@
 //
 // @spec openspec/specs/decision-management/spec.md
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	STATES,
-	STATE_COLORS,
 	buildTimeline,
+	STATE_COLORS,
+	STATES,
 } from '../../src/components/tabs/decisionLifecycle.js'
 
 describe('decisionLifecycle helpers', () => {

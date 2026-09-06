@@ -235,32 +235,36 @@ let the user register a new proxy authorization from that facet with
 
 @e2e exclude no current e2e test drives the create-from-facet flow; genuine coverage gap tracked as e2e debt.
 
-### Requirement: REQ-MDV-012 — Kascommissie verklaringen facet (assoc mode only)
-The Meeting detail page SHALL show a facet listing `kascommissie-verklaring`
+### Requirement: REQ-MDV-012 — Audit statements facet (assoc mode only)
+The Meeting detail page SHALL show a facet listing `audit-statement`
 objects whose `governanceBody` equals the current meeting's own
 `governanceBody`, and this facet SHALL be visible only when the tenant's
 active `organisatie_modus` setting is `assoc`. In every other mode the
-facet SHALL be hidden — the widget declaration itself is not removed from
+facet SHALL be hidden: the widget declaration itself is not removed from
 the page, only its rendered content is suppressed.
 
-#### Scenario: Kascommissie facet visible in association mode
+An association reads this facet as *Kascommissie verklaringen*, and every
+other organisation reads it as *Audit statements*, from one schema. The
+Dutch wording is a mode label, not a schema name.
+
+#### Scenario: Audit statement facet visible in association mode
 - GIVEN the tenant's `organisatie_modus` is `assoc`
-- AND the current meeting's `governanceBody` has one `kascommissie-verklaring`
+- AND the current meeting's `governanceBody` has one `audit-statement`
   object referencing it
 - WHEN the user opens the meeting's detail page
-- THEN the kascommissie facet renders and lists that statement
+- THEN the audit statement facet renders and lists that statement
 
-@e2e exclude no current e2e test switches the tenant to `assoc` mode and asserts the kascommissie facet renders; only the hidden-in-gov-mode half is exercised (see the sibling scenario below) — genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test switches the tenant to `assoc` mode and asserts the audit statement facet renders; only the hidden-in-gov-mode half is exercised (see the sibling scenario below), which is a genuine coverage gap tracked as e2e debt.
 
-#### Scenario: Kascommissie facet hidden outside association mode
+#### Scenario: Audit statement facet hidden outside association mode
 - GIVEN the tenant's `organisatie_modus` is `gov`
-- AND the current meeting's `governanceBody` has a `kascommissie-verklaring`
+- AND the current meeting's `governanceBody` has an `audit-statement`
   object referencing it
 - WHEN the user opens the meeting's detail page
-- THEN the kascommissie facet does not render any content
+- THEN the audit statement facet does not render any content
 - AND no other facet on the page is affected
 
-@e2e exclude exercised by tests/e2e/spec-coverage/facets-meeting-detail.spec.ts ("MeetingDetail: interpellations, proxy-authorizations and routed-documents facets render their real empty states; kascommissie is absent in gov mode" — asserts `getByTestId('meeting-kascommissie-tab')` has count 0); that test's own @e2e anchor still targets the pre-archival openspec/changes/meeting-facet-composition/... path so this gate does not match it — recorded here rather than reported as a gap.
+@e2e exclude exercised by tests/e2e/spec-coverage/facets-meeting-detail.spec.ts, which asserts `getByTestId('meeting-audit-statements-tab')` has count 0 in gov mode.
 
 ### Requirement: REQ-MDV-013 — Routed incoming documents facet (read-only)
 The Meeting detail page SHALL show a single read-only facet listing every

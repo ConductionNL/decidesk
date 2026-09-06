@@ -1,0 +1,32 @@
+{
+	"_note": "documents-as-agenda-items — this finishes a sentence AgendaItemType has been carrying since configurable-types-domain-model, whose own description says it exists so that 'oral questions, interpellations, incoming documents, council information letters and kascommissie reports stop being five separate schemas with five top-level menu entries'. Three of the five are done. These are the other two, plus the technical question that only ever existed to hang off a letter. An incoming document and a letter from the executive are both something put before a body at a meeting, which is what AgendaItem models; the distinctive fields go in typeFields, which is what that property was added for.",
+	"_spec": "openspec/changes/documents-as-agenda-items/specs/documents-as-agenda-items/spec.md",
+	"components": {
+		"schemas": {
+			"IngekomenStuk": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (documents-as-agenda-items): incoming correspondence is an AgendaItem whose type is a kind the organisation names, hung under the list item it was registered on. Its distinctive fields live in AgendaItem.typeFields. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Raadsinformatiebrief": {
+				"version": "0.3.0",
+				"description": "SUPERSEDED (documents-as-agenda-items): a letter from the executive to the body is an AgendaItem carrying a kind the organisation names. `subject` became the item's title and everything else moved to typeFields. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"TechnischeVraag": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (documents-as-agenda-items): a technical question about a letter is a SUB-ITEM of that letter, which the agenda already models through parentItem. It never had an identity of its own: `rib` was required, so a question without a letter could not exist. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

@@ -78,7 +78,7 @@
         "icon": "ClipboardTextOutline",
         "version": "0.1.0",
         "title": "CyclusTemplate",
-        "description": "A reusable calendar step list for a Planning & Control cyclus: the ordered step types, default month/day dates, subject-year offsets, and document slots a governance body follows each year. Follows the process-configuration built-in-template pattern (builtIn seeds, read-only-but-duplicable), but is a DISTINCT schema from ProcessTemplate (43-process-config): a ProcessTemplate models a decision state machine; a CyclusTemplate models a calendar step list (design D2). CONSTRAINT (design D5): editing/deleting a built-in template (builtIn true) is refused server-side; duplication into an editable copy (fresh slug, builtIn cleared) is allowed. Editing a template never regenerates an in-flight cyclus. This read-only-built-in guard is enforced at save time (imperative, mirroring ProcessTemplateService), documented here per REQ-PCC-002.",
+        "description": "A reusable calendar step list for a Planning & Control cyclus: the ordered step types, default month/day dates, subject-year offsets, and document slots a governance body follows each year. Follows the process-configuration built-in-template pattern (builtIn seeds, read-only-but-duplicable), but is a DISTINCT schema from ProcessTemplate (43-process-config): a ProcessTemplate models a decision state machine; a CyclusTemplate models a calendar step list (design D2). CONSTRAINT (design D5): editing/deleting a built-in template (builtIn true) is refused server-side; duplication into an editable copy (fresh slug, builtIn cleared) is allowed. Editing a template never regenerates an in-flight cyclus. This read-only-built-in guard is enforced at save time (imperative, mirroring ProcessTemplateService), documented here.",
         "type": "object",
         "x-schema-org": "schema:HowTo",
         "x-openregister": {
@@ -116,13 +116,13 @@
             "title": "Built-in",
             "type": "boolean",
             "default": false,
-            "description": "Read-only built-in template shipped with the app (design D5 / REQ-PCC-002). Edit and delete are refused server-side; duplicate is allowed and clears this flag.",
+            "description": "Read-only built-in template shipped with the app (design D5). Edit and delete are refused server-side; duplicate is allowed and clears this flag.",
             "example": true
           },
           "steps": {
             "title": "Steps",
             "type": "array",
-            "description": "Ordered list of template steps. Required. Generation resolves each step's default month/day into a concrete date within the cyclus execution year and copies the document slots (REQ-PCC-004).",
+            "description": "Ordered list of template steps. Required. Generation resolves each step's default month/day into a concrete date within the cyclus execution year and copies the document slots.",
             "items": {
               "type": "object",
               "title": "Template step",
@@ -130,7 +130,7 @@
                 "stepType": {
                   "title": "Step type",
                   "type": "string",
-                  "description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge — NOT a closed enum: a duplicated template MAY declare a custom stepType (REQ-PCC-003)."
+                  "description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge. NOT a closed enum: a duplicated template MAY declare a custom stepType."
                 },
                 "label": {
                   "title": "Label",
@@ -205,7 +205,7 @@
         "icon": "CalendarCheckOutline",
         "version": "0.1.0",
         "title": "CyclusStap",
-        "description": "One step of a Planning & Control cyclus, generated from a CyclusTemplate step and tracked from aanlevering through behandeling to vaststelling. Related to its parent PCCyclus (one cyclus -> many steps, ordered by sequence). Cross-references the ordinary AgendaItem (once behandeling is scheduled) and the ordinary Decision (once the vaststellingsbesluit exists); the step NEVER creates meetings, agenda items or decisions itself (REQ-PCC-007) — scheduling stays with agenda-management, decision content with decision-management/decision-route. Decharge is recorded as an outcome, not a decision template (REQ-PCC-008; VvE statutory templates stay in vve-alv-pack). CONSTRAINT: steps carry NO financial figures or monetary properties by construction (REQ-PCC-003). The status workflow is declared exclusively in x-openregister-lifecycle and the rappels exclusively in x-openregister-notifications (ADR-031); no app-side state machine and no bespoke reminder BackgroundJob.",
+        "description": "One step of a Planning & Control cyclus, generated from a CyclusTemplate step and tracked from aanlevering through behandeling to vaststelling. Related to its parent PCCyclus (one cyclus -> many steps, ordered by sequence). Cross-references the ordinary AgendaItem (once behandeling is scheduled) and the ordinary Decision (once the vaststellingsbesluit exists); the step NEVER creates meetings, agenda items or decisions itself: scheduling stays with agenda-management, decision content with decision-management/decision-route. Decharge is recorded as an outcome, not a decision template (VvE statutory templates stay in vve-alv-pack). CONSTRAINT: steps carry NO financial figures or monetary properties by construction. The status workflow is declared exclusively in x-openregister-lifecycle and the rappels exclusively in x-openregister-notifications (ADR-031); no app-side state machine and no bespoke reminder BackgroundJob.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -344,7 +344,7 @@
             "title": "Step type",
             "type": "string",
             "facetable": true,
-            "description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge. NOT a closed enum (REQ-PCC-003): a duplicated template MAY declare a custom stepType, so this property is deliberately not constrained by an enum.",
+            "description": "Canonical values kadernota, begroting, berap, jaarrekening, jaarplan, jaarstukken, decharge. NOT a closed enum: a duplicated template MAY declare a custom stepType, so this property is deliberately not constrained by an enum.",
             "example": "begroting"
           },
           "label": {
@@ -421,7 +421,7 @@
           "documentSlots": {
             "title": "Document slots",
             "type": "array",
-            "description": "Document slots copied from the template step (REQ-PCC-003). Each slot carries a name, a required flag, and the delivered file attached via OpenRegister's FileService — no app-local file storage.",
+            "description": "Document slots copied from the template step. Each slot carries a name, a required flag, and the delivered file attached via OpenRegister's FileService: no app-local file storage.",
             "items": {
               "type": "object",
               "title": "Document slot",
@@ -452,7 +452,7 @@
             "format": "uuid",
             "$ref": "agenda-item",
             "nullable": true,
-            "description": "Reference to the actual AgendaItem once behandeling is scheduled (REQ-PCC-007). Set once the item is placed on a meeting agenda; the step never creates the AgendaItem itself. Empty means behandeling is not yet scheduled (drives the unscheduled rappel)."
+            "description": "Reference to the actual AgendaItem once behandeling is scheduled. Set once the item is placed on a meeting agenda; the step never creates the AgendaItem itself. Empty means behandeling is not yet scheduled (drives the unscheduled rappel)."
           },
           "decision": {
             "title": "Decision",
@@ -460,13 +460,13 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Reference to the actual Decision (vaststellingsbesluit / decharge-besluit) once it exists (REQ-PCC-007/008). The step never creates the Decision itself; decision content stays in decision-management/decision-route."
+            "description": "Reference to the actual Decision (vaststellingsbesluit / decharge-besluit) once it exists. The step never creates the Decision itself; decision content stays in decision-management/decision-route."
           },
           "status": {
             "title": "Status",
             "type": "string",
             "facetable": true,
-            "description": "Step status (declared in x-openregister-lifecycle, ADR-031, REQ-PCC-005): gepland -> stukken-ontvangen -> in-behandeling -> vastgesteld | afgerond, plus stukken-ontvangen -> afgerond. vastgesteld and afgerond are terminal.",
+            "description": "Step status (declared in x-openregister-lifecycle, ADR-031): gepland -> stukken-ontvangen -> in-behandeling -> vastgesteld | afgerond, plus stukken-ontvangen -> afgerond. vastgesteld and afgerond are terminal.",
             "enum": [
               "planned",
               "documents-received",
@@ -480,7 +480,7 @@
             "title": "Outcome",
             "type": "string",
             "nullable": true,
-            "description": "Optional step outcome. For a decharge step: decharge-verleend or decharge-geweigerd (REQ-PCC-008); the resulting besluit lives in the normal Decision model via the decision reference. This capability defines no statutory decision templates.",
+            "description": "Optional step outcome. For a decharge step: decharge-verleend or decharge-geweigerd; the resulting besluit lives in the normal Decision model via the decision reference. This capability defines no statutory decision templates.",
             "example": "decharge-verleend"
           }
         }

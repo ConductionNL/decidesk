@@ -9,7 +9,7 @@
         "icon": "FileDocumentOutline",
         "version": "0.2.0",
         "title": "GoverningDocument",
-        "description": "A governing document (Schema.org DigitalDocument, Akoma Ntoso doc work level): an organisation's own constitutive or internal governing document — statuten, huishoudelijk reglement, reglement van orde, directiestatuut, splitsingsakte. Owned by a GovernanceBody, with a geldend → vervallen lifecycle (drafting happens at version level via concept versions, so no document-level draft state). Versions are GoverningDocumentVersie objects (the Akoma Ntoso expression level). BOUNDARY (design): this register owns private-law / internal constitutive documents and carries NO CVDR identifier, NO DROP/STOP delivery, and NO bekendmaking field — public-law regelingen with publication machinery belong to the verordeningenregister capability. CONDITIONAL RULE (REQ-GDR-004, enforced save-time by GoverningDocumentConsolidationService, not by a schema constraint): a version may be sealed to in-werking only when its inwerkingtreding is after the latest already-sealed version's, so in-force resolution is deterministic.",
+        "description": "A governing document (Schema.org DigitalDocument, Akoma Ntoso doc work level): an organisation's own constitutive or internal governing document, statuten, huishoudelijk reglement, reglement van orde, directiestatuut, splitsingsakte. Owned by a GovernanceBody, with a geldend → vervallen lifecycle (drafting happens at version level via concept versions, so no document-level draft state). Versions are GoverningDocumentVersie objects (the Akoma Ntoso expression level). BOUNDARY (design): this register owns private-law / internal constitutive documents and carries NO CVDR identifier, NO DROP/STOP delivery, and NO bekendmaking field, public-law regelingen with publication machinery belong to the verordeningenregister capability. CONDITIONAL RULE (enforced save-time by GoverningDocumentConsolidationService, not by a schema constraint): a version may be sealed to in-werking only when its inwerkingtreding is after the latest already-sealed version's, so in-force resolution is deterministic.",
         "type": "object",
         "x-schema-org": "schema:DigitalDocument",
         "x-openregister": {
@@ -94,7 +94,7 @@
             "type": "boolean",
             "facetable": true,
             "default": false,
-            "description": "Predicate on the live object controlling public exposure (REQ-GDR-007). Default false = internal (member) only. When true, the OR published-predicate surface exposes only the citeertitel, type, governing body name, and the current sealed version's inwerkingtreding + consolidated text; concept versions, toelichting, and the notaris name are never exposed. Server-side eligibility additionally requires a sealed current version (imperative — see authorization._note)."
+            "description": "Predicate on the live object controlling public exposure. Default false = internal (member) only. When true, the OR published-predicate surface exposes only the citeertitel, type, governing body name, and the current sealed version's inwerkingtreding + consolidated text; concept versions, toelichting, and the notaris name are never exposed. Server-side eligibility additionally requires a sealed current version (imperative: see authorization._note)."
           },
           "status": {
             "title": "Status",
@@ -113,7 +113,7 @@
             "format": "date",
             "facetable": true,
             "nullable": true,
-            "description": "Optional convenience field (REQ-SDM-025) mirroring Regeling.currentEffectiveDate: the inwerkingtreding of the version currently in force, for cheap listing/sorting without resolving GoverningDocumentVersie. MAINTENANCE/DIALECT CAVEAT (same as Regeling.currentEffectiveDate): this is a plain data property, not a live-computed aggregation — it is populated by whatever writes a GoverningDocumentVersie in-werking transition (the code chain's responsibility; this schema change only supplies the storage slot) and reads null on existing GoverningDocument rows until a future write populates it.",
+            "description": "Optional convenience field mirroring Regeling.currentEffectiveDate: the inwerkingtreding of the version currently in force, for cheap listing/sorting without resolving GoverningDocumentVersie. MAINTENANCE/DIALECT CAVEAT (same as Regeling.currentEffectiveDate): this is a plain data property, not a live-computed aggregation, it is populated by whatever writes a GoverningDocumentVersie in-werking transition (the code chain's responsibility; this schema change only supplies the storage slot) and reads null on existing GoverningDocument rows until a future write populates it.",
             "example": "2022-01-01"
           }
         }
@@ -123,7 +123,7 @@
         "icon": "FileDocumentMultipleOutline",
         "version": "0.1.0",
         "title": "GoverningDocumentVersie",
-        "description": "An immutable version (Akoma Ntoso expression level, mirroring the verordeningenregister RegelingVersie conventions) of a GoverningDocument. Carries the parent document reference, a per-document unique versienummer, the enacting Decision (vastgesteldDoor), inwerkingtreding / vervaldatum, a toelichting, optional notarial-deed metadata (aktedatum, notaris), and the consolidated text attached through OpenRegister's file abstraction (a File leaf, not a schema property). SEAL-ON-EFFECTIVE (REQ-GDR-003): when the version transitions to in-werking its versienummer, vastgesteldDoor, inwerkingtreding, notarial-deed metadata, and consolidated-text file reference become immutable, enforced server-side; corrections are made as a NEW version traced to its own rectification Decision, never by editing a sealed version. There is no declarative immutable-after-state dialect key, so the seal is a save-time server guard (imperative, out of declarative scope) keyed on the in-werking lifecycle state. CONDITIONAL TRACE RULE (REQ-GDR-002, enforced save-time by GoverningDocumentConsolidationService, not by a schema constraint — a cross-object conditional-required cannot be expressed in JSON Schema without composition keywords, which OR rejects): every version of a document that already has at least one sealed version MUST carry a resolvable vastgesteldDoor; only the first (constitutive/historical) version MAY omit it, in which case notarial-deed metadata or a toelichting documenting its origin SHOULD be recorded. versienummer MUST be a positive integer unique per document (uniqueness enforced save-time). inwerkingtreding MUST be set before the version is sealed to in-werking (activation-time requirement).",
+        "description": "An immutable version (Akoma Ntoso expression level, mirroring the verordeningenregister RegelingVersie conventions) of a GoverningDocument. Carries the parent document reference, a per-document unique versienummer, the enacting Decision (vastgesteldDoor), inwerkingtreding / vervaldatum, a toelichting, optional notarial-deed metadata (aktedatum, notaris), and the consolidated text attached through OpenRegister's file abstraction (a File leaf, not a schema property). SEAL-ON-EFFECTIVE: when the version transitions to in-werking its versienummer, vastgesteldDoor, inwerkingtreding, notarial-deed metadata, and consolidated-text file reference become immutable, enforced server-side; corrections are made as a NEW version traced to its own rectification Decision, never by editing a sealed version. There is no declarative immutable-after-state dialect key, so the seal is a save-time server guard (imperative, out of declarative scope) keyed on the in-werking lifecycle state. CONDITIONAL TRACE RULE (enforced save-time by GoverningDocumentConsolidationService, not by a schema constraint: a cross-object conditional-required cannot be expressed in JSON Schema without composition keywords, which OR rejects): every version of a document that already has at least one sealed version MUST carry a resolvable vastgesteldDoor; only the first (constitutive/historical) version MAY omit it, in which case notarial-deed metadata or a toelichting documenting its origin SHOULD be recorded. versienummer MUST be a positive integer unique per document (uniqueness enforced save-time). inwerkingtreding MUST be set before the version is sealed to in-werking (activation-time requirement).",
         "type": "object",
         "x-schema-org": "schema:DigitalDocument",
         "x-openregister": {
@@ -227,14 +227,14 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
-            "description": "Reference to the Decision that enacted this version (besluit tot statutenwijziging, vaststellingsbesluit, ALV-besluit). CONDITIONALLY REQUIRED (REQ-GDR-002): mandatory for every version of a document that already has at least one sealed version; only the first (constitutive/historical) version MAY omit it. This cross-object conditional-required cannot be expressed as a JSON Schema constraint (no anyOf/allOf/oneOf in an OR register schema), so it is enforced at save time by GoverningDocumentConsolidationService."
+            "description": "Reference to the Decision that enacted this version (besluit tot statutenwijziging, vaststellingsbesluit, ALV-besluit). CONDITIONALLY REQUIRED: mandatory for every version of a document that already has at least one sealed version; only the first (constitutive/historical) version MAY omit it. This cross-object conditional-required cannot be expressed as a JSON Schema constraint (no anyOf/allOf/oneOf in an OR register schema), so it is enforced at save time by GoverningDocumentConsolidationService."
           },
           "effectiveDate": {
             "title": "Effective date",
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Date on which this version takes effect. REQUIRED before the version is sealed to in-werking (activation-time requirement, enforced save-time — not a create-time schema requirement, so a concept version may exist briefly without it). Drives the in-force resolution (REQ-GDR-004): the version in force on date X is the one with the latest inwerkingtreding <= X whose state is in-werking or vervangen-after-X and whose vervaldatum (if set) is after X.",
+            "description": "Date on which this version takes effect. REQUIRED before the version is sealed to in-werking (activation-time requirement, enforced save-time: not a create-time schema requirement, so a concept version may exist briefly without it). Drives the in-force resolution: the version in force on date X is the one with the latest inwerkingtreding <= X whose state is in-werking or vervangen-after-X and whose vervaldatum (if set) is after X.",
             "example": "2022-01-01"
           },
           "expiryDate": {
@@ -248,26 +248,26 @@
           "notes": {
             "title": "Explanatory note",
             "type": "string",
-            "description": "Summary of what this version changes relative to the previous one; for a constitutive first version, documents its origin. Internal annotation — never exposed in the public payload (REQ-GDR-007)."
+            "description": "Summary of what this version changes relative to the previous one; for a constitutive first version, documents its origin. Internal annotation: never exposed in the public payload."
           },
           "deedDate": {
             "title": "Deed date",
             "type": "string",
             "format": "date",
-            "description": "Optional notarial-deed date, for notarially enacted documents (statuten, splitsingsakte). Plain metadata — no KNB/notary-system integration.",
+            "description": "Optional notarial-deed date, for notarially enacted documents (statuten, splitsingsakte). Plain metadata: no KNB/notary-system integration.",
             "example": "2021-12-15"
           },
           "notary": {
             "title": "Notary",
             "type": "string",
-            "description": "Optional notary name (name only) for notarially enacted documents. PII — structurally stripped from any public payload (REQ-GDR-007).",
+            "description": "Optional notary name (name only) for notarially enacted documents. PII: structurally stripped from any public payload.",
             "example": "mr. A. de Wit"
           },
           "status": {
             "title": "Status",
             "type": "string",
             "facetable": true,
-            "description": "Version lifecycle status (declared in x-openregister-lifecycle, ADR-031): concept → vastgesteld → in-werking → vervangen | vervallen. The in-werking transition seals the version (REQ-GDR-003) and fires the new-effective-version notification (REQ-GDR-008). vervangen and vervallen are terminal.",
+            "description": "Version lifecycle status (declared in x-openregister-lifecycle, ADR-031): concept → vastgesteld → in-werking → vervangen | vervallen. The in-werking transition seals the version and fires the new-effective-version notification. vervangen and vervallen are terminal.",
             "enum": [
               "draft",
               "adopted",
@@ -282,12 +282,12 @@
       "Decision": {
         "slug": "decision",
         "version": "0.7.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern): this fragment merges only the optional citesGoverningDocuments property onto the existing decision schema. No required field is added and no existing property is modified, so decisions created before this change stay valid (REQ-GDR-005).",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern): this fragment merges only the optional citesGoverningDocuments property onto the existing decision schema. No required field is added and no existing property is modified, so decisions created before this change stay valid.",
         "properties": {
           "citesGoverningDocuments": {
             "title": "Cited governing documents",
             "type": "array",
-            "description": "Optional, additive (REQ-GDR-005): the canonical governing-document reference shape used by all consumers ({document, versie?, artikel?}). Lets a decision cite the governing-document article it is based on (e.g. a spoedbesluit citing the statuten article that permits urgency). The citation is assistive metadata: it MUST NOT block or gate any decision workflow, and it grants no read access to the cited document. The urgent-decision-procedure and vve-alv-pack siblings adopt this same shape; their wiring stays in those changes.",
+            "description": "Optional, additive: the canonical governing-document reference shape used by all consumers ({document, versie?, artikel?}). Lets a decision cite the governing-document article it is based on (e.g. a spoedbesluit citing the statuten article that permits urgency). The citation is assistive metadata: it MUST NOT block or gate any decision workflow, and it grants no read access to the cited document. The urgent-decision-procedure and vve-alv-pack siblings adopt this same shape; their wiring stays in those changes.",
             "items": {
               "type": "object",
               "required": [
@@ -306,7 +306,7 @@
                   "type": "string",
                   "format": "uuid",
                   "$ref": "governing-document-versie",
-                  "description": "Optional reference to a specific sealed GoverningDocumentVersie. Omitted means 'the version in force at reading time' per the in-force resolution (REQ-GDR-004); a pinned versie gives the immutable-content guarantee (REQ-GDR-003)."
+                  "description": "Optional reference to a specific sealed GoverningDocumentVersie. Omitted means 'the version in force at reading time' per the in-force resolution; a pinned versie gives the immutable-content guarantee."
                 },
                 "article": {
                   "title": "Article",

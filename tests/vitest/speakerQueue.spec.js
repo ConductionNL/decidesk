@@ -13,13 +13,13 @@
 import { describe, expect, it } from 'vitest'
 import {
 	addSpeaker,
-	removeSpeaker,
+	currentSpeaker,
+	isOverLimit,
 	moveSpeaker,
+	removeSpeaker,
+	speakerElapsedSeconds,
 	startSpeaker,
 	stopSpeaker,
-	currentSpeaker,
-	speakerElapsedSeconds,
-	isOverLimit,
 } from '../../src/utils/speakerQueue.js'
 
 const T0 = 1_000_000_000_000
@@ -112,7 +112,7 @@ describe('startSpeaker / stopSpeaker / currentSpeaker', () => {
 	})
 
 	it('auto-stops the current speaker and reports their duration on switch', () => {
-		let { queue } = startSpeaker(build(), 'a', sec(0))
+		const { queue } = startSpeaker(build(), 'a', sec(0))
 		const res = startSpeaker(queue, 'b', sec(125)) // Alice spoke 125s
 		expect(res.stopped).toEqual({ participantId: 'a', durationSeconds: 125 })
 		expect(currentSpeaker(res.queue).participantId).toBe('b')
@@ -135,7 +135,7 @@ describe('startSpeaker / stopSpeaker / currentSpeaker', () => {
 	})
 
 	it('stopSpeaker folds the running turn into spokenMs and reports rounded seconds', () => {
-		let { queue } = startSpeaker(build(), 'a', sec(0))
+		const { queue } = startSpeaker(build(), 'a', sec(0))
 		const res = stopSpeaker(queue, sec(0) + 1499) // 1.499s -> rounds to 1
 		expect(res.stopped).toEqual({ participantId: 'a', durationSeconds: 1 })
 		expect(currentSpeaker(res.queue)).toBeNull()

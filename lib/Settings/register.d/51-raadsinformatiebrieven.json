@@ -9,7 +9,7 @@
         "icon": "EmailArrowRightOutline",
         "version": "0.1.0",
         "title": "Raadsinformatiebrief",
-        "description": "A raadsinformatiebrief (RIB / collegebrief): the college's formal outbound information letter to the council under its actieve informatieplicht (Gemeentewet art. 169), tracked from verzending through optional agendering ter kennisname to betrokken-bij-behandeling, with a per-RIB technische-vragen thread (TechnischeVraag), an optional toezegging-afdoening cross-reference, and WOO-aware public publication via the OpenRegister published-predicate. A RIB is outbound and college-issued — it is explicitly NOT an IngekomenStuk (ingekomen-stukken-register owns inbound external mail) and college-internal drafting/parafering stays out of Decidiq (procest domain); Decidiq registers the sent letter only. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no drafts, no parafen, no addresses, no citizen PII) — portefeuillehouders are public officeholders. Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A raadsinformatiebrief (RIB / collegebrief): the college's formal outbound information letter to the council under its actieve informatieplicht (Gemeentewet art. 169), tracked from verzending through optional agendering ter kennisname to betrokken-bij-behandeling, with a per-RIB technische-vragen thread (TechnischeVraag), an optional toezegging-afdoening cross-reference, and WOO-aware public publication via the OpenRegister published-predicate. A RIB is outbound and college-issued: it is explicitly NOT an IngekomenStuk (ingekomen-stukken-register owns inbound external mail) and college-internal drafting/parafering stays out of Decidiq (procest domain); Decidiq registers the sent letter only. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no drafts, no parafen, no addresses, no citizen PII), portefeuillehouders are public officeholders. Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:Message",
         "x-openregister": {
@@ -103,7 +103,7 @@
             "type": "string",
             "facetable": true,
             "pattern": "^RIB-\\d{4}-\\d+$",
-            "description": "Human-readable letter number in the format RIB-{jaar}-{volgnummer} (schema-validated by pattern). Required and unique per year — often assigned by the college's own systems before the letter reaches the griffie, so Decidiq accepts an externally given number rather than force-generating one (design D5). The creation dialog pre-fills the next free volgnummer for the current year; uniqueness is a review/validation concern (OR has no cross-object unique constraint) and the index sorts by number so duplicates are immediately visible.",
+            "description": "Human-readable letter number in the format RIB-{jaar}-{volgnummer} (schema-validated by pattern). Required and unique per year: often assigned by the college's own systems before the letter reaches the griffie, so Decidiq accepts an externally given number rather than force-generating one (design D5). The creation dialog pre-fills the next free volgnummer for the current year; uniqueness is a review/validation concern (OR has no cross-object unique constraint) and the index sorts by number so duplicates are immediately visible.",
             "example": "RIB-2026-014"
           },
           "subject": {
@@ -117,13 +117,13 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Person",
-            "description": "Reference to the portefeuillehouder (wethouder / college member) responsible for the letter (schema:Message sender is the college; this records the responsible officeholder). Required. A public officeholder — WOO-conformant to publish (design D4)."
+            "description": "Reference to the portefeuillehouder (wethouder / college member) responsible for the letter (schema:Message sender is the college; this records the responsible officeholder). Required. A public officeholder. WOO-conformant to publish (design D4)."
           },
           "category": {
             "title": "Category",
             "type": "string",
             "facetable": true,
-            "description": "Letter category driven by a configurable option list — deliberately an open string, NOT a hard enum, so municipalities can extend categories without a schema change (design risk: category free-text fragmentation, mitigated by the creation dialog offering existing values). Required. Seeded values: toezegging-afdoening, actieve-informatieplicht, motie-afdoening.",
+            "description": "Letter category driven by a configurable option list: deliberately an open string, NOT a hard enum, so municipalities can extend categories without a schema change (design risk: category free-text fragmentation, mitigated by the creation dialog offering existing values). Required. Seeded values: toezegging-afdoening, actieve-informatieplicht, motie-afdoening.",
             "example": "actieve-informatieplicht"
           },
           "sentAt": {
@@ -131,7 +131,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "Verzenddatum — the date the college sent the letter to the council (schema:Message dateSent). Required.",
+            "description": "Verzenddatum: the date the college sent the letter to the council (schema:Message dateSent). Required.",
             "example": "2026-02-20"
           },
           "directedTo": {
@@ -139,7 +139,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "governance-body",
-            "description": "Reference to the GovernanceBody (council) the letter is directed to (schema:Message recipient). Required. Drives the new-RIB notification recipients (REQ-RIB-008)."
+            "description": "Reference to the GovernanceBody (council) the letter is directed to (schema:Message recipient). Required. Drives the new-RIB notification recipients."
           },
           "letterDocument": {
             "title": "Letter document",
@@ -160,20 +160,20 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Reference to the AgendaItem recording the ter-kennisname placement (typically the lijst-ingekomen-stukken / LIS item or a dedicated RIB list item of a meeting). Set when the lifecycle moves to geagendeerd (REQ-RIB-002). Optional."
+            "description": "Reference to the AgendaItem recording the ter-kennisname placement (typically the lijst-ingekomen-stukken / LIS item or a dedicated RIB list item of a meeting). Set when the lifecycle moves to geagendeerd. Optional."
           },
           "settledCommitment": {
             "title": "Settled commitment",
             "type": "string",
             "format": "uuid",
             "$ref": "Toezegging",
-            "description": "Optional reference to a Toezegging this letter afdoet. Afdoening state and log live EXCLUSIVELY on the Toezegging (toezeggingen-register REQ-002); the ToezeggingDetail surfaces linked RIBs as afdoening evidence via a reverse-relation query, and the RIB detail links back. This register copies no afdoening state and creates no second afdoening log (REQ-RIB-003)."
+            "description": "Optional reference to a Toezegging this letter afdoet. Afdoening state and log live EXCLUSIVELY on the Toezegging (toezeggingen-register REQ-002); the ToezeggingDetail surfaces linked RIBs as afdoening evidence via a reverse-relation query, and the RIB detail links back. This register copies no afdoening state and creates no second afdoening log."
           },
           "relatedFile": {
             "title": "Related dossier",
             "type": "string",
             "nullable": true,
-            "description": "Optional reference to an archival dossier (targets the ArchivalDossier planned in records-management-archiving). Nullable — until that change lands it degrades to a plain link (design D6). Tightening it to a hard $ref later is an additive schema-version bump. Declared WITHOUT format:uuid for the same reason: format:uuid plus a relation description with no $ref is a relation-shaped property that ADR-062 rule 7 rejects, and the $ref has no target to point at yet. Restore format:uuid + $ref together in the commit that introduces ArchivalDossier."
+            "description": "Optional reference to an archival dossier (targets the ArchivalDossier planned in records-management-archiving). Nullable: until that change lands it degrades to a plain link (design D6). Tightening it to a hard $ref later is an additive schema-version bump. Declared WITHOUT format:uuid for the same reason: format:uuid plus a relation description with no $ref is a relation-shaped property that ADR-062 rule 7 rejects, and the $ref has no target to point at yet. Restore format:uuid + $ref together in the commit that introduces ArchivalDossier."
           },
           "relatedDecision": {
             "title": "Related decision",
@@ -193,7 +193,7 @@
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Letter status (declared in x-openregister-lifecycle, ADR-031, REQ-RIB-002): verzonden → geagendeerd → betrokken-bij-behandeling, with agendering optional (direct skip allowed). betrokken-bij-behandeling is terminal.",
+            "description": "Letter status (declared in x-openregister-lifecycle, ADR-031): verzonden → geagendeerd → betrokken-bij-behandeling, with agendering optional (direct skip allowed). betrokken-bij-behandeling is terminal.",
             "enum": [
               "sent",
               "agendised",
@@ -206,7 +206,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live RIB is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public list reflects lifecycle changes (agendering/behandeling) without republication (REQ-RIB-006 / design D4). A confidential RIB is handled by simply never setting this predicate."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live RIB is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public list reflects lifecycle changes (agendering/behandeling) without republication (design D4). A confidential RIB is handled by simply never setting this predicate."
           },
           "depublicationDate": {
             "title": "Depublication date",
@@ -222,7 +222,7 @@
         "icon": "CommentQuestionOutline",
         "version": "0.1.0",
         "title": "TechnischeVraag",
-        "description": "A technische vraag: a short informational Q&A entry scoped to one raadsinformatiebrief — a brief question from a council member and the organisation's answer, rendered as a thread on the RIB detail. A technische vraag is explicitly NOT the formal art. 33 schriftelijke-vragen instrument (the planned SchriftelijkeVraag of fractievoorzitter-fractie-koppeling owns that): it carries NO answer deadlines/termijnbewaking, NO college-workflow states, and NO fractie-quorum machinery, and it is never auto-converted — escalation is a manual re-filing once SchriftelijkeVraag lands (REQ-RIB-005). CONSTRAINT (design D4): only publishable fields by construction (council members are public officeholders); an answered question is anonymously readable through the compound published-predicate (publicationDate <= $now AND lifecycle = beantwoord), so an unanswered question is never exposed even if its predicate is set prematurely.",
+        "description": "A technische vraag: a short informational Q&A entry scoped to one raadsinformatiebrief, a brief question from a council member and the organisation's answer, rendered as a thread on the RIB detail. A technische vraag is explicitly NOT the formal art. 33 schriftelijke-vragen instrument (the planned SchriftelijkeVraag of fractievoorzitter-fractie-koppeling owns that): it carries NO answer deadlines/termijnbewaking, NO college-workflow states, and NO fractie-quorum machinery, and it is never auto-converted, escalation is a manual re-filing once SchriftelijkeVraag lands. CONSTRAINT (design D4): only publishable fields by construction (council members are public officeholders); an answered question is anonymously readable through the compound published-predicate (publicationDate <= $now AND lifecycle = beantwoord), so an unanswered question is never exposed even if its predicate is set prematurely.",
         "type": "object",
         "x-schema-org": "schema:Question",
         "x-openregister": {
@@ -277,7 +277,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Raadsinformatiebrief",
-            "description": "Reference to the Raadsinformatiebrief this question is about (schema:Question aboutMode). Required — a technische vraag cannot exist without a RIB. The RIB detail renders the thread of questions filtered on this reference, in question order (no nested document)."
+            "description": "Reference to the Raadsinformatiebrief this question is about (schema:Question aboutMode). Required: a technische vraag cannot exist without a RIB. The RIB detail renders the thread of questions filtered on this reference, in question order (no nested document)."
           },
           "question": {
             "title": "Question",
@@ -290,13 +290,13 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Person",
-            "description": "Reference to the council member (raadslid) who asked the question. Required. A public officeholder — WOO-conformant to publish (design D4)."
+            "description": "Reference to the council member (raadslid) who asked the question. Required. A public officeholder. WOO-conformant to publish (design D4)."
           },
           "politicalGroup": {
             "title": "Fraction",
             "type": "string",
             "facetable": true,
-            "description": "The asking member's fraction, a plain string until the Fractie schema (fractievoorzitter-fractie-koppeling) lands — a hard reference now would create a blocking dependency on an unlanded change (design D6). Optional.",
+            "description": "The asking member's fraction, a plain string until the Fractie schema (fractievoorzitter-fractie-koppeling) lands: a hard reference now would create a blocking dependency on an unlanded change (design D6). Optional.",
             "example": "GroenLinks"
           },
           "setOn": {
@@ -316,7 +316,7 @@
           "answeredBy": {
             "title": "Answered by",
             "type": "string",
-            "description": "The answering organisational unit (afdeling), a plain string label — NOT a governance Person reference (design D6). Optional.",
+            "description": "The answering organisational unit (afdeling), a plain string label. NOT a governance Person reference (design D6). Optional.",
             "example": "Afdeling Sociaal Domein"
           },
           "answeredOn": {
@@ -331,7 +331,7 @@
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Question status (declared in x-openregister-lifecycle, ADR-031, REQ-RIB-004): gesteld → beantwoord. beantwoord is terminal. No states beyond these two (REQ-RIB-005 boundary).",
+            "description": "Question status (declared in x-openregister-lifecycle, ADR-031): gesteld → beantwoord. beantwoord is terminal. No states beyond these two (boundary).",
             "enum": [
               "put",
               "answered"
@@ -343,7 +343,7 @@
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past AND the lifecycle is beantwoord, the answered question is anonymously readable through the OpenRegister compound published-predicate (public-group authorization.read rule publicationDate <= $now AND lifecycle = beantwoord). The structural lifecycle condition guarantees a mistakenly set predicate can never expose an unanswered question (REQ-RIB-006 / design D4). Publish is an explicit staff action offered only on beantwoord questions."
+            "description": "Publication date (WOO/DIWOO). When set in the past AND the lifecycle is beantwoord, the answered question is anonymously readable through the OpenRegister compound published-predicate (public-group authorization.read rule publicationDate <= $now AND lifecycle = beantwoord). The structural lifecycle condition guarantees a mistakenly set predicate can never expose an unanswered question (design D4). Publish is an explicit staff action offered only on beantwoord questions."
           },
           "depublicationDate": {
             "title": "Depublication date",

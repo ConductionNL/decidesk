@@ -12,11 +12,11 @@
 import { describe, expect, it } from 'vitest'
 import {
 	ABSTENTION_MODES,
-	TIE_BREAK_RULES,
-	VOTE_THRESHOLDS,
 	computeBase,
 	effectiveRules,
 	ruleLabels,
+	TIE_BREAK_RULES,
+	VOTE_THRESHOLDS,
 } from '../../src/utils/votingRules.js'
 
 describe('votingRules enums', () => {

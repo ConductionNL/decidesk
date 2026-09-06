@@ -42,7 +42,9 @@
  *
  * @spec exclude ADR-042/ADR-111 setup contract; no per-app behavioural spec.
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import * as path from 'path'
 
 const STORAGE_STATE = path.resolve(__dirname, '../.auth/admin.json')
@@ -62,13 +64,13 @@ async function api(
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},
 				body: body === undefined ? undefined : JSON.stringify(body),
 			})
-			let json: any = null
+			let json: any
 			try {
 				json = await res.json()
 			} catch {
@@ -126,11 +128,16 @@ test.describe('example sets', () => {
 			'the app must offer at least one example set',
 		).toBeGreaterThan(0)
 
-		// The wizard's own options come from the bundled manifest, but the
-		// server reads the descriptors on disk. Both listing municipality is what
-		// makes the choice step's value resolvable at the next step.
+		// 🔴 THIS RESPONSE *IS* THE OPTION LIST NOW. The step declares
+		// `optionsSource: profiles` and carries no options of its own, so a set
+		// missing here is a set nobody can pick — there is no second copy in the
+		// manifest to fall back on.
 		const ids = profiles.map((p: any) => p.id)
 		expect(ids).toContain('municipality')
+		expect(
+			ids,
+			'declining must be offerable, or "no thanks" is unsayable',
+		).toContain('none')
 
 		// A set that names no object count cannot be told apart from an empty
 		// one, and an empty set is the thing this whole change exists to stop
@@ -138,6 +145,62 @@ test.describe('example sets', () => {
 		const municipality = profiles.find((p: any) => p.id === 'municipality')
 		expect(municipality.objectCount).toBeGreaterThan(0)
 		expect(String(municipality.label ?? '')).not.toBe('')
+
+		// A card renders a label, a description and an icon. An entry missing one
+		// renders a blank card, and a blank card is worse than the dropdown this
+		// replaced.
+		for (const profile of profiles) {
+			expect(
+				String(profile.description ?? ''),
+				`${profile.id} has no description`,
+			).not.toBe('')
+			expect(String(profile.icon ?? ''), `${profile.id} has no icon`).not.toBe(
+				'',
+			)
+		}
+	})
+
+	test('several sets can be picked, and every one of them lands', async ({
+		page,
+	}) => {
+		// 🔴 THE HALF-IMPORT IS THE FAILURE THIS GUARDS. Asking for two sets and
+		// importing the first reads as a success with a smaller number, and
+		// nothing on screen says which half arrived.
+		test.slow()
+
+		const chosen = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			example_profile: ['works-council', 'association'],
+		})
+		expect(chosen.json?.success, JSON.stringify(chosen.json)).toBe(true)
+		expect(chosen.json?.config?.example_profile).toBe(
+			'works-council,association',
+		)
+
+		const res = await api(
+			page,
+			'POST',
+			`${BASE}/api/setup/action/load-example-set`,
+		)
+
+		expect(res.status).toBe(200)
+		expect(res.json?.success, `load failed: ${JSON.stringify(res.json)}`).toBe(
+			true,
+		)
+		expect(
+			String(res.json?.message ?? ''),
+			'the message must say both sets landed, not just that something did',
+		).toContain('2 set')
+	})
+
+	test('one bad id refuses the whole pick rather than storing the good half', async ({
+		page,
+	}) => {
+		const res = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			example_profile: ['municipality', 'atlantis'],
+		})
+
+		expect(res.status).toBe(400)
+		expect(String(res.json?.message ?? '')).toContain('atlantis')
 	})
 
 	test('a set that does not exist is refused rather than stored', async ({
@@ -223,5 +286,82 @@ test.describe('example sets', () => {
 			again.json?.success,
 			`a second load must not fail: ${JSON.stringify(again.json)}`,
 		).toBe(true)
+	})
+	test('the step shows a card per set, and takes more than one', async ({
+		page,
+	}) => {
+		// 🔴 THE API TESTS ABOVE CANNOT SEE THIS. They prove the server offers
+		// the sets and imports them; they say nothing about whether an operator
+		// can read what a set contains before choosing it, which is the whole
+		// reason the dropdown was replaced. A step that renders zero cards
+		// answers every API assertion in this file and is completely broken.
+		// 🔴 NOT `${BASE}`. That constant is the APP path (`/apps/decidiq`), which
+		// every other test here uses to build API URLs; joining the settings
+		// route onto it lands on `/apps/decidiq/settings/admin/decidiq`, a
+		// vue-router route that renders the app shell. The admin section lives
+		// at the server root.
+		await page.goto('/settings/admin/decidiq', {
+			waitUntil: 'domcontentloaded',
+		})
+		await page.waitForSelector('[data-testid="admin-root"]', { timeout: 15_000 })
+
+		// Setup is normally opened by CnAppRoot while a step is outstanding, and
+		// never again once it is settled. This button is the way back in.
+		await page.getByTestId('cn-admin-run-setup').click()
+		await expect(
+			page.locator('[data-testid-modal="cn-wizard-dialog"]'),
+		).toBeVisible()
+
+		// Past the welcome step. The button is addressed by testid because its
+		// LABEL is translated: clicking "Next" passes in English and times out
+		// in Dutch.
+		await page.getByTestId('cn-wizard-next').click()
+
+		const step = page.locator(
+			'.cn-wizard-dialog__step-body[data-step-id="example-set"]',
+		)
+		await expect(step).toBeVisible()
+
+		const cards = step.locator('.cn-choice-cards__option')
+		// none + four shipped sets, and the generated dataset when it ships.
+		await expect
+			.poll(async () => await cards.count(), { timeout: 10_000 })
+			.toBeGreaterThanOrEqual(5)
+
+		// The description is the point of the card. A grid of titles is the
+		// dropdown again, with more whitespace.
+		await expect(step.getByText('A council with committees')).toBeVisible()
+
+		// `multiple` means checkboxes, and two of them can be on at once.
+		const inputs = step.locator('.cn-choice-cards__input')
+		await expect(inputs.first()).toHaveAttribute('type', 'checkbox')
+
+		const municipality = step.locator(
+			'.cn-choice-cards__option:has-text("Municipality") .cn-choice-cards__input',
+		)
+		const worksCouncil = step.locator(
+			'.cn-choice-cards__option:has-text("Works council") .cn-choice-cards__input',
+		)
+		await municipality.check()
+		await worksCouncil.check()
+		await expect(municipality).toBeChecked()
+		await expect(worksCouncil).toBeChecked()
+
+		// Leave the instance where the other tests in this file expect it: a
+		// settled choice that imports nothing.
+		await municipality.uncheck()
+		await worksCouncil.uncheck()
+		await step
+			.locator(
+				'.cn-choice-cards__option:has-text("None") .cn-choice-cards__input',
+			)
+			.check()
+		await page.getByTestId('cn-wizard-next').click()
+
+		await expect(
+			page.locator(
+				'.cn-wizard-dialog__step-body[data-step-id="load-example-set"]',
+			),
+		).toBeVisible()
 	})
 })

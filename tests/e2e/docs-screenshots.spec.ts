@@ -44,10 +44,12 @@
  * Pattern reference: ADR-030 (hydra/openspec/architecture/).
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import * as path from 'path'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
-import { waitForContentReady } from './visual/_visual-helpers'
+import * as path from 'path'
+import { waitForContentReady } from './visual/_visual-helpers.ts'
 
 const SHOT_ROOT = path.resolve(
 	__dirname,

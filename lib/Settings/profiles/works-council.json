@@ -13,7 +13,8 @@
 			"label": "Works council",
 			"description": "A works council inside a company. Advice requests, consent requests and staff consultation.",
 			"order": 4,
-			"objectCount": 45
+			"objectCount": 45,
+			"icon": "HandshakeOutline"
 		},
 		"description": "An example set an operator picks in the first-time setup wizard (ADR-042). NEVER imported on install: the register.d fragments declare schemas only, so a bare install has zero objects. Every object carries @self.configuration/register/schema so the import resolves the live decidiq register WITHOUT this descriptor declaring components.registers. That is deliberate and load-bearing: ImportHandler::importRegister() calls setApplication($appId) unconditionally on an existing register, so a descriptor that declared the register would re-point the decidiq register at this profile config id and hydrate over its authorization baseline. Verified on a live instance: importing this shape left application=decidiq, version and authorization byte-identical. Import is idempotent by slug, so loading a profile twice adds nothing. Descriptors live in this SUBDIRECTORY on purpose: RegisterDescriptorService scans lib/Settings/*.json non-recursively and matches descriptors by declared register slug, so four profile files in lib/Settings would collide with each other and with decidesk_register.json.",
 		"seedData": {
@@ -294,6 +295,73 @@
 						"parentBody": "raad-van-bestuur-acme-bv"
 					}
 				],
+				"governance-consultation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "achterban-or-thuiswerkregeling",
+						"subject": "Wat vindt de achterban van de voorgestelde thuiswerkregeling (instemmingsaanvraag art. 27 WOR)?",
+						"audienceType": "user-group",
+						"binding": false,
+						"deadline": "2026-02-15T17:00:00Z",
+						"description": "Informele raadpleging van de achterban voor het OR-besluit over de instemmingsaanvraag.",
+						"responseType": "open-text",
+						"audienceGroup": "or-achterban-acme",
+						"agendaItem": "or-2026-01-achterban",
+						"opensAt": "2026-02-01T09:00:00Z",
+						"anonymousResponses": true,
+						"lifecycle": "processed",
+						"results": {
+							"audienceSize": 12,
+							"responseCount": 9,
+							"openTextDigest": "Meerderheid positief. Zorgen over de bereikbaarheid van de servicedesk en over de productieploegen, die niet thuis kunnen werken."
+						}
+					}
+				],
+				"governance-consultation-response": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-1",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Positief, maar de regeling moet ook voor de productieploegen een alternatief bieden.",
+						"submittedAt": "2026-02-03T12:05:00Z",
+						"respondentId": "pdevries",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-2",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Twee vaste thuiswerkdagen werkt goed. Graag wel duidelijkheid over de bezetting van de servicedesk.",
+						"submittedAt": "2026-02-05T08:40:00Z",
+						"respondentId": "mbakker",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-3",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Ik mis een regeling voor de reiskostenvergoeding op thuiswerkdagen.",
+						"submittedAt": "2026-02-11T16:20:00Z",
+						"respondentId": "janssen",
+						"status": "submitted"
+					}
+				],
 				"meeting": [
 					{
 						"@self": {
@@ -351,69 +419,6 @@
 						"quorumRequired": 4,
 						"chair": "or-sanne-de-groot",
 						"isPublic": false
-					}
-				],
-				"member-consultation": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "member-consultation"
-						},
-						"slug": "achterban-or-thuiswerkregeling",
-						"question": "Wat vindt de achterban van de voorgestelde thuiswerkregeling (instemmingsaanvraag art. 27 WOR)?",
-						"description": "Informele raadpleging van de achterban voor het OR-besluit over de instemmingsaanvraag.",
-						"responseType": "open-text",
-						"audienceType": "nc-group",
-						"audienceGroup": "or-achterban-acme",
-						"agendaItem": "or-2026-01-achterban",
-						"opensAt": "2026-02-01T09:00:00Z",
-						"closesAt": "2026-02-15T17:00:00Z",
-						"anonymousResponses": true,
-						"lifecycle": "processed",
-						"results": {
-							"audienceSize": 12,
-							"responseCount": 9,
-							"openTextDigest": "Meerderheid positief. Zorgen over de bereikbaarheid van de servicedesk en over de productieploegen, die niet thuis kunnen werken."
-						}
-					}
-				],
-				"member-consultation-response": [
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "member-consultation-response"
-						},
-						"slug": "respons-or-achterban-1",
-						"consultation": "achterban-or-thuiswerkregeling",
-						"respondentId": "pdevries",
-						"openText": "Positief, maar de regeling moet ook voor de productieploegen een alternatief bieden.",
-						"submittedAt": "2026-02-03T12:05:00Z"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "member-consultation-response"
-						},
-						"slug": "respons-or-achterban-2",
-						"consultation": "achterban-or-thuiswerkregeling",
-						"respondentId": "mbakker",
-						"openText": "Twee vaste thuiswerkdagen werkt goed. Graag wel duidelijkheid over de bezetting van de servicedesk.",
-						"submittedAt": "2026-02-05T08:40:00Z"
-					},
-					{
-						"@self": {
-							"configuration": "decidiq",
-							"register": "decidiq",
-							"schema": "member-consultation-response"
-						},
-						"slug": "respons-or-achterban-3",
-						"consultation": "achterban-or-thuiswerkregeling",
-						"respondentId": "janssen",
-						"openText": "Ik mis een regeling voor de reiskostenvergoeding op thuiswerkdagen.",
-						"submittedAt": "2026-02-11T16:20:00Z"
 					}
 				],
 				"membership": [

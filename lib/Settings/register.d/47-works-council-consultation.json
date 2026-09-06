@@ -9,7 +9,7 @@
         "icon": "ClipboardTextClockOutline",
         "version": "0.1.1",
         "title": "ConsultationRequest",
-        "description": "A WOR consultation traject (adviesaanvraag art. 25 / instemmingsverzoek art. 27 WOR): a statutory request/response exchange in which the bestuurder submits a request to the ondernemingsraad (a universal GovernanceBody with bodyType works-council), it is treated in overlegvergaderingen and optionally preceded by an achterbanraadpleging, formally answered with an advies/instemming, and closed by recording the bestuurder's decision — including the art. 25 lid 6 one-month opschortingstermijn when the bestuurder deviates from the advice. The traject is a declarative lifecycle on this one schema (ADR-031). It is explicitly NOT the citizen-participation PublicConsultation (public opinion gathering) and NOT a Decision subtype (it may link to a routed Decision via relatedDecision). CONSTRAINT (REQ-WCC-006): opschortingTot applies to an adviesaanvraag whose besluitOutcome is afwijkend-van-advies ONLY (never to instemmingsverzoeken or besluiten conform advies) and is derived as besluitDate + 1 month — this conditional derivation is not expressed with a composition keyword (no allOf/anyOf/oneOf ever) and is enforced at besluit-recording time (dialog + server-side validation, design D3 fallback), documented here. Submitted documents attach via the Files leaf / DigitalDocument relations. Confidentiality is high: no public publication surface is introduced (deliberate contrast with the toezeggingenlijst); objects stay behind OR RBAC. ADR-006 addendum (consultation-discriminator, 2026-08-19): exempted from folding into PublicConsultation as a genuinely distinct concept (10% measured field overlap, no public-authorization block, x-schema-org Action vs. Event, live constituencyConsultation reference to MemberConsultation) — see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md.",
+        "description": "A WOR consultation traject (adviesaanvraag art. 25 / instemmingsverzoek art. 27 WOR): a statutory request/response exchange in which the bestuurder submits a request to the ondernemingsraad (a universal GovernanceBody with bodyType works-council), it is treated in overlegvergaderingen and optionally preceded by an achterbanraadpleging, formally answered with an advies/instemming, and closed by recording the bestuurder's decision, including the art. 25 lid 6 one-month opschortingstermijn when the bestuurder deviates from the advice. The traject is a declarative lifecycle on this one schema (ADR-031). It is explicitly NOT the citizen-participation PublicConsultation (public opinion gathering) and NOT a Decision subtype (it may link to a routed Decision via relatedDecision). CONSTRAINT: opschortingTot applies to an adviesaanvraag whose besluitOutcome is afwijkend-van-advies ONLY (never to instemmingsverzoeken or besluiten conform advies) and is derived as besluitDate + 1 month, this conditional derivation is not expressed with a composition keyword (no allOf/anyOf/oneOf ever) and is enforced at besluit-recording time (dialog + server-side validation, design D3 fallback), documented here. Submitted documents attach via the Files leaf / DigitalDocument relations. Confidentiality is high: no public publication surface is introduced (deliberate contrast with the toezeggingenlijst); objects stay behind OR RBAC. ADR-006 addendum (consultation-discriminator, 2026-08-19): exempted from folding into PublicConsultation as a genuinely distinct concept (10% measured field overlap, no public-authorization block, x-schema-org Action vs. Event, live constituencyConsultation reference to MemberConsultation): see openspec/architecture/adr-006-mode-adaptation-over-parallel-entities.md.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -304,7 +304,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "governance-body",
-            "description": "Reference to the ondernemingsraad the request is directed to — a universal GovernanceBody (REQ-WCC-009: bodyType works-council, added additively to the base register; never a parallel schema). Required."
+            "description": "Reference to the ondernemingsraad the request is directed to: a universal GovernanceBody (: bodyType works-council, added additively to the base register; never a parallel schema). Required."
           },
           "receivedDate": {
             "title": "Received date",
@@ -345,14 +345,14 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Meeting",
-            "description": "Optional reference to the overlegvergadering (WOR art. 25 lid 4) where the traject is discussed. Reuses the universal Meeting schema — no works-council-specific meeting schema exists (REQ-WCC-004). The meeting's agenda item links back via agendaItem."
+            "description": "Optional reference to the overlegvergadering (WOR art. 25 lid 4) where the traject is discussed. Reuses the universal Meeting schema: no works-council-specific meeting schema exists. The meeting's agenda item links back via agendaItem."
           },
           "agendaItem": {
             "title": "Agenda item",
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Optional reference to the AgendaItem under which the traject is treated in the overlegvergadering. Reuses the universal AgendaItem schema (REQ-WCC-004)."
+            "description": "Optional reference to the AgendaItem under which the traject is treated in the overlegvergadering. Reuses the universal AgendaItem schema."
           },
           "constituencyConsultation": {
             "title": "Achterbanraadpleging",
@@ -360,7 +360,7 @@
             "format": "uuid",
             "$ref": "member-consultation",
             "nullable": true,
-            "description": "Optional reference to the raadpleging/poll object owned by the constituency-consultation capability (member-consultation slug) that the OR started for this traject (REQ-WCC-003). This capability defines NO poll mechanics of its own (no question schema, no response tallying) — it only points at one. The relation is optional (nullable, not required), so a traject with no raadpleging keeps a usable plain lifecycle status and a detail page with an empty reference."
+            "description": "Optional reference to the raadpleging/poll object owned by the constituency-consultation capability (member-consultation slug) that the OR started for this traject. This capability defines NO poll mechanics of its own (no question schema, no response tallying): it only points at one. The relation is optional (nullable, not required), so a traject with no raadpleging keeps a usable plain lifecycle status and a detail page with an empty reference."
           },
           "responseOutcome": {
             "title": "Response outcome",
@@ -403,7 +403,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "Decision",
-            "description": "Optional reference to a routed Decision when the underlying ondernemersbesluit is modelled as one (REQ-WCC-005). When set, the OR's formal response is recorded on that Decision's advisory DecisionStage per the existing decision-methods method=advice semantics (actor sets the non-binding 'advised' outcome directly); this capability introduces no new outcome-derivation mechanism."
+            "description": "Optional reference to a routed Decision when the underlying ondernemersbesluit is modelled as one. When set, the OR's formal response is recorded on that Decision's advisory DecisionStage per the existing decision-methods method=advice semantics (actor sets the non-binding 'advised' outcome directly); this capability introduces no new outcome-derivation mechanism."
           },
           "decisionOutcome": {
             "title": "Besluit outcome",
@@ -438,7 +438,7 @@
             "type": "string",
             "format": "date",
             "facetable": true,
-            "description": "The art. 25 lid 6 opschortingstermijn end date: the bestuurder must suspend execution for one month when deviating from the OR advice. Derived as besluitDate + 1 month for an adviesaanvraag whose besluitOutcome is afwijkend-van-advies ONLY — NEVER for instemmingsverzoeken or besluiten conform advies (REQ-WCC-006). This conditional derivation is expressed WITHOUT any composition keyword (no allOf/anyOf/oneOf); per design D3 it is set/validated at besluit-recording time (dialog + server-side validation) rather than by an unproven x-openregister-calculations rule, and the detail page surfaces the running termijn. Empty when no opschorting applies.",
+            "description": "The art. 25 lid 6 opschortingstermijn end date: the bestuurder must suspend execution for one month when deviating from the OR advice. Derived as besluitDate + 1 month for an adviesaanvraag whose besluitOutcome is afwijkend-van-advies ONLY. NEVER for instemmingsverzoeken or besluiten conform advies. This conditional derivation is expressed WITHOUT any composition keyword (no allOf/anyOf/oneOf); per design D3 it is set/validated at besluit-recording time (dialog + server-side validation) rather than by an unproven x-openregister-calculations rule, and the detail page surfaces the running termijn. Empty when no opschorting applies.",
             "example": "2026-04-10"
           }
         }

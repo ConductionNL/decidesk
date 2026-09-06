@@ -53,6 +53,29 @@ use Psr\Log\LoggerInterface;
 class DecisionIntegrationAuthorizationGuard {
 
 	/**
+	 * The caller may read this Decision's outcome envelope.
+	 *
+	 * @var string
+	 */
+	public const READ_ALLOWED = 'allowed';
+
+	/**
+	 * The caller may NOT read this Decision's outcome envelope.
+	 *
+	 * @var string
+	 */
+	public const READ_DENIED = 'denied';
+
+	/**
+	 * The question could not be answered — the Decision could not be resolved
+	 * at all. Not the same fact as a refusal; see
+	 * {@see self::resolveOutcomeReadAccess()}.
+	 *
+	 * @var string
+	 */
+	public const READ_UNRESOLVED = 'unresolved';
+
+	/**
 	 * Construct the guard.
 	 *
 	 * The ObjectService is resolved lazily through the container — exactly as
@@ -107,8 +130,39 @@ class DecisionIntegrationAuthorizationGuard {
 	 * @spec openspec/changes/signature-and-outcome-authorization-guard/specs/signature-and-outcome-authorization/spec.md#requirement-req-dcdh-101-only-the-raising-consumer-an-admin-or-any-caller-of-a-published-decision-may-read-an-outcome-envelope
 	 */
 	public function isAuthorizedToReadOutcome(string $decisionId, string $callerUid): bool {
+		return ($this->resolveOutcomeReadAccess(
+			decisionId: $decisionId,
+			callerUid: $callerUid
+		) === self::READ_ALLOWED);
+	}//end isAuthorizedToReadOutcome()
+
+	/**
+	 * The outcome-read rule of {@see self::isAuthorizedToReadOutcome()}, with
+	 * "I could not tell" reported instead of folded into "no".
+	 *
+	 * SAME RULE, ONE MORE ANSWER. The boolean above is this method with
+	 * `unresolved` collapsed onto `denied`, which is right for an HTTP caller:
+	 * a request either proceeds or gets a 403, and failing closed is the only
+	 * safe collapse. It is NOT right for a caller that has to decide whether to
+	 * come back. `DecisionStateRequestedListener` serves a consumer's recovery
+	 * heartbeat, and there "OpenRegister was unreachable for a moment" and "you
+	 * may not see this Decision" call for opposite actions: wait, versus stop
+	 * waiting and say why. Collapsing them would make a transient outage fail a
+	 * consumer's run on an authorization error it never had.
+	 *
+	 * The rule itself is not restated — the boolean now delegates here, so the
+	 * HTTP path and the event path cannot come to disagree about who may read.
+	 *
+	 * @param string $decisionId UUID of the Decision
+	 * @param string $callerUid Nextcloud UID of the caller
+	 *
+	 * @return string One of self::READ_ALLOWED, self::READ_DENIED, self::READ_UNRESOLVED
+	 *
+	 * @spec openspec/changes/decision-state-read-seam/specs/decidesk-decision-events/spec.md
+	 */
+	public function resolveOutcomeReadAccess(string $decisionId, string $callerUid): string {
 		if ($decisionId === '' || $callerUid === '') {
-			return false;
+			return self::READ_DENIED;
 		}
 
 		$decision = $this->loadDecisionForGuard(
@@ -118,24 +172,29 @@ class DecisionIntegrationAuthorizationGuard {
 		);
 
 		if ($decision === false) {
-			// Could not be resolved — fail closed.
-			return false;
+			// Could not be resolved. An HTTP caller is denied (fail closed);
+			// a caller that can come back is told to.
+			return self::READ_UNRESOLVED;
 		}
 
 		if ($decision === null) {
 			// Not found — let getOutcomeEnvelope() answer 404 instead of
 			// converting a miss into a 403.
-			return true;
+			return self::READ_ALLOWED;
 		}
 
 		// (a) The raising consumer.
 		if ($this->isDecisionOwner(decision: $decision, callerUid: $callerUid) === true) {
-			return true;
+			return self::READ_ALLOWED;
 		}
 
 		// (b) A published decision is a public governance record.
-		return ((string)($decision['isPublished'] ?? '') === 'public');
-	}//end isAuthorizedToReadOutcome()
+		if ((string)($decision['isPublished'] ?? '') === 'public') {
+			return self::READ_ALLOWED;
+		}
+
+		return self::READ_DENIED;
+	}//end resolveOutcomeReadAccess()
 
 	/**
 	 * Authorize a WRITE of one Decision's outcome callback (REQ-DCDH-102).

@@ -119,8 +119,10 @@ import {
 	createHostDecision,
 	decisionBucket,
 	isProposal,
+	listDecisionTypes,
 	listHostDecisions,
 	objId,
+	proposalFormSchema,
 } from './decisionLink.js'
 
 const DASHBOARD_SURFACES = ['user-dashboard', 'app-dashboard']
@@ -165,6 +167,7 @@ export default {
 	data() {
 		return {
 			decisions: [],
+			decisionTypes: null,
 			loading: false,
 			creating: false,
 			error: '',
@@ -270,38 +273,13 @@ export default {
 		},
 
 		/**
-		 * Minimal schema for the create-proposal form (title + body + type).
+		 * The picker offers the REGISTRY's vocabulary, not a hardcoded list:
+		 * a type an administrator adds appears here without a release.
 		 *
 		 * @spec openspec/specs/decidesk-contract-decision-hub/spec.md — REQ-DCDH-002 create-proposal form schema.
 		 */
 		createSchema() {
-			return {
-				title: t('decidiq', 'Proposal'),
-				properties: {
-					title: { type: 'string', title: t('decidiq', 'Title') },
-					text: {
-						type: 'string',
-						title: t('decidiq', 'Rationale'),
-						widget: 'textarea',
-					},
-
-					decisionType: {
-						type: 'string',
-						title: t('decidiq', 'Type'),
-						enum: [
-							'motion',
-							'policy',
-							'report-adoption',
-							'appointment',
-							'meeting-outcome',
-						],
-
-						default: 'motion',
-					},
-				},
-
-				required: ['title'],
-			}
+			return proposalFormSchema(this.decisionTypes)
 		},
 	},
 
@@ -318,6 +296,10 @@ export default {
 				this.refresh()
 			},
 		},
+	},
+
+	created() {
+		this.loadDecisionTypes()
 	},
 
 	methods: {
@@ -410,6 +392,19 @@ export default {
 			if (this.hostObjectId) {
 				this.createOpen = true
 			}
+		},
+
+		/**
+		 * Load the decisionType vocabulary from the registry endpoint.
+		 *
+		 * Fire-and-forget from created(): until it answers, the picker offers
+		 * the shipped seed, and the schema is reactive so the configured
+		 * vocabulary replaces it the moment it arrives.
+		 *
+		 * @spec openspec/specs/decidesk-contract-decision-hub/spec.md — REQ-DCDH-002 create-proposal form schema.
+		 */
+		async loadDecisionTypes() {
+			this.decisionTypes = await listDecisionTypes()
 		},
 
 		/** @spec openspec/specs/decidesk-contract-decision-hub/spec.md — REQ-DCDH-001 load decisions for the host object. */

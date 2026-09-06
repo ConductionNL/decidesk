@@ -12,17 +12,17 @@
  * @spec openspec/specs/user-settings/spec.md
  */
 
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-	DEFAULT_REMINDER_TIMES,
-	DISPLAY_DEFAULTS,
-	REMINDER_TIME_OPTIONS,
 	channelsToDeliveryMethod,
+	DEFAULT_REMINDER_TIMES,
 	deliveryMethodToChannels,
+	DISPLAY_DEFAULTS,
 	fetchDisplayPreference,
 	fetchNotificationPreference,
 	formatDate,
 	isValidEmail,
+	REMINDER_TIME_OPTIONS,
 	saveDisplayPreference,
 	saveNotificationPreference,
 	validateDelegation,

@@ -9,7 +9,7 @@
         "icon": "AccountGroupOutline",
         "version": "0.1.0",
         "title": "BodyParticipation",
-        "description": "A participation edge (W3C org ontology / Popolo org:Membership with an organisation as member) recording that a participating GovernanceBody (a municipal council/organisation) participates in a shared GovernanceBody (a gemeenschappelijke regeling / joint body per Wgr). Carries per-edge master data — seats, org-level votingWeight agreed in the regeling, and toetreding/uittreding dates — and history (a withdrawn participant stays visible as a record). A participation is ACTIVE when uittredingsDatum is null or lies in the future (the Membership active-window semantics, REQ-SGB-001); this active-window predicate is a read-side evaluation, not a lifecycle state, so this schema declares no x-openregister-lifecycle. votingWeight is org-level master data surfaced as the suggested default when creating a Membership in the shared body (REQ-SGB-008) and is NEVER read by any vote-computation path — weighted voting reuses the existing Membership votingWeight machinery per meeting-attendees REQ-MAT-006.",
+        "description": "A participation edge (W3C org ontology / Popolo org:Membership with an organisation as member) recording that a participating GovernanceBody (a municipal council/organisation) participates in a shared GovernanceBody (a gemeenschappelijke regeling / joint body per Wgr). Carries per-edge master data: seats, org-level votingWeight agreed in the regeling, and toetreding/uittreding dates, and history (a withdrawn participant stays visible as a record). A participation is ACTIVE when uittredingsDatum is null or lies in the future (the Membership active-window semantics); this active-window predicate is a read-side evaluation, not a lifecycle state, so this schema declares no x-openregister-lifecycle. votingWeight is org-level master data surfaced as the suggested default when creating a Membership in the shared body and is NEVER read by any vote-computation path: weighted voting reuses the existing Membership votingWeight machinery per meeting-attendees.",
         "type": "object",
         "x-schema-org": "org:Membership",
         "x-openregister": {
@@ -51,7 +51,7 @@
             "title": "Voting weight",
             "type": "number",
             "default": 1,
-            "description": "Org-level vote weight agreed in the regeling (master data, REQ-SGB-008). Surfaced as the suggested default when creating a Membership in the shared body; NEVER read by any vote-computation path.",
+            "description": "Org-level vote weight agreed in the regeling (master data). Surfaced as the suggested default when creating a Membership in the shared body; NEVER read by any vote-computation path.",
             "example": 2
           },
           "accessionDate": {
@@ -68,7 +68,7 @@
             "format": "date-time",
             "nullable": true,
             "facetable": true,
-            "description": "Date-time of withdrawal (uittreding). Null while participating; a participation is active when this is null or in the future (REQ-SGB-001 active-window)."
+            "description": "Date-time of withdrawal (uittreding). Null while participating; a participation is active when this is null or in the future (active-window)."
           },
           "label": {
             "title": "Label",
@@ -82,7 +82,7 @@
         "icon": "CommentQuoteOutline",
         "version": "0.1.0",
         "title": "Zienswijzeronde",
-        "description": "A zienswijzeprocedure round (schema:Action) opened by a shared GovernanceBody on a document or decision (e.g. de ontwerpbegroting, Wgr art. 35): what the body asks, on what subject, by when. Opening the ronde fans out to one Zienswijze per active BodyParticipation (imperative ZienswijzerondeService::openRonde, D6 — no dialect creates objects). The subject document(s) attach via OpenRegister's Files leaf (no app-local file storage). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'); Decidiq implements no imperative state machine for it. cyclusStap is a nullable soft reference to the pc-cyclus sibling's cyclus-stap (the GR ontwerpbegroting is a P&C artifact) — the ronde works standalone and either change lands first. decision links the shared body's vaststellingsbesluit after processing (universal Decision model; this capability creates no meetings, agenda items, or decisions).",
+        "description": "A zienswijzeprocedure round (schema:Action) opened by a shared GovernanceBody on a document or decision (e.g. de ontwerpbegroting, Wgr art. 35): what the body asks, on what subject, by when. Opening the ronde fans out to one Zienswijze per active BodyParticipation (imperative ZienswijzerondeService:openRonde, D6, no dialect creates objects). The subject document(s) attach via OpenRegister's Files leaf (no app-local file storage). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'); Decidiq implements no imperative state machine for it. cyclusStap is a nullable soft reference to the pc-cyclus sibling's cyclus-stap (the GR ontwerpbegroting is a P&C artifact): the ronde works standalone and either change lands first. decision links the shared body's vaststellingsbesluit after processing (universal Decision model; this capability creates no meetings, agenda items, or decisions).",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -216,7 +216,7 @@
         "icon": "CommentTextOutline",
         "version": "0.1.0",
         "title": "Zienswijze",
-        "description": "A single participating organisation's zienswijze (schema:Action) within a Zienswijzeronde: its deadline tracking, standpunt, response document (Files leaf), and how the shared body processed it (verwerking). One Zienswijze is generated per active BodyParticipation when the ronde transitions concept -> geopend (ZienswijzerondeService::openRonde, idempotent per ronde+participant, D6). deadline is denormalised from the ronde at generation so the declarative rappels (x-openregister-notifications, filtering non-terminal status + deadline window) fire per zienswijze to reach the right organisation (D5). decision links the participant council's raadsbesluit adopting the zienswijze; the zienswijze itself creates no meetings, agenda items, or decisions (pc-cyclus REQ-PCC-007 linkage discipline). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031); rappels EXCLUSIVELY via x-openregister-notifications (ADR-031, toezeggingen-register pattern) — no imperative dispatch, no bespoke reminder BackgroundJob.",
+        "description": "A single participating organisation's zienswijze (schema:Action) within a Zienswijzeronde: its deadline tracking, standpunt, response document (Files leaf), and how the shared body processed it (verwerking). One Zienswijze is generated per active BodyParticipation when the ronde transitions concept -> geopend (ZienswijzerondeService:openRonde, idempotent per ronde+participant, D6). deadline is denormalised from the ronde at generation so the declarative rappels (x-openregister-notifications, filtering non-terminal status + deadline window) fire per zienswijze to reach the right organisation (D5). decision links the participant council's raadsbesluit adopting the zienswijze; the zienswijze itself creates no meetings, agenda items, or decisions (pc-cyclus linkage discipline). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031); rappels EXCLUSIVELY via x-openregister-notifications (ADR-031, toezeggingen-register pattern): no imperative dispatch, no bespoke reminder BackgroundJob.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -457,7 +457,7 @@
       "Membership": {
         "slug": "membership",
         "version": "0.2.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring fragment 55's Decision delta): this fragment merges ONLY the optional namens property onto the existing membership schema (deep-merge unions it with the base Membership's existing properties). No required field is added and no existing property, enum value, or required-field set is modified, so memberships created before this change stay valid (REQ-SGB-002/003).",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring fragment 55's Decision delta): this fragment merges ONLY the optional namens property onto the existing membership schema (deep-merge unions it with the base Membership's existing properties). No required field is added and no existing property, enum value, or required-field set is modified, so memberships created before this change stay valid.",
         "properties": {
           "onBehalfOf": {
             "title": "Namens",

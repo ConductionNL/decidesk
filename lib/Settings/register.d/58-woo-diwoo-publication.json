@@ -9,7 +9,7 @@
         "icon": "TagOutline",
         "version": "0.1.0",
         "title": "WooCategorieMapping",
-        "description": "A Woo informatiecategorie mapping (REQ-WOO-001): a pure per-type configuration row binding one publishable object type (identified by schema slug or payload kind — meeting-agenda, besluitenlijst, minutes, decision, motie, toezegging, raadsinformatiebrief, regeling) to a TOOI concept URI from the waardelijst woo-informatiecategorieen, so the DiWoo decorator (imperative DiWooMetadataService, out of this declarative-core scope) can resolve the Woo informatiecategorie of a payload at publish time. Mappings are per-type DEFAULTS: a per-object override is captured at publish time and stored in that publication's own diwoo block with provenance default|override (REQ-WOO-002) — the mapping object itself is NEVER edited by a publish action. A mapping whose objectType schema is not installed (sibling change not yet landed) is INERT: it never blocks import, publication, or the coverage report; the coverage view lists it as 'type not installed' rather than a compliance gap (REQ-WOO-001 / REQ-WOO-005). CONSTRAINT: this schema carries only public configuration data — no secrets, no credentials (ADR-064; any push Source credentials live in OpenConnector). Mappings have NO lifecycle (design: 'mappings have no lifecycle; publication lifecycle stays owned by public-publication') — deliberately no x-openregister-lifecycle. objectType is required and unique per row; OR has no cross-object unique constraint, so uniqueness is a review/validation concern and the index sorts by objectType so duplicates are immediately visible.",
+        "description": "A Woo informatiecategorie mapping: a pure per-type configuration row binding one publishable object type (identified by schema slug or payload kind, meeting-agenda, besluitenlijst, minutes, decision, motie, toezegging, raadsinformatiebrief, regeling) to a TOOI concept URI from the waardelijst woo-informatiecategorieen, so the DiWoo decorator (imperative DiWooMetadataService, out of this declarative-core scope) can resolve the Woo informatiecategorie of a payload at publish time. Mappings are per-type DEFAULTS: a per-object override is captured at publish time and stored in that publication's own diwoo block with provenance default|override, the mapping object itself is NEVER edited by a publish action. A mapping whose objectType schema is not installed (sibling change not yet landed) is INERT: it never blocks import, publication, or the coverage report; the coverage view lists it as 'type not installed' rather than a compliance gap. CONSTRAINT: this schema carries only public configuration data, no secrets, no credentials (ADR-064; any push Source credentials live in OpenConnector). Mappings have NO lifecycle (design: 'mappings have no lifecycle; publication lifecycle stays owned by public-publication'), deliberately no x-openregister-lifecycle. objectType is required and unique per row; OR has no cross-object unique constraint, so uniqueness is a review/validation concern and the index sorts by objectType so duplicates are immediately visible.",
         "type": "object",
         "x-schema-org": "schema:DefinedTerm",
         "x-openregister": {
@@ -58,7 +58,7 @@
             "title": "Object type",
             "type": "string",
             "facetable": true,
-            "description": "The publishable object type this row maps, identified by schema slug or payload kind. Required and unique per row (OR has no cross-object unique constraint — uniqueness is a review/validation concern; the index sorts by objectType so duplicates are immediately visible). A row whose type schema is not installed is inert (REQ-WOO-001).",
+            "description": "The publishable object type this row maps, identified by schema slug or payload kind. Required and unique per row (OR has no cross-object unique constraint: uniqueness is a review/validation concern; the index sorts by objectType so duplicates are immediately visible). A row whose type schema is not installed is inert.",
             "enum": [
               "meeting-agenda",
               "decision-list",
@@ -76,7 +76,7 @@
             "type": "string",
             "format": "uri",
             "pattern": "^https://identifier\\.overheid\\.nl/tooi/",
-            "description": "TOOI concept URI from the published waardelijst woo-informatiecategorieen (REQ-WOO-001). Pattern-validated against the https://identifier.overheid.nl/tooi/ prefix server-side (schema validation rejects any URI outside the TOOI namespace — the 'Invalid TOOI URI refused' scenario). SEEDS SHIP AN OBVIOUS SHAPE-ONLY PLACEHOLDER (segment c_PLACEHOLDER_...); the implementation task copies the exact concept URI verbatim from the published waardelijst — invented ids never ship (design 'TOOI URIs are data, never code'). Required.",
+            "description": "TOOI concept URI from the published waardelijst woo-informatiecategorieen. Pattern-validated against the https://identifier.overheid.nl/tooi/ prefix server-side (schema validation rejects any URI outside the TOOI namespace, the 'Invalid TOOI URI refused' scenario). SEEDS SHIP AN OBVIOUS SHAPE-ONLY PLACEHOLDER (segment c_PLACEHOLDER_...); the implementation task copies the exact concept URI verbatim from the published waardelijst: invented ids never ship (design 'TOOI URIs are data, never code'). Required.",
             "example": "https://identifier.overheid.nl/tooi/def/thes/kern/c_PLACEHOLDER_vergaderstukken-decentrale-overheden"
           },
           "informatiecategorieLabel": {
@@ -89,7 +89,7 @@
             "title": "Active",
             "type": "boolean",
             "facetable": true,
-            "description": "Whether this mapping is active. Only an active mapping is used by the decorator to resolve a payload's informatiecategorie (REQ-WOO-002); an inactive mapping leaves the type unmapped and is counted by the coverage KPI (REQ-WOO-005). Required.",
+            "description": "Whether this mapping is active. Only an active mapping is used by the decorator to resolve a payload's informatiecategorie; an inactive mapping leaves the type unmapped and is counted by the coverage KPI. Required.",
             "example": true
           },
           "notes": {
@@ -104,7 +104,7 @@
         "icon": "OfficeBuildingOutline",
         "version": "0.1.0",
         "title": "WooBestuursorgaan",
-        "description": "A per-governance-body bestuursorgaan configuration (REQ-WOO-006, 'admin settings shape'): binds one GovernanceBody to its bestuursorgaan TOOI organization identifier (the gemeente code convention, e.g. gm0344, the SAME org-identity convention the records-management-archiving MDTO archiefvormer uses — one identity convention across archiving and Woo). The DiWoo decorator (imperative, out of this declarative-core scope) stamps diwoo.bestuursorgaan from this override when publishing an object of the matching body; the instance-wide default bestuursorgaan is app config managed in the admin Woo section (not an OR object). CONSTRAINT: public configuration only — no secrets (ADR-064). One row per governance body; governanceBody is required and unique. No lifecycle (config object).",
+        "description": "A per-governance-body bestuursorgaan configuration ('admin settings shape'): binds one GovernanceBody to its bestuursorgaan TOOI organization identifier (the gemeente code convention, e.g. gm0344, the SAME org-identity convention the records-management-archiving MDTO archiefvormer uses: one identity convention across archiving and Woo). The DiWoo decorator (imperative, out of this declarative-core scope) stamps diwoo.bestuursorgaan from this override when publishing an object of the matching body; the instance-wide default bestuursorgaan is app config managed in the admin Woo section (not an OR object). CONSTRAINT: public configuration only, no secrets (ADR-064). One row per governance body; governanceBody is required and unique. No lifecycle (config object).",
         "type": "object",
         "x-schema-org": "schema:GovernmentOrganization",
         "x-openregister": {
@@ -130,12 +130,12 @@
             "type": "string",
             "format": "uuid",
             "$ref": "governance-body",
-            "description": "Reference to the GovernanceBody this bestuursorgaan identifier applies to (REQ-WOO-006 per-body override). Required and unique per row (OR has no cross-object unique constraint — uniqueness is a review/validation concern)."
+            "description": "Reference to the GovernanceBody this bestuursorgaan identifier applies to (per-body override). Required and unique per row (OR has no cross-object unique constraint: uniqueness is a review/validation concern)."
           },
           "governingBody": {
             "title": "Bestuursorgaan (TOOI id)",
             "type": "string",
-            "description": "TOOI organization identifier of the publishing governance body — the gemeente code convention (e.g. gm0344), the same convention the records-management-archiving MDTO archiefvormer uses. Statutory Dutch term kept (bestuursorgaan). SEEDS SHIP AN EXAMPLE id only; set the real bestuursorgaan identifier of this body at implementation. Required.",
+            "description": "TOOI organization identifier of the publishing governance body: the gemeente code convention (e.g. gm0344), the same convention the records-management-archiving MDTO archiefvormer uses. Statutory Dutch term kept (bestuursorgaan). SEEDS SHIP AN EXAMPLE id only; set the real bestuursorgaan identifier of this body at implementation. Required.",
             "example": "gm0344"
           },
           "label": {
