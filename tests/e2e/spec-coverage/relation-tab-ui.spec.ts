@@ -38,14 +38,28 @@ import { BASE_URL as BASE } from '../base-url.ts'
  * started being invisible, which is strictly worse, and the skip message is
  * what hid it.
  *
- * This does not decide the data model — that is #957's call, and these tests
- * stay skipped until it lands. It only makes the reason true.
+ * ✅ #957 LANDED (merged 2026-08-29), so the two tests above no longer wait on
+ * it. ADR-005 folded `motion` and `amendment` into the single `Decision`
+ * supertype discriminated by `decisionType`, which is exactly how the manifest
+ * binds the surfaces: MotionDetail and AmendmentDetail both declare
+ * `schema: "decision"`, and the Motions index adds `filter: {decisionType:
+ * "motion"}`. The register carries no `motion` schema and never will again.
+ *
+ * So those tests now ask for what the pages ask for: a decision of the right
+ * decisionType. Querying the retired slug kept them dark for months behind a
+ * reason that was true and permanent, which is the quietest way for a test to
+ * stop existing.
  */
 async function getFirstObject(
 	page: Page,
 	schema: string,
+	filters: Record<string, string> = {},
 ): Promise<Record<string, unknown> | string> {
-	const url = `${BASE}/index.php/apps/openregister/api/objects/decidiq/${schema}?_limit=1`
+	// Property filters are plain query params; only CONTROL params take the
+	// underscore prefix (`_limit`). A bare `limit` is read as a property filter
+	// and matches nothing — the API says so in its own `hint` field.
+	const query = new URLSearchParams({ _limit: '1', ...filters }).toString()
+	const url = `${BASE}/index.php/apps/openregister/api/objects/decidiq/${schema}?${query}`
 	const resp = await page.request.get(url, {
 		headers: { Accept: 'application/json' },
 	})
@@ -58,7 +72,10 @@ async function getFirstObject(
 	const body = await resp.json()
 	const items = body.results ?? body.items ?? []
 	if (!items[0]) {
-		return `register 'decidiq' has schema '${schema}' but it holds no objects — a seeding gap`
+		const where = Object.entries(filters)
+			.map(([k, v]) => `${k}=${v}`)
+			.join(', ')
+		return `register 'decidiq' has schema '${schema}' but no object matches ${where || 'any filter'} — a seeding gap`
 	}
 	return items[0]
 }
@@ -111,7 +128,9 @@ test('meeting detail has participants tab in sidebar', async ({ page }) => {
 
 // @e2e openspec/specs/relation-tab-ui/spec.md#vote-caster-resolves-to-a-display-name
 test('motion detail renders votes tab area', async ({ page }) => {
-	const first = await getFirstObject(page, 'motion')
+	const first = await getFirstObject(page, 'decision', {
+		decisionType: 'motion',
+	})
 	test.skip(noObject(first), noObject(first) ? first : '')
 	const obj = first as Record<string, unknown>
 	const motionId = obj.id ?? (obj['@self'] as Record<string, unknown>)?.id
@@ -124,7 +143,9 @@ test('motion detail renders votes tab area', async ({ page }) => {
 
 // @e2e openspec/specs/relation-tab-ui/spec.md#open-the-parent-motion
 test('amendment detail renders with parent motion tab', async ({ page }) => {
-	const first = await getFirstObject(page, 'amendment')
+	const first = await getFirstObject(page, 'decision', {
+		decisionType: 'amendment',
+	})
 	test.skip(noObject(first), noObject(first) ? first : '')
 	const obj = first as Record<string, unknown>
 	const amendmentId = obj.id ?? (obj['@self'] as Record<string, unknown>)?.id

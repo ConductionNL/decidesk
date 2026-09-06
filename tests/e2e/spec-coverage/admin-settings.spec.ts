@@ -98,6 +98,11 @@ test('Members tab lists body members and offers the Change role action', async (
 	// `getByRole('button').last()` then waited out the full 20 s timeout
 	// looking for an action button the empty row never has. That is the
 	// failure on development at 34fd275.
+	//
+	// ⚠️ It is NOT a budget problem, which is what it first looked like: the
+	// test ran 20.5s against a 20s cap while its four siblings here took 8.9 to
+	// 11.5s. Under test.slow(), given 60s, it failed identically on the same
+	// locator. A timeout that survives a tripled budget is not about time.
 	const rows = tabRoot.locator('[data-testid="cn-object-row"]')
 	if ((await rows.count()) > 0) {
 		await rows.first().hover()
@@ -120,6 +125,15 @@ test('Members tab lists body members and offers the Change role action', async (
 			).toBeVisible()
 			await dialog.locator('[data-testid="member-role-cancel"]').click()
 		}
+	} else {
+		// No members to act on, so assert the empty state rather than falling
+		// through silently. A conditional whose false branch asserts nothing
+		// passes identically whether the widget works or renders nothing at all,
+		// which is how this test could have gone green without ever proving the
+		// members table exists.
+		await expect(
+			tabRoot.locator('[data-testid="cn-object-list-empty"]'),
+		).toBeVisible()
 	}
 })
 
