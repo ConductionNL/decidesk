@@ -254,14 +254,21 @@ class MigrateDocumentsToAgendaItems implements IRepairStep {
 					$saved = $objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::TARGET,
-						object: $this->mapItem(
+						object: $this->coerceToTarget(
 							objectService: $objectService,
-							row: $row,
-							mapping: $mapping,
-							typeId: $typeId,
-							origin: $origin,
-							order: $position,
-							copiedIds: $copiedIds
+							properties: $this->declaredProperties(slug: self::TARGET),
+							// `type` comes from the resolved type id and
+							// `parentItem` from what this run already copied.
+							alreadyResolved: ['type', 'parentItem'],
+							payload: $this->mapItem(
+								objectService: $objectService,
+								row: $row,
+								mapping: $mapping,
+								typeId: $typeId,
+								origin: $origin,
+								order: $position,
+								copiedIds: $copiedIds
+							),
 						),
 					);
 					$existing[$origin]  = true;

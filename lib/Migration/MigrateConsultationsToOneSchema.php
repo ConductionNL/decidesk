@@ -75,6 +75,33 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 	 *
 	 * @var array<string, array<string, mixed>>
 	 */
+	/**
+	 * Lifecycle values one source spells differently from the generic schema.
+	 *
+	 * 🔴 A CARRIED ENUM IS NOT A CARRIED STRING. `advice-request` tracked
+	 * `sent / in-progress / advice-issued / accounted-for / completed /
+	 * not-issued`; `governance-consultation` accepts `draft / open /
+	 * processing / closed / processed / withdrawn / not-issued`. Carrying the
+	 * value verbatim made OpenRegister refuse the whole row with "should be one
+	 * of ... but is 'advice-issued'", reported through `$output->warning()`,
+	 * which does not fail an upgrade. Measured on a live `occ upgrade`: three
+	 * rows, three different values, all refused.
+	 *
+	 * `member-consultation` needs no entry: every value it used is already one
+	 * the generic schema accepts.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const LIFECYCLE = [
+		'advice-request' => [
+			'sent' => 'open',
+			'in-progress' => 'processing',
+			'advice-issued' => 'processed',
+			'accounted-for' => 'closed',
+			'completed' => 'closed',
+		],
+	];
+
 	private const ASKS = [
 		'advice-request' => [
 			'subject' => 'subject',
@@ -291,11 +318,19 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 					$saved = $objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::TARGET,
-						object: $this->mapAsk(
+						object: $this->coerceToTarget(
 							objectService: $objectService,
-							source: $source,
-							mapping: $mapping,
-							origin: $origin
+							properties: $this->declaredProperties(slug: self::TARGET),
+							// These two are resolved by mapAsk() itself; a second pass would
+							// resolve an already-resolved id again.
+							alreadyResolved: ['askingBody', 'audienceBody'],
+							payload: $this->mapAsk(
+								objectService: $objectService,
+								source: $source,
+								mapping: $mapping,
+								origin: $origin,
+								sourceSlug: $schema
+							),
 						),
 					);
 					$existing[$origin] = $this->identifierOf(object: $this->toArray(entity: $saved));
@@ -355,11 +390,17 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::RESPONSE_TARGET,
-						object: $this->mapAnswer(
-							source: $source,
-							mapping: $mapping,
-							origin: $origin,
-							consultation: $parent
+						object: $this->coerceToTarget(
+							objectService: $objectService,
+							properties: $this->declaredProperties(slug: self::RESPONSE_TARGET),
+							// `consultation` is the id of the ask this run just copied.
+							alreadyResolved: ['consultation'],
+							payload: $this->mapAnswer(
+								source: $source,
+								mapping: $mapping,
+								origin: $origin,
+								consultation: $parent
+							),
 						),
 					);
 					$existing[$origin] = $parent;
@@ -437,10 +478,19 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 	 * @param array<string,mixed> $source        The legacy row.
 	 * @param array<string,mixed> $mapping       The source's mapping entry.
 	 * @param string              $origin        The source identifier.
+	 * @param string              $sourceSlug    The schema this row came from,
+	 *                                           which decides whose lifecycle
+	 *                                           vocabulary to translate.
 	 *
 	 * @return array<string,mixed> The generic payload.
 	 */
-	private function mapAsk(object $objectService, array $source, array $mapping, string $origin): array {
+	private function mapAsk(
+		object $objectService,
+		array $source,
+		array $mapping,
+		string $origin,
+		string $sourceSlug
+	): array {
 		$payload = [
 			'subject' => (string)($source[(string)$mapping['subject']] ?? 'Untitled'),
 			'lifecycle' => 'draft',
@@ -484,7 +534,13 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 			$payload['deadline'] = $deadline;
 		}
 
-		return array_merge($payload, $this->carried(source: $source, keys: (array)$mapping['carry']));
+		$carried = $this->carried(source: $source, keys: (array)$mapping['carry']);
+		$lifecycle = (string)($carried['lifecycle'] ?? '');
+		if ($lifecycle !== '' && isset(self::LIFECYCLE[$sourceSlug][$lifecycle]) === true) {
+			$carried['lifecycle'] = self::LIFECYCLE[$sourceSlug][$lifecycle];
+		}
+
+		return array_merge($payload, $carried);
 
 	}//end mapAsk()
 
