@@ -1,6 +1,6 @@
 <?php
 /**
- * Decidiq RenameSwearingInStepType.
+ * Decidiq RenameStepTypes.
  *
  * Rewrites the `swearing-in` onboarding step type to `installation` on stored
  * member onboarding records.
@@ -39,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/plain-words-for-groups-and-the-installation-step/specs/plain-words-for-groups-and-the-installation-step/spec.md
  */
-class RenameSwearingInStepType implements IRepairStep {
+class RenameStepTypes implements IRepairStep {
 	use ReadsLegacyRows;
 
 	/**
@@ -50,25 +50,44 @@ class RenameSwearingInStepType implements IRepairStep {
 	private const REGISTER = 'decidiq';
 
 	/**
-	 * The schema whose steps carry the value.
+	 * The schemas whose steps carry these values.
 	 *
-	 * @var string
+	 * @var array<int,string>
 	 */
-	private const SCHEMA = 'member-onboarding';
+	private const SCHEMAS = ['member-onboarding', 'member-offboarding'];
 
 	/**
-	 * The value as it was stored.
+	 * Stored step type => the value the schema declares today.
 	 *
-	 * @var string
-	 */
-	private const OLD_VALUE = 'swearing-in';
-
-	/**
-	 * The value the schema now declares.
+	 * 🔴 THESE TEN PAIRS USED TO LIVE IN RenameDutchDecidiqValues::VALUE_MAP,
+	 * WHERE THEY COULD NEVER HAVE RUN. That step rewrites by DATABASE COLUMN:
+	 * `DbValueMigrationGateway::columnsOf()` reads `information_schema.columns`
+	 * and `plannedRewrites()` only plans a rewrite for a value-map key that IS a
+	 * column. `stepType` is not a column — it lives inside the `steps` array of
+	 * an object payload — so the block planned nothing, rewrote nothing, and
+	 * reported success. It read as done work that had never been done.
 	 *
-	 * @var string
+	 * `beediging` maps straight to `installation` rather than through the
+	 * intermediate `swearing-in`: an instance that still holds the Dutch value
+	 * never saw the intermediate one, and two hops would only add a state that
+	 * no schema accepts.
+	 *
+	 * @var array<string,string>
 	 */
-	private const NEW_VALUE = 'installation';
+	private const RENAMES = [
+		'account-koppeling' => 'account-linking',
+		'beediging' => 'installation',
+		'exit-bevestiging' => 'exit-confirmation',
+		'fractie-toewijzing' => 'body-group-assignment',
+		'groepen-intrekken' => 'revoke-groups',
+		'groepen-toewijzen' => 'assign-groups',
+		'introductiepakket' => 'induction-pack',
+		'lidmaatschap-beeindigen' => 'end-membership',
+		'nevenfuncties-intake' => 'ancillary-positions-intake',
+		'persoonsgegevens-notitie' => 'personal-data-note',
+		'political-group-assignment' => 'body-group-assignment',
+		'swearing-in' => 'installation',
+	];
 
 	/**
 	 * Constructor.
@@ -158,7 +177,31 @@ class RenameSwearingInStepType implements IRepairStep {
 	private function rewriteAll(object $objectService, IOutput $output): void {
 		$rewritten = 0;
 
-		foreach ($this->readRows(objectService: $objectService, schema: self::SCHEMA, limit: 10000) as $row) {
+		foreach (self::SCHEMAS as $schema) {
+			$rewritten += $this->rewriteSchema(
+				objectService: $objectService,
+				output: $output,
+				schema: $schema
+			);
+		}
+
+		$output->info('Decidiq step-type rename complete: ' . $rewritten . ' record(s).');
+
+	}//end rewriteAll()
+
+	/**
+	 * Rewrite every stored step of one schema.
+	 *
+	 * @param object  $objectService The OR ObjectService.
+	 * @param IOutput $output        Progress reporting.
+	 * @param string  $schema        The schema to walk.
+	 *
+	 * @return int How many records were rewritten.
+	 */
+	private function rewriteSchema(object $objectService, IOutput $output, string $schema): int {
+		$rewritten = 0;
+
+		foreach ($this->readRows(objectService: $objectService, schema: $schema, limit: 10000) as $row) {
 			$identifier = $this->identifierOf(object: $row);
 			$steps      = ($row['steps'] ?? null);
 			if ($identifier === '' || is_array($steps) === false) {
@@ -167,8 +210,13 @@ class RenameSwearingInStepType implements IRepairStep {
 
 			$changed = false;
 			foreach ($steps as $index => $step) {
-				if (is_array($step) === true && ($step['stepType'] ?? null) === self::OLD_VALUE) {
-					$steps[$index]['stepType'] = self::NEW_VALUE;
+				if (is_array($step) === false) {
+					continue;
+				}
+
+				$type = (string)($step['stepType'] ?? '');
+				if (isset(self::RENAMES[$type]) === true) {
+					$steps[$index]['stepType'] = self::RENAMES[$type];
 					$changed                   = true;
 				}
 			}
@@ -183,10 +231,10 @@ class RenameSwearingInStepType implements IRepairStep {
 				unset($payload['@self']);
 
 				$objectService->setRegister(self::REGISTER);
-				$objectService->setSchema(self::SCHEMA);
+				$objectService->setSchema($schema);
 				$objectService->saveObject(
 					register: self::REGISTER,
-					schema: self::SCHEMA,
+					schema: $schema,
 					object: $payload,
 					uuid: $identifier,
 				);
@@ -200,7 +248,7 @@ class RenameSwearingInStepType implements IRepairStep {
 			}//end try
 		}//end foreach
 
-		$output->info('Decidiq step-type rename complete: ' . $rewritten . ' record(s).');
+		return $rewritten;
 
-	}//end rewriteAll()
+	}//end rewriteSchema()
 }//end class

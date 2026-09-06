@@ -3014,7 +3014,7 @@
 								"dueDate": "2026-08-22"
 							},
 							{
-								"stepType": "political-group-assignment",
+								"stepType": "body-group-assignment",
 								"title": "Fractie toewijzen",
 								"status": "open",
 								"mandatory": false,
@@ -3085,7 +3085,7 @@
 								"note": "Geen nevenfuncties opgegeven; stap overgeslagen (verplicht false)."
 							},
 							{
-								"stepType": "political-group-assignment",
+								"stepType": "body-group-assignment",
 								"title": "Fractie toewijzen",
 								"status": "completed",
 								"mandatory": false,
@@ -3156,7 +3156,7 @@
 								"dueDate": "2026-06-15"
 							},
 							{
-								"stepType": "political-group-assignment",
+								"stepType": "body-group-assignment",
 								"title": "Fractie toewijzen",
 								"status": "open",
 								"mandatory": false,

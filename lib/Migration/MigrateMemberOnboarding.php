@@ -115,6 +115,7 @@ class MigrateMemberOnboarding implements IRepairStep {
 	 */
 	private const RENAMED_STEP_TYPES = [
 		'swearing-in' => 'installation',
+		'political-group-assignment' => 'body-group-assignment',
 	];
 
 	private const RENAMED_FIELDS = [
