@@ -89,11 +89,29 @@ export default defineConfig({
 	//                   twice for each genuine one. Restore
 	//                   `process.env.CI ? 1 : 0` once the remaining cost is
 	//                   flake rather than failure.
-	//   globalTimeout — 38 minutes, inside the job's 45. This is the one that
+	//   globalTimeout — 41 minutes, inside the job's 45. This is the one that
 	//                   guarantees a verdict: when Playwright hits it, it stops
 	//                   and exits NON-ZERO with a real summary (passed / failed /
 	//                   did not run). A red with a tally is a measurement; a
 	//                   cancelled job is not.
+	//
+	//                   🔴 RAISE IT **HERE**, NOT IN THE ROOT CONFIG. #1199
+	//                   raised the root `playwright.config.ts` to 41 and the
+	//                   next run still stopped at 2280s, because CI runs THIS
+	//                   file: the shared workflow looks for
+	//                   `${playwright-test-path}/playwright.config.ts` first and
+	//                   only falls back to the repo root, and this repo ships
+	//                   this file precisely so that lookup hits it. Both configs
+	//                   are deliberate — the root one is what `npm run test:e2e`
+	//                   uses locally, with all three projects — so the trap is
+	//                   not a duplicate to delete, it is two files that must be
+	//                   told apart.
+	//
+	//                   The budget is arithmetic, not taste. The job cap is 45
+	//                   and is hard-coded in the shared workflow, not an input.
+	//                   Measured on run 33991029428: 2m25s of setup before
+	//                   Playwright starts and ~10s of uploads after, so 41
+	//                   leaves the suite the most it can have and still report.
 	//
 	// `workers` stays at 1 deliberately. Raising it would halve the wall clock,
 	// but these specs seed and delete objects in one shared OpenRegister
@@ -101,7 +119,7 @@ export default defineConfig({
 	// fabricates failures that belong to the parallelism, not the code.
 	timeout: 20_000,
 	expect: { timeout: 10_000 },
-	globalTimeout: 38 * 60_000,
+	globalTimeout: 41 * 60_000,
 	fullyParallel: false,
 	retries: 0,
 	workers: 1,
