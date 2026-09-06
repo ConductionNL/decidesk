@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Service;
 
 use OCA\Decidiq\Exception\MissingObjectException;
+use OCA\Decidiq\Support\FleetAppId;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\FileService;
 use Psr\Container\ContainerInterface;
@@ -237,7 +238,14 @@ class BoardEvaluationReportService {
 	 */
 	private function tryDocudeskPdf(string $markdown, string $title): ?string {
 		try {
-			$pdfService = $this->container->get('OCA\DocuDesk\Service\PdfService');
+			// Resolved across every namespace filinq has shipped under. Bound to
+			// 'OCA\DocuDesk\...' alone this get() threw on any current instance,
+			// and the catch below turned that into a silent fallback — the board
+			// evaluation report simply stopped coming out as a PDF.
+			$pdfService = FleetAppId::getService($this->container, 'filinq', 'Service\PdfService');
+			if ($pdfService === null) {
+				return null;
+			}
 			$html = $this->markdownToHtml(markdown: $markdown);
 			$pdf = $pdfService->generatePdfFromHtml($html, ['title' => $title]);
 			if (is_string($pdf) === true && $pdf !== '') {

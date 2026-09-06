@@ -38,6 +38,7 @@ use OCA\Decidiq\Service\IEIDASSignatureService;
 use OCA\Decidiq\Service\ITranslationAdapter;
 use OCA\Decidiq\Service\LogEIDASSignatureService;
 use OCA\Decidiq\Service\LogTranslationAdapter;
+use OCA\Decidiq\Support\FleetAppId;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -138,13 +139,11 @@ class DomainServiceRegistrar {
 		$context->registerService(
 			IEIDASSignatureService::class,
 			static function ($c): IEIDASSignatureService {
-				$hasOpenconnector = false;
-				try {
-					$c->get('OCA\\OpenConnector\\Service\\CallService');
-					$hasOpenconnector = true;
-				} catch (\Throwable $e) {
-					$hasOpenconnector = false;
-				}
+				// Resolved across every namespace integriq has shipped under.
+				// Pinned to the retired name this probe was false on any current
+				// instance, so eIDAS signing silently fell back to the DORMANT
+				// LogEIDASSignatureService — signatures were logged, not made.
+				$hasOpenconnector = FleetAppId::getService($c, 'integriq', 'Service\\CallService') !== null;
 
 				if ($hasOpenconnector === true) {
 					return $c->get(EIDASSignatureService::class);
