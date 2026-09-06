@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { SeedLedger } from '../workflows/governance-fixture.ts'
 
 /*
@@ -10,14 +10,18 @@ import type { SeedLedger } from '../workflows/governance-fixture.ts'
  * Drives the real UI surfaces shipped by minutes-ui-v1: the live
  * minute-taking panel in the LiveMeeting view (per-agenda-item notes with
  * debounced autosave + the action-item capture shortcut), the approval
- * workflow sidebar tab on the Minutes detail page (submit / approve /
- * reject-with-comment / correction suggestions), and the Documents sidebar
- * tab (document generation + notarial proof package).
+ * workflow widget on the Minutes detail page (submit / approve /
+ * reject-with-comment / correction suggestions), and the Documents widget
+ * (document generation + notarial proof package).
+ *
+ * Both are WIDGETS, not sidebar tabs: MinutesDetail declares them in its
+ * `config.widgets` and wires them through its `slots` map, so they render
+ * inline. See openMinutesPanel() for why that distinction cost five tests.
  *
  * Fixtures are seeded through the OpenRegister object API (setup only —
- * all assertions go through the UI) and torn down per spec run. Every test
- * skips defensively when the deployed decidiq predates minutes-ui-v1
- * (deploy drift on the shared dev container, never a false green).
+ * all assertions go through the UI) and torn down per spec run. No test here
+ * skips: every surface it drives is declared in the shipped manifest, so an
+ * absent one is a regression to report rather than a deployment to excuse.
  *
  * @e2e openspec/specs/resolution-minutes/spec.md#take-structured-minutes-during-a-meeting
  * @e2e openspec/specs/resolution-minutes/spec.md#record-action-items-during-minute-taking
@@ -74,18 +78,34 @@ async function seedFixture(page: Page): Promise<void> {
 	minutesId = objId(minutes)
 }
 
-/** Open the Minutes detail page and activate a sidebar tab by its label. */
-async function openMinutesTab(page: Page, tabLabel: string): Promise<boolean> {
+/**
+ * Open the Minutes detail page and return one of its widget panels.
+ *
+ * ⚠️ MinutesDetail HAS NO TABS. `src/manifest.json`'s MinutesDetail page
+ * declares `minutes-approval` and `minutes-documents` as `type: "custom"`
+ * WIDGETS wired through the page's own `slots` map, so both render inline in
+ * the page layout. Read off the live page, `getByRole('tab')` returns an EMPTY
+ * list — there is no tab to click, and there never was.
+ *
+ * The helper this replaces looked for `getByRole('tab', { name })` with a
+ * `getByRole('button', { name, exact: true })` fallback, and skipped the test
+ * when neither appeared, blaming "the deployed decidiq predates minutes-ui-v1".
+ * That reason was never true: the widgets ship in the build under test, and the
+ * page renders `minutes-approval-tab` and `minutes-document-tab` on load.
+ * Because the button fallback matched on some runs and not others, the five
+ * tests using it skipped NONDETERMINISTICALLY — CI skipped all five while a
+ * local run of the same commit skipped four and FAILED the fifth.
+ *
+ * 🔑 A skip whose stated reason is untrue is an invisible pass. So the gate is
+ * gone rather than merely retimed: the panel is asserted, and its absence now
+ * fails the test instead of quietly excusing it.
+ */
+async function openMinutesPanel(page: Page, testid: string): Promise<Locator> {
 	await page.goto(`${BASE}/apps/decidiq/minutes/${minutesId}`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
-	const tab = page
-		.getByRole('tab', { name: tabLabel })
-		.or(page.getByRole('button', { name: tabLabel, exact: true }))
-	if (!(await becomesVisible(tab))) {
-		return false
-	}
-	await tab.first().click()
-	return true
+	const panel = page.getByTestId(testid)
+	await expect(panel).toBeVisible({ timeout: 15_000 })
+	return panel
 }
 
 test.beforeAll(async ({ browser }) => {
@@ -108,11 +128,10 @@ test('live meeting: minutes panel offers per-agenda-item notes with autosave', a
 	await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}/live`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
+	// LiveMeeting.vue renders <MinutesPanel> unconditionally, so an absent
+	// panel is a regression, not deploy drift. Asserted rather than skipped.
 	const panel = page.getByTestId('minutes-panel')
-	test.skip(
-		!(await becomesVisible(panel)),
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no minutes panel in LiveMeeting)',
-	)
+	await expect(panel).toBeVisible({ timeout: 15_000 })
 
 	// A draft Minutes record exists for this meeting → the editor renders
 	// the per-agenda-item fields straight away (pre-populated template).
@@ -146,11 +165,10 @@ test('live meeting: action-item capture shortcut creates a tracked action item',
 	await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}/live`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
+	// LiveMeeting.vue renders <MinutesPanel> unconditionally, so an absent
+	// panel is a regression, not deploy drift. Asserted rather than skipped.
 	const panel = page.getByTestId('minutes-panel')
-	test.skip(
-		!(await becomesVisible(panel)),
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no minutes panel in LiveMeeting)',
-	)
+	await expect(panel).toBeVisible({ timeout: 15_000 })
 
 	const itemBlock = page.getByTestId(`minutes-panel-item-${agendaItemId}`)
 	await expect(itemBlock).toBeVisible({ timeout: 10_000 })
@@ -192,14 +210,14 @@ test('live meeting: action-item capture shortcut creates a tracked action item',
 test('approval tab: submit for review, then reject back to draft with a mandatory comment', async ({
 	page,
 }) => {
-	const hasTab = await openMinutesTab(page, 'Approval')
-	test.skip(
-		!hasTab,
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no Approval tab)',
-	)
+	// Navigates, runs a lifecycle action, waits for the record to refetch, then
+	// drives a modal — more than CI's 20s per-test budget allows. Measured: at
+	// 20s it fails on whichever click is in flight when the budget expires, and
+	// passes with room to spare at 90s. test.slow() triples this test's budget
+	// instead of raising it for all 252.
+	test.slow()
 
-	const tab = page.getByTestId('minutes-approval-tab')
-	await expect(tab).toBeVisible()
+	const tab = await openMinutesPanel(page, 'minutes-approval-tab')
 
 	// Draft → submit for review.
 	await tab.getByTestId('minutes-action-submit').click()
@@ -231,14 +249,14 @@ test('approval tab: submit for review, then reject back to draft with a mandator
 test('approval tab: participants can suggest corrections and the chair resolves them', async ({
 	page,
 }) => {
-	const hasTab = await openMinutesTab(page, 'Approval')
-	test.skip(
-		!hasTab,
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no Approval tab)',
-	)
+	// Navigates, runs a lifecycle action, waits for the record to refetch, then
+	// drives a modal — more than CI's 20s per-test budget allows. Measured: at
+	// 20s it fails on whichever click is in flight when the budget expires, and
+	// passes with room to spare at 90s. test.slow() triples this test's budget
+	// instead of raising it for all 252.
+	test.slow()
 
-	const tab = page.getByTestId('minutes-approval-tab')
-	await expect(tab).toBeVisible()
+	const tab = await openMinutesPanel(page, 'minutes-approval-tab')
 
 	await tab.getByTestId('minutes-correction-add').click()
 	const modal = page.getByTestId('minutes-correction-modal')
@@ -253,7 +271,16 @@ test('approval tab: participants can suggest corrections and the chair resolves 
 	await expect(
 		tab.getByText('The vote count for item 5 should read 12 in favour'),
 	).toBeVisible({ timeout: 10_000 })
-	await tab.getByRole('button', { name: 'Accept', exact: true }).first().click()
+	// ⚠️ The accessible name is "Accept correction", NOT "Accept": the button
+	// carries `:aria-label="t('decidiq', 'Accept correction')"`, and an aria-label
+	// REPLACES the text content when the accessible name is computed. Asking for
+	// `{ name: 'Accept', exact: true }` could therefore never match — which no
+	// run ever reported, because this test only ever reached here on the rare
+	// occasions the old tab-hunting guard let it past its skip.
+	await tab
+		.getByRole('button', { name: 'Accept correction', exact: true })
+		.first()
+		.click()
 	await expect(tab.getByText('Accepted', { exact: true }).first()).toBeVisible({
 		timeout: 10_000,
 	})
@@ -263,14 +290,14 @@ test('approval tab: participants can suggest corrections and the chair resolves 
 test('approval tab: approving review minutes locks editing and records the approval', async ({
 	page,
 }) => {
-	const hasTab = await openMinutesTab(page, 'Approval')
-	test.skip(
-		!hasTab,
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no Approval tab)',
-	)
+	// Navigates, runs a lifecycle action, waits for the record to refetch, then
+	// drives a modal — more than CI's 20s per-test budget allows. Measured: at
+	// 20s it fails on whichever click is in flight when the budget expires, and
+	// passes with room to spare at 90s. test.slow() triples this test's budget
+	// instead of raising it for all 252.
+	test.slow()
 
-	const tab = page.getByTestId('minutes-approval-tab')
-	await expect(tab).toBeVisible()
+	const tab = await openMinutesPanel(page, 'minutes-approval-tab')
 
 	// Reach review (the earlier reject test returned the record to draft).
 	if (await becomesVisible(tab.getByTestId('minutes-action-submit'), 5_000)) {
@@ -290,14 +317,7 @@ test('approval tab: approving review minutes locks editing and records the appro
 test('documents tab: generate document persists into the meeting folder and lists it', async ({
 	page,
 }) => {
-	const hasTab = await openMinutesTab(page, 'Documents')
-	test.skip(
-		!hasTab,
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no Documents tab)',
-	)
-
-	const tab = page.getByTestId('minutes-document-tab')
-	await expect(tab).toBeVisible()
+	const tab = await openMinutesPanel(page, 'minutes-document-tab')
 
 	await tab.getByTestId('minutes-document-generate').click()
 
@@ -319,14 +339,7 @@ test('documents tab: generate document persists into the meeting folder and list
 test('documents tab: notarial proof package is assembled and hash-sealed', async ({
 	page,
 }) => {
-	const hasTab = await openMinutesTab(page, 'Documents')
-	test.skip(
-		!hasTab,
-		'Deploy drift: the deployed decidiq predates minutes-ui-v1 (no Documents tab)',
-	)
-
-	const tab = page.getByTestId('minutes-document-tab')
-	await expect(tab).toBeVisible()
+	const tab = await openMinutesPanel(page, 'minutes-document-tab')
 
 	await tab.getByTestId('minutes-proof-package').click()
 	await expect(page.getByTestId('minutes-proof-result')).toContainText('SHA-256', {

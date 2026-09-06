@@ -110,6 +110,14 @@ BASE="${BASE%/}"
 USER_NAME="${ADMIN_USER:-${NC_ADMIN_USER:-admin}}"
 USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
 
+# A deliberately UNPRIVILEGED account. The suite otherwise has exactly one
+# account, `admin`, and against a single admin "this endpoint denies a
+# non-admin" and "this endpoint denies nobody" produce identical evidence — so
+# decidiq's four RequiresOrAdmin controllers had no live proof they gate
+# anything. Consumed by tests/e2e/workflows/rbac-authorization-workflow.spec.ts.
+E2E_MEMBER_USER="${E2E_MEMBER_USER:-decidiq-e2e-member}"
+E2E_MEMBER_PASS="${E2E_MEMBER_PASS:-decidiq-e2e-member-pw}"
+
 # The calendar collection action-item VTODOs are written into. Its own URI, not
 # `personal`: Nextcloud's auto-provisioned "Personal" calendar is VEVENT-only,
 # and a calendar's component set is fixed at creation — so this must be a
@@ -210,9 +218,43 @@ if [ -f ./occ ]; then
 		echo "::error::PROPFIND returned: ${CAL_PROPS}"
 		exit 1
 	fi
+
+	# ── 0a-ter. AN UNPRIVILEGED ACCOUNT, so admin-gating is testable ─────────
+	#
+	# Created with NO --group, so it lands outside `admin` — which is exactly
+	# what IGroupManager::isAdmin() reads, and what RequiresOrAdmin consumes.
+	#
+	# Idempotent in the same shape as the calendar above: the create may fail
+	# ("user already exists") and the VERIFY is what gates.
+	OC_PASS="${E2E_MEMBER_PASS}" php ./occ user:add --password-from-env \
+		"${E2E_MEMBER_USER}" >/dev/null 2>&1 || true
+
+	# VERIFY over occ, and gate. An absent member account turns the spec's 403
+	# assertions into 401s, which reads as a broken guard rather than a missing
+	# fixture — the failure would name the wrong thing.
+	MEMBER_INFO="$(php ./occ user:info "${E2E_MEMBER_USER}" --output=json 2>/dev/null || true)"
+	if [ -z "${MEMBER_INFO}" ]; then
+		echo "::error::could not provision the non-admin account '${E2E_MEMBER_USER}'."
+		echo "::error::rbac-authorization-workflow.spec.ts asserts 403 for it on four"
+		echo "::error::RequiresOrAdmin surfaces; without the account those become 401s."
+		exit 1
+	fi
+
+	# It must NOT be an admin. If it were, every 403 assertion would invert and
+	# the spec would pass while proving the opposite of its own name — the worst
+	# available outcome, because it is green.
+	if printf '%s' "${MEMBER_INFO}" | python3 -c \
+		'import json,sys; sys.exit(0 if "admin" in json.load(sys.stdin).get("groups",[]) else 1)' \
+		2>/dev/null; then
+		echo "::error::'${E2E_MEMBER_USER}' is in the admin group; it must not be."
+		exit 1
+	fi
+	echo "[ci-seed] non-admin account '${E2E_MEMBER_USER}' present and unprivileged."
 else
 	echo "[ci-seed] no ./occ in $(pwd) — skipping the front-controller config (not a server root?)."
 	echo "[ci-seed] WARNING: the VTODO calendar gate is also skipped; action-item specs may 500."
+	echo "[ci-seed] WARNING: the non-admin account is also skipped; the admin-gating spec will"
+	echo "[ci-seed]          see 401 where it asserts 403."
 fi
 
 # ── 0b. GATE: the SERVED page must actually advertise pretty URLs ────────────
