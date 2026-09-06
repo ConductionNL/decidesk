@@ -58,7 +58,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         row (the code fallback keeps them working, but the admin would have
         nothing to edit).
     -->
-    <version>1.1.11-unstable.20260906055850</version>
+    <version>1.1.11-unstable.20260906061513</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Decidiq</namespace>
@@ -391,7 +391,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 DATABASE COLUMN, and stepType is not a column, it sits inside the steps array of an
                 object payload. Adding it there would have planned nothing and reported success.
             -->
-            <step>OCA\Decidiq\Migration\RenameSwearingInStepType</step>
+            <step>OCA\Decidiq\Migration\RenameStepTypes</step>
             <!--
                 model-debt-cleanup-code: both steps below run AFTER InitializeSettings so they
                 read the NEW $ref declarations (Participant -> Membership/Person retargets,

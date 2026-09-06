@@ -181,18 +181,15 @@ class RenameDutchDecidiqValues implements IRepairStep {
 		'senderType' => [
 			'natuurlijk-persoon' => 'natural-person',
 		],
-		'stepType' => [
-			'account-koppeling' => 'account-linking',
-			'beediging' => 'swearing-in',
-			'exit-bevestiging' => 'exit-confirmation',
-			'fractie-toewijzing' => 'political-group-assignment',
-			'groepen-intrekken' => 'revoke-groups',
-			'groepen-toewijzen' => 'assign-groups',
-			'introductiepakket' => 'induction-pack',
-			'lidmaatschap-beeindigen' => 'end-membership',
-			'nevenfuncties-intake' => 'ancillary-positions-intake',
-			'persoonsgegevens-notitie' => 'personal-data-note',
-		],
+		// 🔴 `stepType` IS NOT HERE, AND MUST NOT COME BACK. It held ten Dutch
+		// pairs and could never have rewritten one of them: this step rewrites
+		// by DATABASE COLUMN, `DbValueMigrationGateway::columnsOf()` reads
+		// `information_schema.columns`, and `plannedRewrites()` only plans a
+		// rewrite for a value-map key that IS a column. `stepType` lives inside
+		// the `steps` array of an object payload, so the block planned nothing,
+		// rewrote nothing, and reported success — done work that had never been
+		// done. The pairs now live in Migration\RenameStepTypes, which reads the
+		// objects. Anything nested belongs there, not here.
 		'subjectType' => [
 			'begrotingswijziging' => 'budget-amendment',
 			'jaarrekening' => 'annual-accounts',
