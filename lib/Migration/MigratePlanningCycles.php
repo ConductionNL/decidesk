@@ -189,11 +189,16 @@ class MigratePlanningCycles implements IRepairStep {
 					$saved = $objectService->saveObject(
 						register: self::REGISTER,
 						schema: $target,
-						object: $this->mapRow(
+						object: $this->coerceToTarget(
 							objectService: $objectService,
-							row: $row,
-							origin: $origin,
-							copiedIds: $copiedIds
+							properties: $this->declaredProperties(slug: $target),
+							alreadyResolved: array_column(self::REFERENCES, 'target'),
+							payload: $this->mapRow(
+								objectService: $objectService,
+								row: $row,
+								origin: $origin,
+								copiedIds: $copiedIds
+							),
 						),
 					);
 					$existing[$origin]  = true;

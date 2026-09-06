@@ -97,6 +97,26 @@ class MigrateMemberOnboarding implements IRepairStep {
 	 *
 	 * @var array<string,string>
 	 */
+	/**
+	 * Step-type values renamed with the schema, old value to new.
+	 *
+	 * 🔴 A CARRIED ENUM IS NOT A CARRIED STRING. The `stepType` vocabulary moved
+	 * `swearing-in` to `installation` with the rest of the ceremony wording, so
+	 * a step copied verbatim carries a value the target no longer offers and
+	 * OpenRegister refuses the WHOLE record: "Property 'steps.0.stepType'
+	 * should be one of ... but is 'swearing-in'". Measured on a live
+	 * `occ upgrade`: three records, all refused, reported through
+	 * `$output->warning()` which does not fail the upgrade.
+	 *
+	 * RenameSwearingInStepType covers rows that are ALREADY on the new schema.
+	 * It cannot help here, because this copy is what puts them there.
+	 *
+	 * @var array<string,string>
+	 */
+	private const RENAMED_STEP_TYPES = [
+		'swearing-in' => 'installation',
+	];
+
 	private const RENAMED_FIELDS = [
 		'beëdigingsType' => 'installationType',
 		'swearingInDate' => 'installedOn',
@@ -205,10 +225,15 @@ class MigrateMemberOnboarding implements IRepairStep {
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: $target,
-						object: $this->mapRow(
+						object: $this->coerceToTarget(
 							objectService: $objectService,
-							row: $row,
-							origin: $origin
+							properties: $this->declaredProperties(slug: $target),
+							alreadyResolved: array_column(self::REFERENCES, 'target'),
+							payload: $this->mapRow(
+								objectService: $objectService,
+								row: $row,
+								origin: $origin
+							),
 						),
 					);
 					$existing[$origin] = true;
@@ -266,12 +291,12 @@ class MigrateMemberOnboarding implements IRepairStep {
 				continue;
 			}
 
-			if (isset(self::REFERENCES[$key]) === true && is_string($value) === true && $value !== '') {
-				$reference = self::REFERENCES[$key];
+			if ($this->isReference(key: $key, value: $value) === true) {
+				$reference                     = self::REFERENCES[$key];
 				$payload[$reference['target']] = $this->resolveReference(
 					objectService: $objectService,
 					schema: $reference['schema'],
-					reference: $value
+					reference: (string)$value
 				);
 				continue;
 			}
@@ -285,7 +310,49 @@ class MigrateMemberOnboarding implements IRepairStep {
 
 		$payload[self::ORIGIN_KEY] = $origin;
 
+		if (isset($payload['steps']) === true && is_array($payload['steps']) === true) {
+			$payload['steps'] = $this->renameStepTypes(steps: $payload['steps']);
+		}
+
 		return $payload;
 
 	}//end mapRow()
+
+	/**
+	 * Whether one source key holds a reference this migration resolves itself.
+	 *
+	 * @param string $key   The source property name.
+	 * @param mixed  $value The value as the source holds it.
+	 *
+	 * @return bool True when it is a non-empty reference string.
+	 */
+	private function isReference(string $key, mixed $value): bool {
+		return (isset(self::REFERENCES[$key]) === true
+			&& is_string($value) === true
+			&& $value !== '');
+
+	}//end isReference()
+
+	/**
+	 * Move each step onto the vocabulary the target schema declares.
+	 *
+	 * @param array<int,mixed> $steps The steps as the source holds them.
+	 *
+	 * @return array<int,mixed> The steps, with renamed types.
+	 */
+	private function renameStepTypes(array $steps): array {
+		foreach ($steps as $index => $step) {
+			if (is_array($step) === false) {
+				continue;
+			}
+
+			$type = (string)($step['stepType'] ?? '');
+			if (isset(self::RENAMED_STEP_TYPES[$type]) === true) {
+				$steps[$index]['stepType'] = self::RENAMED_STEP_TYPES[$type];
+			}
+		}
+
+		return $steps;
+
+	}//end renameStepTypes()
 }//end class

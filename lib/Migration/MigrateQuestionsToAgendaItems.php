@@ -492,10 +492,18 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 				try {
 					$objectService->setRegister(self::REGISTER);
 					$objectService->setSchema(self::TYPE_SCHEMA);
+					// 🔴 A PATCH IS STILL VALIDATED AS A WHOLE OBJECT.
+					// `agenda-item-type` declares `name` required, and sending
+					// the patch alone made OpenRegister refuse the update with
+					// "The required property (name) is missing" — reported
+					// through $output->warning(), which does not fail an
+					// upgrade. The name is the one this run just looked the
+					// type up by, so carrying it changes nothing but the
+					// completeness of the payload.
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::TYPE_SCHEMA,
-						object: $patch,
+						object: ($patch + ['name' => (string)$mapping['typeName']]),
 						uuid: $typeId,
 					);
 					$applied++;

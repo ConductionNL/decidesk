@@ -192,7 +192,12 @@ class MigrateIntegrityDisclosures implements IRepairStep {
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: $target,
-						object: $this->mapRow(objectService: $objectService, row: $row, origin: $origin),
+						object: $this->coerceToTarget(
+							objectService: $objectService,
+							properties: $this->declaredProperties(slug: $target),
+							alreadyResolved: array_column(self::REFERENCES, 'target'),
+							payload: $this->mapRow(objectService: $objectService, row: $row, origin: $origin),
+						),
 					);
 					$existing[$origin] = true;
 					$copied++;
@@ -249,10 +254,16 @@ class MigrateIntegrityDisclosures implements IRepairStep {
 				$objectService->setRegister(self::REGISTER);
 				$objectService->setSchema(self::CONFIGURATION);
 				if ($existing !== '') {
+					// 🔴 A PATCH IS STILL VALIDATED AS A WHOLE OBJECT.
+					// `body-governance-configuration` declares `governanceBody`
+					// required, and sending the patch alone made OpenRegister
+					// refuse the update with "The required property
+					// (governanceBody) is missing" — reported through
+					// $output->warning(), which does not fail an upgrade.
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::CONFIGURATION,
-						object: $patch,
+						object: ($patch + ['governanceBody' => $body]),
 						uuid: $existing,
 					);
 					$folded++;
