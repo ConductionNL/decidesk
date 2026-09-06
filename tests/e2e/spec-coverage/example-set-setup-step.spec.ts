@@ -1,5 +1,3 @@
-import type { Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,6 +42,8 @@ import type { Page } from '@playwright/test'
  *
  * @spec exclude ADR-042/ADR-111 setup contract; no per-app behavioural spec.
  */
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 import * as path from 'path'
 

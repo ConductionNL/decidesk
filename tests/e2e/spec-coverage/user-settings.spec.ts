@@ -1,5 +1,3 @@
-import type { Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,6 +26,8 @@ import type { Page } from '@playwright/test'
  * @e2e openspec/specs/user-settings/spec.md#configure-absence-delegation
  * @e2e openspec/specs/user-settings/spec.md#set-preferred-contact-for-governance-communications
  */
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 

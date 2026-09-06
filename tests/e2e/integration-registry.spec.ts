@@ -1,6 +1,3 @@
-import type { Page } from '@playwright/test'
-import type { SeedLedger } from './workflows/governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,6 +40,9 @@ import type { SeedLedger } from './workflows/governance-fixture.ts'
  * the commit under test — and 46 of them were hiding the fact that this spec
  * ran 12 of its 76 tests.
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './workflows/governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	cleanupAll,

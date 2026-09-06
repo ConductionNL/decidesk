@@ -1,5 +1,3 @@
-import type { Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,6 +27,8 @@ import type { Page } from '@playwright/test'
  * @e2e openspec/specs/admin-settings/spec.md#configure-organization-defaults
  * @e2e openspec/specs/openregister-integration/spec.md#configure-register-mapping
  */
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 

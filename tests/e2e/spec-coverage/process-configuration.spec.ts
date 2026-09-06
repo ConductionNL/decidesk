@@ -1,5 +1,3 @@
-import type { Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,6 +19,8 @@ import type { Page } from '@playwright/test'
  * @e2e openspec/specs/process-configuration/spec.md#built-in-templates-are-read-only
  * @e2e openspec/specs/process-configuration/spec.md#reject-an-invalid-transition-graph
  */
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'

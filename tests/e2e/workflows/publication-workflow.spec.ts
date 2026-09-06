@@ -1,5 +1,3 @@
-import type { SeedLedger } from './governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,6 +31,8 @@ import type { SeedLedger } from './governance-fixture.ts'
  * @e2e openspec/specs/decision-management/spec.md#publish-action-visible-only-when-eligible
  * @e2e openspec/specs/decision-management/spec.md#publication-events-in-the-audit-trail
  */
+import type { SeedLedger } from './governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	BASE,

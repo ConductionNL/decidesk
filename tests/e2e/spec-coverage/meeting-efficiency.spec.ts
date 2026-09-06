@@ -1,6 +1,3 @@
-import type { Page } from '@playwright/test'
-import type { SeedLedger } from '../workflows/governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,6 +46,9 @@ import type { SeedLedger } from '../workflows/governance-fixture.ts'
  * @e2e openspec/specs/meeting-efficiency/spec.md#compare-allocated-vs-actual-time-per-item-type
  * @e2e openspec/specs/meeting-efficiency/spec.md#show-cost-per-agenda-item-in-analytics
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from '../workflows/governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'

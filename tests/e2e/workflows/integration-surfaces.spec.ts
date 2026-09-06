@@ -1,7 +1,3 @@
-import type { Page } from '@playwright/test'
-import type { SeedLedger } from './governance-fixture.ts'
-
-import { expect, test } from '@playwright/test'
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,6 +52,10 @@ import { expect, test } from '@playwright/test'
  * Scenario here would be authoring the spec this suite is checked against.
  * Tracked as an issue instead.
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
 import {

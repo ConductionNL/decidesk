@@ -1,5 +1,3 @@
-import type { APIRequestContext, Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,6 +21,8 @@ import type { APIRequestContext, Page } from '@playwright/test'
  * @e2e openspec/specs/voting-system/spec.md#configure-voting-rules-when-opening-a-round
  * @e2e openspec/specs/voting-system/spec.md#display-active-rules-and-computed-base
  */
+import type { APIRequestContext, Page } from '@playwright/test'
+
 import { expect, request as pwRequest, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'
