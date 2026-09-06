@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Service;
 
+use OCA\Decidiq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -39,13 +40,16 @@ use Psr\Log\LoggerInterface;
 class LogTranslationAdapter implements ITranslationAdapter {
 
 	/**
-	 * Candidate FQCNs of an openconnector translation source service.
+	 * Integriq translation services, named relative to that app's root.
+	 *
+	 * Relative rather than fully qualified: each name is expanded across every
+	 * namespace integriq has shipped under at resolve time.
 	 *
 	 * @var string[]
 	 */
-	public const OPENCONNECTOR_CANDIDATES = [
-		'\\OCA\\OpenConnector\\Service\\TranslationService',
-		'\\OCA\\OpenConnector\\Service\\TranslationSourceService',
+	public const OPENCONNECTOR_SERVICES = [
+		'Service\\TranslationService',
+		'Service\\TranslationSourceService',
 	];
 
 	/**
@@ -141,18 +145,14 @@ class LogTranslationAdapter implements ITranslationAdapter {
 	 * @return object|null
 	 */
 	private function resolveOpenConnector(): ?object {
-		foreach (self::OPENCONNECTOR_CANDIDATES as $candidate) {
-			if (class_exists($candidate) === false) {
-				continue;
-			}
-
-			try {
-				$service = $this->container->get($candidate);
-				if (is_object($service) === true) {
-					return $service;
-				}
-			} catch (\Throwable) {
-				continue;
+		// This list used to hold fully-qualified 'OCA\OpenConnector' names, so
+		// class_exists() was false for both on any instance running the renamed
+		// app and this method always returned null — which reads as
+		// "translation is not configured" rather than as an error.
+		foreach (self::OPENCONNECTOR_SERVICES as $relative) {
+			$service = FleetAppId::getService($this->container, 'integriq', $relative);
+			if ($service !== null) {
+				return $service;
 			}
 		}
 

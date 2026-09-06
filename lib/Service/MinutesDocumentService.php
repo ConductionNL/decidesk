@@ -33,6 +33,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Decidiq\Exception\MissingObjectException;
 use OCA\Decidiq\Exception\MissingRelationException;
+use OCA\Decidiq\Support\FleetAppId;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -374,7 +375,13 @@ class MinutesDocumentService {
 	 */
 	private function tryDocudeskPdf(string $markdown, string $title): ?string {
 		try {
-			$pdfService = $this->container->get('OCA\DocuDesk\Service\PdfService');
+			// Resolved across every namespace filinq has shipped under; see the
+			// note on BoardEvaluationReportService::tryDocudeskPdf(). Pinned to
+			// the retired name, minutes stopped rendering as PDF silently.
+			$pdfService = FleetAppId::getService($this->container, 'filinq', 'Service\PdfService');
+			if ($pdfService === null) {
+				return null;
+			}
 			$html = $this->markdownToHtml(markdown: $markdown);
 			$pdf = $pdfService->generatePdfFromHtml($html, ['title' => $title]);
 			if (is_string($pdf) === true && $pdf !== '') {

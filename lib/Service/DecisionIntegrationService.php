@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Service;
 
+use OCA\Decidiq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -543,8 +544,8 @@ class DecisionIntegrationService {
 		// Try to ask the openconnector/openregister registry whether this URL
 		// is a known consumer. Degrade gracefully if registry is absent.
 		try {
-			$registry = $this->container->get('OCA\\OpenConnector\\Service\\IntegrationService');
-			if (method_exists($registry, 'isRegisteredConsumer') === true) {
+			$registry = FleetAppId::getService($this->container, 'integriq', 'Service\\IntegrationService');
+			if ($registry !== null && method_exists($registry, 'isRegisteredConsumer') === true) {
 				// Positional, not named: the registry is resolved from a class-name
 				// string at runtime, so its parameter names are not part of any
 				// contract Decidiq can rely on.
