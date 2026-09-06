@@ -38,7 +38,17 @@ async function openFirstBodyDetail(page: Page): Promise<boolean> {
 	try {
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 		// Open the first row of the bodies list.
-		const firstRow = page.locator('tbody tr').first()
+		//
+		// `cn-object-row`, NOT `tbody tr`. CnDataTable renders its empty state
+		// as a row inside the same tbody:
+		//
+		//   <tr v-if="effectiveRows.length === 0" data-testid="cn-object-list-empty">
+		//   <tr v-for=...                         data-testid="cn-object-row">
+		//
+		// so `tbody tr` matches when there is no governance body at all. This
+		// helper then clicked that empty row, navigated nowhere, and returned
+		// TRUE — every caller took the false premise and carried on.
+		const firstRow = page.locator('[data-testid="cn-object-row"]').first()
 		await firstRow.waitFor({ state: 'visible', timeout: 10_000 })
 		await firstRow.click()
 		await page.waitForTimeout(1_000)
@@ -83,7 +93,12 @@ test('Members tab lists body members and offers the Change role action', async (
 	// Role assignment: when the body has at least one member, the row
 	// actions expose "Change role" opening the role dialog with the role
 	// enum select.
-	const rows = tabRoot.locator('tbody tr')
+	// Data rows only. With no members, CnDataTable still renders one row —
+	// its empty state — so `tbody tr` counted 1, `hover()` worked on it, and
+	// `getByRole('button').last()` then waited out the full 20 s timeout
+	// looking for an action button the empty row never has. That is the
+	// failure on development at 34fd275.
+	const rows = tabRoot.locator('[data-testid="cn-object-row"]')
 	if ((await rows.count()) > 0) {
 		await rows.first().hover()
 		const actions = rows.first().getByRole('button').last()

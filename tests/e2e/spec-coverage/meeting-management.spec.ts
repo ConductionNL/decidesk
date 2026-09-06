@@ -267,8 +267,13 @@ test('board meeting detail renders send-notice surface and delivery table when s
 		await expect(page.getByTestId('board-meeting-deliveries')).toBeVisible({
 			timeout: 10_000,
 		})
+		// Counting `cn-object-row` rather than `tbody tr`: with no deliveries
+		// CnDataTable renders its empty-state row in the same tbody, so the
+		// count would read 1 for a table showing nothing.
 		await expect(
-			page.getByTestId('board-meeting-deliveries').locator('tbody tr'),
+			page
+				.getByTestId('board-meeting-deliveries')
+				.locator('[data-testid="cn-object-row"]'),
 		).toHaveCount(withDeliveries.noticeDeliveries.length)
 	} else if (target.status === 'scheduled') {
 		// Pre-send: the send-notice action is offered for scheduled meetings.
