@@ -38,7 +38,17 @@ async function openFirstBodyDetail(page: Page): Promise<boolean> {
 	try {
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 		// Open the first row of the bodies list.
-		const firstRow = page.locator('tbody tr').first()
+		//
+		// `cn-object-row`, NOT `tbody tr`. CnDataTable renders its empty state
+		// as a row inside the same tbody:
+		//
+		//   <tr v-if="effectiveRows.length === 0" data-testid="cn-object-list-empty">
+		//   <tr v-for=...                         data-testid="cn-object-row">
+		//
+		// so `tbody tr` matches when there is no governance body at all. This
+		// helper then clicked that empty row, navigated nowhere, and returned
+		// TRUE — every caller took the false premise and carried on.
+		const firstRow = page.locator('[data-testid="cn-object-row"]').first()
 		await firstRow.waitFor({ state: 'visible', timeout: 10_000 })
 		await firstRow.click()
 		await page.waitForTimeout(1_000)
@@ -83,22 +93,20 @@ test('Members tab lists body members and offers the Change role action', async (
 	// Role assignment: when the body has at least one member, the row
 	// actions expose "Change role" opening the role dialog with the role
 	// enum select.
-	// ⚠️ AN EMPTY MEMBERS TABLE STILL RENDERS ONE `tbody tr`. CnObjectList's
-	// empty state is a row — "No members linked to this body yet." — carrying
-	// zero buttons, so `rows.count() > 0` is true with no members at all. The
-	// row-actions click below then waits for a button that does not exist until
-	// the test times out.
+	// Data rows only. With no members, CnDataTable still renders one row —
+	// its empty state — so `tbody tr` counted 1, `hover()` worked on it, and
+	// `getByRole('button').last()` then waited out the full 20 s timeout
+	// looking for an action button the empty row never has. That is the
+	// failure on development at 34fd275.
 	//
-	// Measured, because the first reading was wrong: this is what reddened the
-	// development push that first executed this test, and it is NOT a budget
-	// problem. Under test.slow() it failed the same way at 60s, on the same
-	// locator. Filtering to rows that actually carry a button is the fix; a
-	// bigger timeout only makes it fail more slowly.
-	const rows = tabRoot.locator('tbody tr')
-	const memberRows = rows.filter({ has: page.getByRole('button') })
-	if ((await memberRows.count()) > 0) {
-		await memberRows.first().hover()
-		const actions = memberRows.first().getByRole('button').last()
+	// ⚠️ It is NOT a budget problem, which is what it first looked like: the
+	// test ran 20.5s against a 20s cap while its four siblings here took 8.9 to
+	// 11.5s. Under test.slow(), given 60s, it failed identically on the same
+	// locator. A timeout that survives a tripled budget is not about time.
+	const rows = tabRoot.locator('[data-testid="cn-object-row"]')
+	if ((await rows.count()) > 0) {
+		await rows.first().hover()
+		const actions = rows.first().getByRole('button').last()
 		await actions.click()
 		const changeRole = page
 			.getByRole('menuitem', { name: 'Change role' })

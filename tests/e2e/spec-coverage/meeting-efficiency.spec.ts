@@ -258,9 +258,12 @@ test('GovernanceBody: Efficiency tab shows the analytics surface', async ({
 		return
 	}
 	await bodiesEntry.click()
+	// `cn-object-row`, not `tbody tr`: the empty-state row lives in the same
+	// tbody, so an instance with no governance body would click it and read as
+	// "a body opened" rather than reaching the skip below.
 	const firstRow = page
 		.getByTestId('cn-object-list-table')
-		.locator('tbody tr')
+		.locator('[data-testid="cn-object-row"]')
 		.first()
 	if (!(await becomesVisible(firstRow))) {
 		test.skip(true, 'No governance body seeded in this environment.')

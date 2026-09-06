@@ -96,9 +96,37 @@ test('motions list shows existing motions', async ({ page }) => {
 		await tableBtn.click()
 	}
 
-	const rows = page.locator('table tbody tr')
-	const count = await rows.count()
-	expect(count, 'Motions list should show seed data').toBeGreaterThanOrEqual(0)
+	// THIS USED TO ASSERT `count >= 0`, which no count can ever fail. The
+	// message said "Motions list should show seed data" while the assertion
+	// said nothing at all: it passed on an empty table, on a table that never
+	// rendered, and on a page that had navigated somewhere else entirely.
+	//
+	// What the test can honestly claim is that the list rendered and settled
+	// into exactly one of its two legitimate states. `tbody tr` cannot tell
+	// them apart, because CnDataTable puts its empty state in the same tbody,
+	// so both are addressed by their own testid.
+	const table = page.getByTestId('cn-object-list-table')
+	await expect(table).toBeVisible({ timeout: 15_000 })
+
+	const dataRows = page.locator('[data-testid="cn-object-row"]')
+	const emptyRow = page.locator('[data-testid="cn-object-list-empty"]')
+
+	await expect
+		.poll(
+			async () => (await dataRows.count()) > 0 || (await emptyRow.count()) > 0,
+			{
+				message:
+					'the motions table rendered neither a row nor its empty state',
+			},
+		)
+		.toBe(true)
+
+	// And the two are mutually exclusive: seeing both means the table is
+	// showing an empty state above rows it also rendered.
+	expect(
+		(await dataRows.count()) > 0 && (await emptyRow.count()) > 0,
+		'the motions table showed data rows and its empty state at once',
+	).toBe(false)
 })
 
 // @e2e openspec/specs/motion-amendment/spec.md#submit-an-amendment-to-a-pending-motion
