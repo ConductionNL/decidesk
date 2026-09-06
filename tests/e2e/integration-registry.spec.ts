@@ -600,16 +600,25 @@ test.describe('Integration registry — sidebar tab rendering', () => {
 				!(await registryDeployed(page)),
 				'registry not deployed (OCS caps) — skipping sidebar navigation',
 			)
-			await openMeetingIntegrations(page)
 
-			const tab = page.locator(
-				`aside.app-sidebar [role="tab"]#tab-button-${id}`,
-			)
 			// Skip only for a reason the SERVER gives — an absent backing app —
 			// never for "not deployed", which cannot be true of the commit under
 			// test. When the provider IS available, a missing tab is a failure.
+			//
+			// ⚠️ DECIDED BEFORE openMeetingIntegrations(), not after. Both
+			// registryDeployed() and providerCaps() are cached OCS reads that
+			// touch no page state, while openMeetingIntegrations() navigates to a
+			// meeting and opens its sidebar. Deciding afterwards made all 20 tests
+			// that skip on CI — the backing apps are not installed there — pay a
+			// full navigation first to prove an absent app is absent. This file
+			// was the single largest consumer of the E2E budget at 5.5 min of 38.8.
 			const reason = absenceReason(await providerCaps(page), id)
 			test.skip(reason !== null, `${id}: ${reason ?? ''}`)
+
+			await openMeetingIntegrations(page)
+			const tab = page.locator(
+				`aside.app-sidebar [role="tab"]#tab-button-${id}`,
+			)
 			await expect(
 				tab,
 				`provider "${id}" is available, so its tab must render`,
@@ -642,13 +651,17 @@ test.describe('Integration registry — tab activation', () => {
 				!(await registryDeployed(page)),
 				'registry not deployed (OCS caps) — skipping sidebar navigation',
 			)
-			await openMeetingIntegrations(page)
 
+			// Decided before the navigation, for the reason given in the sidebar
+			// rendering loop above: the skip inputs are cached OCS reads, so a
+			// test that is going to skip need not open a meeting first.
+			const reason = absenceReason(await providerCaps(page), id)
+			test.skip(reason !== null, `${id}: ${reason ?? ''}`)
+
+			await openMeetingIntegrations(page)
 			const tab = page.locator(
 				`aside.app-sidebar [role="tab"]#tab-button-${id}`,
 			)
-			const reason = absenceReason(await providerCaps(page), id)
-			test.skip(reason !== null, `${id}: ${reason ?? ''}`)
 
 			await tab.click()
 			await expect(tab).toHaveAttribute('aria-selected', 'true')
