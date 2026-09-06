@@ -201,14 +201,14 @@ test('meeting detail Series tab shows pattern form, preview and generate action'
 	await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
-	// Activate the Series sidebar tab (defensive: older deployments lack it).
-	const seriesTab = page.getByRole('tab', { name: 'Series' })
-	const hasTab = await becomesVisible(seriesTab)
-	test.skip(
-		!hasTab,
-		'Series tab not present (deployed build predates meeting-agenda-gaps-v1)',
-	)
-	await seriesTab.click()
+	// There is no Series sidebar tab to activate. MeetingDetail declares ONE
+	// sidebar tab (History); meeting-series is a `type: "custom"` widget wired
+	// through the page's slots map and rendered inline, so
+	// `getByRole('tab', { name: 'Series' })` matched nothing and this test
+	// skipped permanently, blaming a build that in fact ships the surface.
+	await expect(page.getByTestId('meeting-series-tab')).toBeVisible({
+		timeout: 15_000,
+	})
 
 	// Pattern form with frequency / interval / until fields renders.
 	await expect(page.getByTestId('series-pattern-form')).toBeVisible({

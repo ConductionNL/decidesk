@@ -267,14 +267,14 @@ test('GovernanceBody: Efficiency tab shows the analytics surface', async ({
 		return
 	}
 	await firstRow.click()
-	const efficiencyTab = page.getByRole('tab', { name: 'Efficiency' }).first()
-	if (!(await becomesVisible(efficiencyTab))) {
-		test.skip(true, 'Efficiency tab not rendered (sidebar tabs unavailable).')
-		return
-	}
-	await efficiencyTab.click()
+
+	// ⚠️ No tab to click. GovernanceBodyDetail declares ONE sidebar tab (audit),
+	// and body-efficiency is a `type: "custom"` widget in `config.widgets`,
+	// rendered inline. `getByRole('tab', { name: 'Efficiency' })` matched
+	// nothing, so this test skipped permanently as "sidebar tabs unavailable"
+	// while the surface was on the page the whole time.
 	const tab = page.getByTestId('body-efficiency-tab')
-	await expect(tab).toBeVisible()
+	await expect(tab).toBeVisible({ timeout: 15_000 })
 	// Either the analytics sections or the honest empty state are shown.
 	const duration = page.getByTestId('body-efficiency-duration')
 	const empty = page.getByTestId('body-efficiency-empty')

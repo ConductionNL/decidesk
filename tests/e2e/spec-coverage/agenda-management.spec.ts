@@ -208,13 +208,13 @@ test('general assembly agenda warns about missing statutory ALV items', async ({
 		await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}`)
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
-		const agendaTab = page.getByRole('tab', { name: 'Agenda' })
-		const hasTab = await becomesVisible(agendaTab)
-		test.skip(
-			!hasTab,
-			'Agenda tab not present (deployed build predates sidebar tabs)',
-		)
-		await agendaTab.click()
+		// No tab to click. MeetingDetail declares ONE sidebar tab (History), and
+		// meeting-agenda is a `type: "custom"` widget rendered inline, so
+		// `getByRole('tab', { name: 'Agenda' })` matched nothing and this skipped
+		// permanently while blaming the deployed build.
+		await expect(page.getByTestId('agenda-tab')).toBeVisible({
+			timeout: 15_000,
+		})
 
 		const warning = page.getByTestId('statutory-items-warning')
 		const hasWarning = await becomesVisible(warning)
@@ -224,7 +224,12 @@ test('general assembly agenda warns about missing statutory ALV items', async ({
 		)
 
 		// All eight statutory items are missing on an empty ALV agenda.
-		await expect(warning.getByText('Kascommissie report')).toBeVisible()
+		//
+		// ⚠️ 'Audit committee report', not 'Kascommissie report'. The rule's label
+		// in src/services/agendaRules.js was anglicised and this expectation kept
+		// the Dutch-era name, so it could never match. Nothing reported it because
+		// the test skipped before reaching here, on a tab that does not exist.
+		await expect(warning.getByText('Audit committee report')).toBeVisible()
 		await expect(warning.getByText('Financial statements')).toBeVisible()
 		await expect(warning.getByText('Board elections')).toBeVisible()
 	} finally {
@@ -319,13 +324,13 @@ test('sub-items render nested under their parent in the agenda tab', async ({
 		await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}`)
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
-		const agendaTab = page.getByRole('tab', { name: 'Agenda' })
-		const hasTab = await becomesVisible(agendaTab)
-		test.skip(
-			!hasTab,
-			'Agenda tab not present (deployed build predates sidebar tabs)',
-		)
-		await agendaTab.click()
+		// No tab to click. MeetingDetail declares ONE sidebar tab (History), and
+		// meeting-agenda is a `type: "custom"` widget rendered inline, so
+		// `getByRole('tab', { name: 'Agenda' })` matched nothing and this skipped
+		// permanently while blaming the deployed build.
+		await expect(page.getByTestId('agenda-tab')).toBeVisible({
+			timeout: 15_000,
+		})
 
 		// The parent renders plain; the sub-item carries the nesting indicator.
 		const parentCell = page.getByText('Committee Reports', { exact: true })
@@ -370,13 +375,8 @@ test('agenda tab offers the Assemble meeting package action', async ({ page }) =
 	await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 
-	const agendaTab = page.getByRole('tab', { name: 'Agenda' })
-	const hasTab = await becomesVisible(agendaTab)
-	test.skip(
-		!hasTab,
-		'Agenda tab not present (deployed build predates sidebar tabs)',
-	)
-	await agendaTab.click()
+	// No tab to click; meeting-agenda is an inline widget. See the note above.
+	await expect(page.getByTestId('agenda-tab')).toBeVisible({ timeout: 15_000 })
 
 	const assembleButton = page.getByTestId('agenda-assemble-package')
 	const hasButton = await becomesVisible(assembleButton)

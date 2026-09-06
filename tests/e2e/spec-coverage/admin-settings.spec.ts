@@ -4,17 +4,18 @@
  *
  * Gate-19 e2e coverage — Admin settings (admin-settings-v1).
  *
- * Drives the governance-body detail sidebar (Members tab: role
- * assignment + Nextcloud-group/CSV import dialogs; Process template tab:
- * default + specialized template assignment) and the admin settings
- * Organization section. The body create/quorum scenarios stay covered by
- * governance-body.spec.ts. API/contract assertions live in Newman
+ * Drives the governance-body detail widgets (Members: role assignment +
+ * Nextcloud-group/CSV import dialogs; Process template: default + specialized
+ * template assignment) and the admin settings Organization section. The body
+ * create/quorum scenarios stay covered by governance-body.spec.ts.
+ * API/contract assertions live in Newman
  * (tests/integration/decidiq-admin-settings.postman_collection.json),
  * not here.
  *
- * Defensive skips: when the deployed instance does not serve this
- * branch's surfaces yet (deploy mismatch) the specs skip instead of
- * failing — same convention as the other spec-coverage suites.
+ * These are WIDGETS, not sidebar tabs. The distinction is not pedantry: the
+ * helper that hunted a tab could never match, so four tests here skipped
+ * permanently while reporting "not deployed on this instance". Surfaces the
+ * shipped manifest declares are asserted, so an absent one fails.
  *
  * @e2e openspec/specs/admin-settings/spec.md#assign-roles-within-a-body
  * @e2e openspec/specs/admin-settings/spec.md#assign-default-and-specialized-templates-to-a-body
@@ -47,20 +48,21 @@ async function openFirstBodyDetail(page: Page): Promise<boolean> {
 	}
 }
 
-/**
- * Click a sidebar tab by its visible label; false when the tab is absent
- * (older deploy without this branch).
+/*
+ * openSidebarTab() used to live here. It clicked `getByRole('tab', { name })`
+ * and, when nothing matched, skipped the test as "not deployed on this
+ * instance".
+ *
+ * ⚠️ GovernanceBodyDetail HAS NO SIDEBAR TABS. Its `config.sidebar` declares
+ * exactly one, `audit` / "History"; body-members, body-template and
+ * body-efficiency are `type: "custom"` WIDGETS in `config.widgets`, rendered
+ * inline. Dumped off the live page, `getByRole('tab')` returns an EMPTY list,
+ * so the helper could only ever return false and every test behind it skipped
+ * permanently, with a reason about deployment that was never true.
+ *
+ * The widgets are asserted directly now. Same finding as the five minutes tests
+ * fixed alongside these.
  */
-async function openSidebarTab(page: Page, label: string): Promise<boolean> {
-	const tab = page.getByRole('tab', { name: label }).first()
-	try {
-		await tab.waitFor({ state: 'visible', timeout: 10_000 })
-		await tab.click()
-		return true
-	} catch {
-		return false
-	}
-}
 
 // @e2e openspec/specs/admin-settings/spec.md#assign-roles-within-a-body
 test('Members tab lists body members and offers the Change role action', async ({
@@ -70,16 +72,9 @@ test('Members tab lists body members and offers the Change role action', async (
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
 	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
-	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
-	test.skip(
-		!(await becomesVisible(tabRoot)),
-		'members tab body not deployed on this instance',
-	)
+	await expect(tabRoot).toBeVisible({ timeout: 15_000 })
 
 	// The tab renders its member table (root-cause fix: governanceBody is
 	// now a real Participant property, so the filter resolves).
@@ -121,10 +116,6 @@ test('Members tab opens the Nextcloud-group import dialog with a group selector'
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
 	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
-	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
 	const importMenu = tabRoot.getByRole('button', { name: 'Import members' })
@@ -151,10 +142,6 @@ test('Members tab CSV import validates rows and previews duplicates before impor
 	test.skip(
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
-	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
 	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
@@ -197,10 +184,6 @@ test('Process template tab assigns a default and specialized templates', async (
 	test.skip(
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
-	)
-	test.skip(
-		!(await openSidebarTab(page, 'Process template')),
-		'Process template tab not deployed on this instance',
 	)
 
 	const tabRoot = page.locator('[data-testid="body-template-tab"]')
