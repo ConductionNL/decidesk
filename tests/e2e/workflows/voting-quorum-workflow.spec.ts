@@ -1,5 +1,3 @@
-import type { SeedLedger } from './governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,6 +43,8 @@ import type { SeedLedger } from './governance-fixture.ts'
  * @e2e openspec/specs/meeting-management/spec.md#quorum-not-met-meeting-cannot-proceed-to-voting
  * @e2e openspec/specs/decision-management/spec.md#transition-a-decision-from-draft-to-proposed
  */
+import type { SeedLedger } from './governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	BASE,

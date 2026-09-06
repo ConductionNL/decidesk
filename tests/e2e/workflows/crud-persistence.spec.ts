@@ -1,5 +1,3 @@
-import type { SeedLedger } from './governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,6 +23,8 @@ import type { SeedLedger } from './governance-fixture.ts'
  * @e2e openspec/specs/meeting-management/spec.md#create-a-board-meeting-with-physical-location
  * @e2e openspec/specs/decision-management/spec.md#create-a-standalone-decision-outside-a-meeting
  */
+import type { SeedLedger } from './governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	BASE,

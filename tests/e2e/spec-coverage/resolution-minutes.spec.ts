@@ -1,6 +1,3 @@
-import type { Locator, Page } from '@playwright/test'
-import type { SeedLedger } from '../workflows/governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,6 +28,9 @@ import type { SeedLedger } from '../workflows/governance-fixture.ts'
  * @e2e openspec/specs/resolution-minutes/spec.md#generate-minutes-document-from-meeting-data
  * @e2e openspec/specs/resolution-minutes/spec.md#provide-proof-of-proper-adoption-for-notarial-deed
  */
+import type { Locator, Page } from '@playwright/test'
+import type { SeedLedger } from '../workflows/governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'

@@ -1,5 +1,3 @@
-import type { SeedLedger } from './governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,6 +34,8 @@ import type { SeedLedger } from './governance-fixture.ts'
  * @e2e openspec/changes/board-self-evaluation/specs/board-self-evaluation/spec.md#publishing-exposes-only-the-aggregate
  * @e2e openspec/changes/board-self-evaluation/specs/board-self-evaluation/spec.md#lifecycle-gating-is-or-rbac-not-app-local
  */
+import type { SeedLedger } from './governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	BASE,

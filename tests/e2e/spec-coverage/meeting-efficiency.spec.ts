@@ -1,6 +1,3 @@
-import type { Page } from '@playwright/test'
-import type { SeedLedger } from '../workflows/governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,6 +46,9 @@ import type { SeedLedger } from '../workflows/governance-fixture.ts'
  * @e2e openspec/specs/meeting-efficiency/spec.md#compare-allocated-vs-actual-time-per-item-type
  * @e2e openspec/specs/meeting-efficiency/spec.md#show-cost-per-agenda-item-in-analytics
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from '../workflows/governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'
@@ -267,14 +267,14 @@ test('GovernanceBody: Efficiency tab shows the analytics surface', async ({
 		return
 	}
 	await firstRow.click()
-	const efficiencyTab = page.getByRole('tab', { name: 'Efficiency' }).first()
-	if (!(await becomesVisible(efficiencyTab))) {
-		test.skip(true, 'Efficiency tab not rendered (sidebar tabs unavailable).')
-		return
-	}
-	await efficiencyTab.click()
+
+	// ⚠️ No tab to click. GovernanceBodyDetail declares ONE sidebar tab (audit),
+	// and body-efficiency is a `type: "custom"` widget in `config.widgets`,
+	// rendered inline. `getByRole('tab', { name: 'Efficiency' })` matched
+	// nothing, so this test skipped permanently as "sidebar tabs unavailable"
+	// while the surface was on the page the whole time.
 	const tab = page.getByTestId('body-efficiency-tab')
-	await expect(tab).toBeVisible()
+	await expect(tab).toBeVisible({ timeout: 15_000 })
 	// Either the analytics sections or the honest empty state are shown.
 	const duration = page.getByTestId('body-efficiency-duration')
 	const empty = page.getByTestId('body-efficiency-empty')

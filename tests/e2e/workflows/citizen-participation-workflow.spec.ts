@@ -1,6 +1,3 @@
-import type { Page } from '@playwright/test'
-import type { SeedLedger } from './governance-fixture.ts'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,6 +30,9 @@ import type { SeedLedger } from './governance-fixture.ts'
  * @e2e openspec/specs/citizen-participation/spec.md#admin-sets-instance-defaults
  * @e2e openspec/specs/voting-system/spec.md#duplicate-detection-shared-with-statutory-voting
  */
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
+
 import { expect, test } from '@playwright/test'
 import {
 	BASE,

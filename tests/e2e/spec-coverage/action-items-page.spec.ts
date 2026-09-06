@@ -1,5 +1,3 @@
-import type { Page } from '@playwright/test'
-
 /*
  * SPDX-FileCopyrightText: 2026 Decidiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -13,6 +11,8 @@ import type { Page } from '@playwright/test'
  * @e2e openspec/specs/action-item-management/spec.md#view-the-action-items-list
  * @e2e openspec/specs/action-item-management/spec.md#create-an-action-item
  */
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 import { BASE_URL as BASE } from '../base-url.ts'
 import { writeHeaders } from '../workflows/governance-fixture.ts'
