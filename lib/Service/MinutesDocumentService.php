@@ -29,7 +29,6 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Service;
 
 use DateTimeImmutable;
-use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Decidiq\Exception\MissingObjectException;
 use OCA\Decidiq\Exception\MissingRelationException;
@@ -174,7 +173,7 @@ class MinutesDocumentService {
 			record: [
 				'path' => $path,
 				'format' => $document['format'],
-				'generatedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+				'generatedAt' => (new DateTimeImmutable())->format(DateTimeImmutable::ATOM),
 				'generatedBy' => $displayName,
 				'docudesk' => $document['docudesk'],
 			],
