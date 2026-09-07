@@ -27,11 +27,11 @@ use OCA\Decidiq\Exception\MissingRelationException;
 use OCA\Decidiq\Service\MeetingFolderService;
 use OCA\Decidiq\Service\MinutesDocumentService;
 use OCA\Decidiq\Service\MinutesGenerationService;
+use OCA\Decidiq\Support\FilinqPdf;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,13 +41,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/resolution-minutes/spec.md
  */
 class MinutesDocumentServiceTest extends TestCase {
-
-	/**
-	 * Mock DI container.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface&MockObject $container;
 
 	/**
 	 * Mock ObjectService.
@@ -82,7 +75,12 @@ class MinutesDocumentServiceTest extends TestCase {
 	 *
 	 * @var object|null
 	 */
-	private ?object $pdfService = null;
+	/**
+	 * The PDF bytes filinq should answer with, or null when it cannot.
+	 *
+	 * @var string|null
+	 */
+	private ?string $pdfBytes = null;
 
 	/**
 	 * Set up test fixtures.
@@ -92,8 +90,8 @@ class MinutesDocumentServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		// The OpenRegister object service is injected directly (ADR-083/084);
-		// the container is only consulted for the optional Docudesk PdfService.
+		// The OpenRegister object service is injected directly (ADR-083/084),
+		// and the optional PDF pathway now arrives as its own collaborator.
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 
 		$this->objectService->method('setRegister')->willReturnSelf();
@@ -102,19 +100,18 @@ class MinutesDocumentServiceTest extends TestCase {
 		$this->generationService = $this->createMock(MinutesGenerationService::class);
 		$this->folderService = $this->createMock(MeetingFolderService::class);
 
-		$this->container = $this->createMock(ContainerInterface::class);
-		$this->container->method('get')->willReturnCallback(
-			function (string $id): object {
-				if ($id === 'OCA\DocuDesk\Service\PdfService' && $this->pdfService !== null) {
-					return $this->pdfService;
-				}
-
-				throw new \RuntimeException('Service not found: ' . $id);
-			}
+		// The RESOLVER is the collaborator now, not the container. Which name
+		// filinq answers to, and what happens when it answers to none, is
+		// FilinqPdf's own concern and has its own test — asserting it again
+		// through this service would be testing the lookup twice and the
+		// minutes document never.
+		$filinqPdf = $this->createMock(FilinqPdf::class);
+		$filinqPdf->method('fromHtml')->willReturnCallback(
+			fn (): ?string => $this->pdfBytes
 		);
 
 		$this->service = new MinutesDocumentService(
-			container: $this->container,
+			filinqPdf: $filinqPdf,
 			logger: $this->createMock(LoggerInterface::class),
 			generationService: $this->generationService,
 			folderService: $this->folderService,
@@ -296,20 +293,7 @@ class MinutesDocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGeneratePdfWithDocudeskWritesPdf(): void {
-		$this->pdfService = new class {
-
-			/**
-			 * Fake renderer.
-			 *
-			 * @param string $html HTML input
-			 * @param array<string,mixed> $options Render options
-			 *
-			 * @return string
-			 */
-			public function generatePdfFromHtml(string $html, array $options = []): string {
-				return '%PDF-1.4 fake';
-			}//end generatePdfFromHtml()
-		};
+		$this->pdfBytes = '%PDF-1.4 fake';
 
 		$minutesEntity = $this->createEntityMock(
 			[
