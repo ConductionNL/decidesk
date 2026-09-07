@@ -5,9 +5,9 @@
  *
  * Renders the minutes content into a formatted document and persists it into
  * the linked meeting's Files folder ('Minutes' subfolder). PDF rendering is
- * delegated to Docudesk when (and only when) its PdfService is resolvable
- * from the container; otherwise the plain markdown document is produced and
- * the response says so honestly.
+ * delegated to filinq when (and only when) FilinqPdf can resolve it, under
+ * whichever name that app carries on this instance; otherwise the plain
+ * markdown document is produced and the response says so honestly.
  *
  * @category Service
  * @package  OCA\Decidiq\Service
@@ -33,9 +33,8 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Decidiq\Exception\MissingObjectException;
 use OCA\Decidiq\Exception\MissingRelationException;
-use OCA\Decidiq\Support\FleetAppId;
+use OCA\Decidiq\Support\FilinqPdf;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -72,14 +71,14 @@ class MinutesDocumentService {
 	/**
 	 * Constructor for MinutesDocumentService.
 	 *
-	 * @param ContainerInterface $container DI container (lazy ObjectService / Docudesk lookup)
+	 * @param FilinqPdf $filinqPdf Renders a PDF through filinq when it is installed
 	 * @param LoggerInterface $logger The logger
 	 * @param MinutesGenerationService $generationService Draft generator (content fallback)
 	 * @param MeetingFolderService $folderService Meeting Files folder writer
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
+		private readonly FilinqPdf $filinqPdf,
 		private readonly LoggerInterface $logger,
 		private readonly MinutesGenerationService $generationService,
 		private readonly MeetingFolderService $folderService,
@@ -374,27 +373,11 @@ class MinutesDocumentService {
 	 * @spec openspec/specs/resolution-minutes/spec.md
 	 */
 	private function tryDocudeskPdf(string $markdown, string $title): ?string {
-		try {
-			// Resolved across every namespace filinq has shipped under; see the
-			// note on BoardEvaluationReportService::tryDocudeskPdf(). Pinned to
-			// the retired name, minutes stopped rendering as PDF silently.
-			$pdfService = FleetAppId::getService($this->container, 'filinq', 'Service\PdfService');
-			if ($pdfService === null) {
-				return null;
-			}
-			$html = $this->markdownToHtml(markdown: $markdown);
-			$pdf = $pdfService->generatePdfFromHtml($html, ['title' => $title]);
-			if (is_string($pdf) === true && $pdf !== '') {
-				return $pdf;
-			}
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'Decidiq: Docudesk PDF pathway unavailable, falling back to markdown',
-				['error' => $e->getMessage()]
-			);
-		}
-
-		return null;
+		return $this->filinqPdf->fromHtml(
+			html: $this->markdownToHtml(markdown: $markdown),
+			title: $title,
+			context: 'the minutes document'
+		);
 	}//end tryDocudeskPdf()
 
 	/**
@@ -536,7 +519,7 @@ class MinutesDocumentService {
 	}//end resolveMeeting()
 
 	/**
-	 * Lazy-load the OpenRegister ObjectService from the container.
+	 * The OpenRegister ObjectService, injected since ADR-083.
 	 *
 	 * @return object The OpenRegister ObjectService instance
 	 */

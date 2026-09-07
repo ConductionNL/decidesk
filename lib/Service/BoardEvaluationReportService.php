@@ -33,10 +33,9 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Service;
 
 use OCA\Decidiq\Exception\MissingObjectException;
-use OCA\Decidiq\Support\FleetAppId;
+use OCA\Decidiq\Support\FilinqPdf;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\FileService;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -49,13 +48,13 @@ class BoardEvaluationReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (lazy ObjectService / Docudesk lookup)
+	 * @param FilinqPdf $filinqPdf Renders a PDF through filinq when it is installed
 	 * @param LoggerInterface $logger Diagnostic logger
 	 * @param FileService $fileService The OpenRegister file service
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
+		private readonly FilinqPdf $filinqPdf,
 		private readonly LoggerInterface $logger,
 		private readonly FileService $fileService,
 		private readonly ObjectServiceInterface $objectService,
@@ -237,28 +236,11 @@ class BoardEvaluationReportService {
 	 * @return string|null PDF binary content or null
 	 */
 	private function tryDocudeskPdf(string $markdown, string $title): ?string {
-		try {
-			// Resolved across every namespace filinq has shipped under. Bound to
-			// 'OCA\DocuDesk\...' alone this get() threw on any current instance,
-			// and the catch below turned that into a silent fallback — the board
-			// evaluation report simply stopped coming out as a PDF.
-			$pdfService = FleetAppId::getService($this->container, 'filinq', 'Service\PdfService');
-			if ($pdfService === null) {
-				return null;
-			}
-			$html = $this->markdownToHtml(markdown: $markdown);
-			$pdf = $pdfService->generatePdfFromHtml($html, ['title' => $title]);
-			if (is_string($pdf) === true && $pdf !== '') {
-				return $pdf;
-			}
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'Decidiq: Docudesk PDF pathway unavailable for evaluation report, falling back to markdown',
-				['error' => $e->getMessage()]
-			);
-		}
-
-		return null;
+		return $this->filinqPdf->fromHtml(
+			html: $this->markdownToHtml(markdown: $markdown),
+			title: $title,
+			context: 'the board evaluation report'
+		);
 	}//end tryDocudeskPdf()
 
 	/**
@@ -420,7 +402,7 @@ class BoardEvaluationReportService {
 	}//end sanitize()
 
 	/**
-	 * Lazy-load the OpenRegister ObjectService from the container.
+	 * The OpenRegister ObjectService, injected since ADR-083.
 	 *
 	 * @return object The ObjectService instance
 	 */
