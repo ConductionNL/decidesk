@@ -1,0 +1,26 @@
+{
+    "x-openregister": {
+        "description": "Additive fragment (ADR-037; OpenSpec change governance-body-events). Adds the provenance pair a governance body raised by ANOTHER app needs: sourceApp + externalReference. Together they are the idempotency key GovernanceBodyCommandService resolves on before writing, which is what makes a re-run of a cross-app migration update one body instead of minting a second. Decision already carries exactly this pair for exactly this reason. Both are optional: a body created through decidiq's own UI leaves them empty, and GovernanceBody.required is deliberately unchanged so no stored body becomes invalid."
+    },
+    "components": {
+        "schemas": {
+            "GovernanceBody": {
+                "version": "0.1.0",
+                "properties": {
+                    "sourceApp": {
+                        "title": "Source app",
+                        "type": "string",
+                        "maxLength": 64,
+                        "description": "App id of the fleet app that asked decidiq to raise this body (e.g. dossiq). Empty for bodies created in decidiq itself. Half of the idempotency key; never an authorization input."
+                    },
+                    "externalReference": {
+                        "title": "External reference",
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "The producing app's own id for the record this body was raised from. Paired with sourceApp it identifies the origin, so a repeated command updates this body rather than creating another."
+                    }
+                }
+            }
+        }
+    }
+}

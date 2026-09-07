@@ -3,23 +3,23 @@
 	"_note": "Delegatie- en mandaatregister (bevoegdheidstoedelingen) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail pages for the bevoegdheidstoedeling register; schema refs BY SLUG (bevoegdheidstoedeling), never the PascalCase key Bevoegdheidstoedeling (multi-word schema — the exact silent-breakage case). The 'geldig op' (in-force-on-date) filter and the ondermandaat chain display are wired by Task 4 (imperative filter/chain UI); this fragment provides the declarative page skeleton, quick filters on status/type, and mass export.",
 	"menu": [
 		{
-			"id": "Bevoegdheidstoedelingen",
+			"id": "AuthorityDelegations",
 			"label": "Delegations & mandates",
 			"icon": "Cog",
-			"route": "Bevoegdheidstoedelingen",
+			"route": "AuthorityDelegations",
 			"order": 54
 		}
 	],
 	"pages": [
 		{
-			"id": "Bevoegdheidstoedelingen",
-			"route": "/bevoegdheidstoedelingen",
+			"id": "AuthorityDelegations",
+			"route": "/authority-delegations",
 			"type": "index",
 			"title": "Delegations & mandates",
 			"_note": "spec: openspec/changes/delegatie-mandaatregister/specs/delegatie-mandaatregister/spec.md#requirement-req-dmr-004-register-views-per-delegans-per-delegataris-in-force-on-date-search-csv-export",
 			"config": {
 				"register": "decidiq",
-				"schema": "bevoegdheidstoedeling",
+				"schema": "authority-delegation",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"subscribe": false,
@@ -42,7 +42,7 @@
 				],
 				"columns": [
 					{ "key": "type", "label": "Type", "widget": "badge" },
-					{ "key": "delegans", "label": "Delegans", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
+					{ "key": "delegatingBody", "label": "Delegans", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
 					{ "key": "delegateRole", "label": "Delegataris" },
 					{ "key": "subject", "label": "Subject", "widget": "link" },
 					{ "key": "validFrom", "label": "Valid from" },
@@ -55,7 +55,7 @@
 						"label": "View",
 						"icon": "EyeOutline",
 						"handler": "navigate",
-						"route": "BevoegdheidstoedelingDetail",
+						"route": "AuthorityDelegationDetail",
 						"primary": true
 					}
 				],
@@ -65,14 +65,14 @@
 			}
 		},
 		{
-			"id": "BevoegdheidstoedelingDetail",
-			"route": "/bevoegdheidstoedelingen/:id",
+			"id": "AuthorityDelegationDetail",
+			"route": "/authority-delegations/:id",
 			"type": "detail",
 			"title": "Delegation / mandate",
 			"_note": "spec: openspec/changes/delegatie-mandaatregister/specs/delegatie-mandaatregister/spec.md#requirement-req-dmr-003-ondermandaat-chains-are-permitted-displayed-and-cycle-free",
 			"config": {
 				"register": "decidiq",
-				"schema": "bevoegdheidstoedeling",
+				"schema": "authority-delegation",
 				"_note": "BevoegdheidstoedelingDetail (REQ-DMR-003/004/005/006). Toedeling data leads 8-wide, publication stacked right; the linked delegans/delegatarisBody/delegatarisPersoon/besluit/ingetrokkenDoor/parentToedeling render as resolved references in the data + Related widgets. The Related widget also surfaces the ondermandaat chain (parent link + list of ondermandaten, keyboard-navigable, depth walked from the loaded chain — never stored) and the reverse lookup of decisions referencing this toedeling as bevoegdheidsgrondslag (REQ-DMR-006). Files leaf for the scanned mandaatbesluit PDF. Audit trail is a sidebar tab. The publish/withdraw actions (setting publicationDate/depublicationDate) and the chain display are wired by Tasks 4-5.",
 				"widgets": [
 					{
@@ -105,12 +105,12 @@
 							"title": "Ondermandaat chain",
 							"icon": "Sitemap",
 							"register": "decidiq",
-							"schema": "bevoegdheidstoedeling",
+							"schema": "authority-delegation",
 							"parentRefField": "parentAllocation",
 							"decisionRefField": "decision",
 							"subjectField": "subject",
 							"labelField": "subject",
-							"detailRoute": "BevoegdheidstoedelingDetail",
+							"detailRoute": "AuthorityDelegationDetail",
 							"decisionRoute": "DecisionDetail"
 						}
 					}

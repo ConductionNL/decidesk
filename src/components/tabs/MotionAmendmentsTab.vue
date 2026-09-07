@@ -163,9 +163,25 @@ export default {
 			]
 		},
 
-		/** @spec openspec/specs/relation-tab-ui/spec.md */
+		/**
+		 * `decisionType` is excluded because it is this tab's DISCRIMINATOR,
+		 * not a choice: every row here is a Decision of decisionType=amendment
+		 * and onConfirm already writes the value itself. Leaving it on the
+		 * form showed an EMPTY required picker — decision-types-as-configuration
+		 * (#1099) dropped the enum from the stored schema, so the select had
+		 * no options and blocked the save.
+		 *
+		 * @spec openspec/specs/relation-tab-ui/spec.md
+		 */
 		excludedFields() {
-			return ['id', 'uuid', 'parentMotion', 'created', 'updated']
+			return [
+				'id',
+				'uuid',
+				'parentMotion',
+				'decisionType',
+				'created',
+				'updated',
+			]
 		},
 	},
 
@@ -213,7 +229,7 @@ export default {
 		},
 
 		/**
-		 * @param row
+		 * @param row The decision row to edit.
 		 * @spec openspec/specs/relation-tab-ui/spec.md
 		 */
 		async openEdit(row) {
@@ -225,7 +241,7 @@ export default {
 		},
 
 		/**
-		 * @param formData
+		 * @param formData The submitted form values.
 		 * @spec openspec/specs/relation-tab-ui/spec.md
 		 */
 		async onConfirm(formData) {

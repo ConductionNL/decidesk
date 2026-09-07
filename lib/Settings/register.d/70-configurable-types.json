@@ -5,388 +5,7 @@
     "description": "Register fragment for the configurable-types-domain-model change (ADR-037). Introduces the TYPE layer: MeetingType, AgendaItemType, PositionType, PositionHold and GovernanceBodyComposition, plus additive `type` references on Meeting, AgendaItem and Decision and the competence fields on DecisionTemplate. See openspec/changes/configurable-types-domain-model/design.md for why an enum was the wrong escape hatch and what is retired as a consequence."
   },
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the configurable-types-domain-model acceptance scenario: gremia Management team and Development team, a gremium Pub quiz COMPOSED OF BOTH via two direct compositions, a Pub quiz night MeetingType on the Pub quiz, a votable Quiz question AgendaItemType, one pub quiz meeting and three quiz questions with voting rounds. References resolve by slug against objects in this same fragment. Deliberately English and domain-neutral: it demonstrates that the model is not council-specific, which is the whole claim of the change.",
-      "objects": {
-        "governance-body": [
-          {
-            "slug": "management-team-conduction",
-            "name": "Management team",
-            "bodyType": "operational",
-            "domain": "operations",
-            "votingDefault": "for-against-abstain",
-            "active": true,
-            "termStart": "2026-01-01T00:00:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000001",
-            "uuid": "c7d10000-0000-4000-a000-000000000001"
-          },
-          {
-            "slug": "development-team-conduction",
-            "name": "Development team",
-            "bodyType": "operational",
-            "domain": "operations",
-            "votingDefault": "for-against-abstain",
-            "active": true,
-            "termStart": "2026-01-01T00:00:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000002",
-            "uuid": "c7d10000-0000-4000-a000-000000000002"
-          },
-          {
-            "slug": "pub-quiz-conduction",
-            "name": "Pub quiz",
-            "bodyType": "operational",
-            "domain": "operations",
-            "votingDefault": "for-against-abstain",
-            "active": true,
-            "termStart": "2026-01-01T00:00:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000003",
-            "uuid": "c7d10000-0000-4000-a000-000000000003"
-          }
-        ],
-        "governance-body-composition": [
-          {
-            "slug": "composition-pub-quiz-management-team",
-            "composite": "c7d10000-0000-4000-a000-000000000003",
-            "component": "c7d10000-0000-4000-a000-000000000001",
-            "compositionType": "direct",
-            "accessionDate": "2026-01-01",
-            "label": "Management team plays"
-          },
-          {
-            "slug": "composition-pub-quiz-development-team",
-            "composite": "c7d10000-0000-4000-a000-000000000003",
-            "component": "c7d10000-0000-4000-a000-000000000002",
-            "compositionType": "direct",
-            "accessionDate": "2026-01-01",
-            "label": "Development team plays"
-          }
-        ],
-        "position-type": [
-          {
-            "slug": "position-pub-quiz-quizmaster",
-            "name": "Quizmaster",
-            "governanceBody": "c7d10000-0000-4000-a000-000000000003",
-            "key": "quizmaster",
-            "seats": 1,
-            "order": 1,
-            "allowedHoldTypes": [
-              "regular",
-              "interim"
-            ],
-            "termDurationMonths": 12,
-            "maxConsecutiveTerms": 3,
-            "reappointable": true,
-            "active": true,
-            "description": "Runs the quiz and rules on disputed answers. Demonstrates a position declared by its own gremium: the Management team has no quizmaster unless it declares one.",
-            "id": "c7d10000-0000-4000-a000-000000000011",
-            "uuid": "c7d10000-0000-4000-a000-000000000011"
-          },
-          {
-            "slug": "position-management-team-chair",
-            "name": "Chair",
-            "governanceBody": "c7d10000-0000-4000-a000-000000000001",
-            "key": "chair",
-            "seats": 1,
-            "order": 1,
-            "allowedHoldTypes": [
-              "regular",
-              "interim",
-              "acting"
-            ],
-            "termDurationMonths": 24,
-            "maxConsecutiveTerms": 2,
-            "reappointable": true,
-            "active": true,
-            "description": "Chairs the management team. Its allowedHoldTypes admit an interim; the quizmaster's do not admit 'acting' — hold types are configured per position, not globally.",
-            "id": "c7d10000-0000-4000-a000-000000000012",
-            "uuid": "c7d10000-0000-4000-a000-000000000012"
-          }
-        ],
-        "agenda-item-type": [
-          {
-            "slug": "agenda-item-type-quiz-question",
-            "name": "Quiz question",
-            "owningBody": "c7d10000-0000-4000-a000-000000000003",
-            "votable": true,
-            "order": 1,
-            "isDraft": false,
-            "active": true,
-            "initialLifecycle": "open",
-            "lifecycleStates": [
-              "open",
-              "voting",
-              "scored"
-            ],
-            "description": "A question the assembled teams vote on. Votable, so it carries a voting round; owned by the Pub quiz body.",
-            "fields": [
-              {
-                "key": "correctAnswer",
-                "label": "Correct answer",
-                "fieldType": "string",
-                "required": false
-              },
-              {
-                "key": "points",
-                "label": "Points",
-                "fieldType": "number",
-                "required": false
-              }
-            ],
-            "id": "c7d10000-0000-4000-a000-000000000021",
-            "uuid": "c7d10000-0000-4000-a000-000000000021"
-          },
-          {
-            "slug": "agenda-item-type-quiz-round-opening",
-            "name": "Round opening",
-            "owningBody": "c7d10000-0000-4000-a000-000000000003",
-            "votable": false,
-            "order": 0,
-            "isDraft": false,
-            "active": true,
-            "initialLifecycle": "open",
-            "description": "Non-votable housekeeping item — proves a meeting type admits more than one item kind.",
-            "id": "c7d10000-0000-4000-a000-000000000022",
-            "uuid": "c7d10000-0000-4000-a000-000000000022"
-          }
-        ],
-        "meeting-type": [
-          {
-            "slug": "meeting-type-pub-quiz-night",
-            "name": "Pub quiz night",
-            "governanceBody": "c7d10000-0000-4000-a000-000000000003",
-            "allowedAgendaItemTypes": [
-              "c7d10000-0000-4000-a000-000000000022",
-              "c7d10000-0000-4000-a000-000000000021"
-            ],
-            "defaultQuorum": 4,
-            "defaultQuorumRule": "majority",
-            "defaultVotingRule": "for-against-abstain",
-            "defaultVoteThreshold": "simple-majority",
-            "defaultDurationMinutes": 90,
-            "initialLifecycle": "scheduled",
-            "isPublic": false,
-            "isDraft": false,
-            "validFrom": "2026-01-01",
-            "active": true,
-            "description": "The Pub quiz body's own meeting kind. It exists in no enum anywhere in decidiq — that is the point: a gremium defined its own meeting type at runtime, with zero code changed.",
-            "id": "c7d10000-0000-4000-a000-000000000031",
-            "uuid": "c7d10000-0000-4000-a000-000000000031"
-          }
-        ],
-        "meeting": [
-          {
-            "slug": "pub-quiz-night-2026-09",
-            "title": "Pub quiz — September 2026",
-            "type": "c7d10000-0000-4000-a000-000000000031",
-            "governanceBody": "c7d10000-0000-4000-a000-000000000003",
-            "meetingType": "regular",
-            "scheduledDate": "2026-09-18T19:30:00Z",
-            "endDate": "2026-09-18T21:00:00Z",
-            "location": "Conduction HQ, kantine",
-            "meetingMode": "in-person",
-            "lifecycle": "scheduled",
-            "quorumRequired": 4,
-            "isPublic": false,
-            "id": "c7d10000-0000-4000-a000-000000000041",
-            "uuid": "c7d10000-0000-4000-a000-000000000041"
-          }
-        ],
-        "agenda-item": [
-          {
-            "slug": "pub-quiz-2026-09-opening",
-            "title": "Welcome and rules",
-            "type": "c7d10000-0000-4000-a000-000000000022",
-            "itemType": "informational",
-            "orderNumber": 1,
-            "estimatedDuration": 5,
-            "meeting": "c7d10000-0000-4000-a000-000000000041",
-            "description": "The quizmaster opens the evening."
-          },
-          {
-            "slug": "pub-quiz-2026-09-q1",
-            "title": "Which team ships more Friday deploys?",
-            "type": "c7d10000-0000-4000-a000-000000000021",
-            "itemType": "decision",
-            "orderNumber": 2,
-            "estimatedDuration": 10,
-            "meeting": "c7d10000-0000-4000-a000-000000000041",
-            "description": "Votable quiz question. The teams present are the Management team and the Development team, resolved through the Pub quiz body's two direct compositions — nobody was added to the Pub quiz by hand.",
-            "id": "c7d10000-0000-4000-a000-000000000042",
-            "uuid": "c7d10000-0000-4000-a000-000000000042"
-          },
-          {
-            "slug": "pub-quiz-2026-09-q2",
-            "title": "Should the next quiz be held off-site?",
-            "type": "c7d10000-0000-4000-a000-000000000021",
-            "itemType": "decision",
-            "orderNumber": 3,
-            "estimatedDuration": 10,
-            "meeting": "c7d10000-0000-4000-a000-000000000041",
-            "description": "Votable quiz question.",
-            "id": "c7d10000-0000-4000-a000-000000000043",
-            "uuid": "c7d10000-0000-4000-a000-000000000043"
-          },
-          {
-            "slug": "pub-quiz-2026-09-q3",
-            "title": "Is a tie broken by the quizmaster?",
-            "type": "c7d10000-0000-4000-a000-000000000021",
-            "itemType": "decision",
-            "orderNumber": 4,
-            "estimatedDuration": 10,
-            "meeting": "c7d10000-0000-4000-a000-000000000041",
-            "description": "Votable quiz question.",
-            "id": "c7d10000-0000-4000-a000-000000000044",
-            "uuid": "c7d10000-0000-4000-a000-000000000044"
-          }
-        ],
-        "voting-round": [
-          {
-            "slug": "pub-quiz-2026-09-q1-vote",
-            "votingMethod": "for-against-abstain",
-            "isSecret": false,
-            "voteThreshold": "simple-majority",
-            "abstentionHandling": "exclude",
-            "tieBreakRule": "chair-decides",
-            "openedAt": "2026-09-18T19:40:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000061",
-            "uuid": "c7d10000-0000-4000-a000-000000000061"
-          },
-          {
-            "slug": "pub-quiz-2026-09-q2-vote",
-            "votingMethod": "for-against-abstain",
-            "isSecret": false,
-            "voteThreshold": "simple-majority",
-            "abstentionHandling": "exclude",
-            "tieBreakRule": "chair-decides",
-            "openedAt": "2026-09-18T19:50:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000062",
-            "uuid": "c7d10000-0000-4000-a000-000000000062"
-          },
-          {
-            "slug": "pub-quiz-2026-09-q3-vote",
-            "votingMethod": "show-of-hands",
-            "isSecret": false,
-            "voteThreshold": "simple-majority",
-            "abstentionHandling": "count",
-            "tieBreakRule": "chair-decides",
-            "openedAt": "2026-09-18T20:00:00Z",
-            "id": "c7d10000-0000-4000-a000-000000000063",
-            "uuid": "c7d10000-0000-4000-a000-000000000063"
-          }
-        ],
-        "decision-template": [
-          {
-            "slug": "decision-type-quiz-answer",
-            "id": "c7d10000-0000-4000-a000-000000000051",
-            "uuid": "c7d10000-0000-4000-a000-000000000051",
-            "name": "Quiz answer",
-            "description": "A quiz question put to the assembled teams. Demonstrates REQ-CTM-003/004: the decision references this TYPE rather than copying it, and the type names the gremium competent to take it.",
-            "decisionType": "motion",
-            "context": "operations",
-            "builtIn": false,
-            "competentBody": "c7d10000-0000-4000-a000-000000000003",
-            "competentPositionTypes": [
-              "c7d10000-0000-4000-a000-000000000011"
-            ],
-            "quorumRequired": true,
-            "quorumRule": "majority",
-            "allowDecideWithoutVote": false,
-            "initialState": "proposed"
-          }
-        ],
-        "decision": [
-          {
-            "slug": "pub-quiz-2026-09-decision-q1",
-            "id": "c7d10000-0000-4000-a000-000000000071",
-            "uuid": "c7d10000-0000-4000-a000-000000000071",
-            "title": "Which team ships more Friday deploys?",
-            "text": "Resolution recorded for quiz question 1 of the September 2026 pub quiz.",
-            "decisionType": "motion",
-            "type": "c7d10000-0000-4000-a000-000000000051",
-            "agendaItem": "c7d10000-0000-4000-a000-000000000042",
-            "lifecycle": "voting",
-            "votingOrder": 1,
-            "voteType": "named",
-            "voteThreshold": "simple-majority"
-          },
-          {
-            "slug": "pub-quiz-2026-09-decision-q2",
-            "id": "c7d10000-0000-4000-a000-000000000072",
-            "uuid": "c7d10000-0000-4000-a000-000000000072",
-            "title": "Should the next quiz be held off-site?",
-            "text": "Resolution recorded for quiz question 2 of the September 2026 pub quiz.",
-            "decisionType": "motion",
-            "type": "c7d10000-0000-4000-a000-000000000051",
-            "agendaItem": "c7d10000-0000-4000-a000-000000000043",
-            "lifecycle": "voting",
-            "votingOrder": 2,
-            "voteType": "named",
-            "voteThreshold": "simple-majority"
-          },
-          {
-            "slug": "pub-quiz-2026-09-decision-q3",
-            "id": "c7d10000-0000-4000-a000-000000000073",
-            "uuid": "c7d10000-0000-4000-a000-000000000073",
-            "title": "Is a tie broken by the quizmaster?",
-            "text": "Resolution recorded for quiz question 3 of the September 2026 pub quiz.",
-            "decisionType": "motion",
-            "type": "c7d10000-0000-4000-a000-000000000051",
-            "agendaItem": "c7d10000-0000-4000-a000-000000000044",
-            "lifecycle": "voting",
-            "votingOrder": 3,
-            "voteType": "named",
-            "voteThreshold": "simple-majority"
-          }
-        ],
-        "decision-stage": [
-          {
-            "slug": "pub-quiz-2026-09-stage-q1",
-            "id": "c7d10000-0000-4000-a000-000000000081",
-            "uuid": "c7d10000-0000-4000-a000-000000000081",
-            "sequence": 1,
-            "mandatory": true,
-            "stageType": "vote",
-            "status": "in-progress",
-            "method": "vote",
-            "decisionMakerType": "body",
-            "label": "Vote on question 1",
-            "decision": "c7d10000-0000-4000-a000-000000000071",
-            "assignedBody": "c7d10000-0000-4000-a000-000000000003",
-            "votingRound": "c7d10000-0000-4000-a000-000000000061"
-          },
-          {
-            "slug": "pub-quiz-2026-09-stage-q2",
-            "id": "c7d10000-0000-4000-a000-000000000082",
-            "uuid": "c7d10000-0000-4000-a000-000000000082",
-            "sequence": 1,
-            "mandatory": true,
-            "stageType": "vote",
-            "status": "in-progress",
-            "method": "vote",
-            "decisionMakerType": "body",
-            "label": "Vote on question 2",
-            "decision": "c7d10000-0000-4000-a000-000000000072",
-            "assignedBody": "c7d10000-0000-4000-a000-000000000003",
-            "votingRound": "c7d10000-0000-4000-a000-000000000062"
-          },
-          {
-            "slug": "pub-quiz-2026-09-stage-q3",
-            "id": "c7d10000-0000-4000-a000-000000000083",
-            "uuid": "c7d10000-0000-4000-a000-000000000083",
-            "sequence": 1,
-            "mandatory": true,
-            "stageType": "vote",
-            "status": "in-progress",
-            "method": "vote",
-            "decisionMakerType": "body",
-            "label": "Vote on question 3",
-            "decision": "c7d10000-0000-4000-a000-000000000073",
-            "assignedBody": "c7d10000-0000-4000-a000-000000000003",
-            "votingRound": "c7d10000-0000-4000-a000-000000000063"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -395,7 +14,7 @@
         "icon": "CalendarTextOutline",
         "version": "0.1.0",
         "title": "Meeting type",
-        "description": "A configurable KIND of meeting, owned by one GovernanceBody. This is the abstraction whose absence produced the flat, undifferentiated meeting list: Meeting.meetingType was a five-value enum with no relation to the body holding the meeting, so a gremium could not define its own meeting kinds without a developer widening the enum or, when that failed, adding a schema. Mirrors dossiq's caseType: the instance references its type and inherits the type's configuration (allowed agenda-item types, quorum and voting defaults, opening lifecycle state). Created by an administrator at runtime — adding a meeting kind costs zero code (configurable-types-domain-model REQ-CTM-001).",
+        "description": "A configurable KIND of meeting, owned by one GovernanceBody. This is the abstraction whose absence produced the flat, undifferentiated meeting list: Meeting.meetingType was a five-value enum with no relation to the body holding the meeting, so a gremium could not define its own meeting kinds without a developer widening the enum or, when that failed, adding a schema. Mirrors dossiq's caseType: the instance references its type and inherits the type's configuration (allowed agenda-item types, quorum and voting defaults, opening lifecycle state). Created by an administrator at runtime: adding a meeting kind costs zero code (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:EventSeries",
         "x-openregister": {
@@ -541,7 +160,7 @@
         "icon": "FormatListNumbered",
         "version": "0.1.0",
         "title": "Agenda item type",
-        "description": "A configurable KIND of agenda item. This is the schema that lets oral questions, interpellations, incoming documents, council information letters and kascommissie reports stop being five separate schemas with five top-level menu entries: each becomes an AgendaItem carrying one of these types. CRITICAL PROPERTY: owningBody is INDEPENDENT of the body holding the meeting the item sits on. That single decoupling expresses both halves of the kascommissie case with one model — the kascommissie can hold its OWN meeting (a MeetingType whose governanceBody is the kascommissie) AND own an agenda item on the ALV's meeting (this type's owningBody is the kascommissie). No second schema (configurable-types-domain-model REQ-CTM-002).",
+        "description": "A configurable KIND of agenda item. This is the schema that lets oral questions, interpellations, incoming documents, council information letters and kascommissie reports stop being five separate schemas with five top-level menu entries: each becomes an AgendaItem carrying one of these types. CRITICAL PROPERTY: owningBody is INDEPENDENT of the body holding the meeting the item sits on. That single decoupling expresses both halves of the kascommissie case with one model: the kascommissie can hold its OWN meeting (a MeetingType whose governanceBody is the kascommissie) AND own an agenda item on the ALV's meeting (this type's owningBody is the kascommissie). No second schema (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:ItemList",
         "x-openregister": {
@@ -609,7 +228,7 @@
                 "label": {
                   "type": "string",
                   "title": "Label",
-                  "description": "What the field is called on screen — the caption above the input when someone fills in an agenda item, and the column header where the field is listed."
+                  "description": "What the field is called on screen: the caption above the input when someone fills in an agenda item, and the column header where the field is listed."
                 },
                 "fieldType": {
                   "type": "string",
@@ -711,7 +330,7 @@
         "icon": "SeatOutline",
         "version": "0.1.0",
         "title": "Position type",
-        "description": "A position that EXISTS on a gremium — the gremium's configuration declaring, for example, that a board has a president. Carries a governanceBody back-reference, exactly as dossiq's statusType/resultType/roleType carry a caseType back-reference; a type's configuration lives in child schemas with a back-FK, never inlined as an array on the type, because an inline array cannot be referenced by uuid and PositionHold needs to reference it. Supersedes Post, whose startDate/endDate wrongly described the HOLDER rather than the position, and absorbs TermijnRegeling wholesale (configurable-types-domain-model REQ-CTM-005).",
+        "description": "A position that EXISTS on a gremium: the gremium's configuration declaring, for example, that a board has a president. Carries a governanceBody back-reference, exactly as dossiq's statusType/resultType/roleType carry a caseType back-reference; a type's configuration lives in child schemas with a back-FK, never inlined as an array on the type, because an inline array cannot be referenced by uuid and PositionHold needs to reference it. Supersedes Post, whose startDate/endDate wrongly described the HOLDER rather than the position, and absorbs TermijnRegeling wholesale (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:Role",
         "x-openregister": {
@@ -844,7 +463,7 @@
         "icon": "AccountTieOutline",
         "version": "0.1.0",
         "title": "Position hold",
-        "description": "One membership holding one position, for a duration, with a hold type. This is the object decidiq had no way to express: Membership.post was a bare string reference with no duration and no type, so 'X held the presidency, as interim, from A to B' was unsayable and successive holds were inexpressible — although there will always be a next president. It points at a MEMBERSHIP rather than a Person, so you cannot hold a position on a body you do not sit on and the referential integrity is free. Its endDate is INDEPENDENT of Membership.endDate, which is what lets one person be council member until date A but faction leader until date B (configurable-types-domain-model REQ-CTM-006, REQ-CTM-007).",
+        "description": "One membership holding one position, for a duration, with a hold type. This is the object decidiq had no way to express: Membership.post was a bare string reference with no duration and no type, so 'X held the presidency, as interim, from A to B' was unsayable and successive holds were inexpressible, although there will always be a next president. It points at a MEMBERSHIP rather than a Person, so you cannot hold a position on a body you do not sit on and the referential integrity is free. Its endDate is INDEPENDENT of Membership.endDate, which is what lets one person be council member until date A but faction leader until date B (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:Role",
         "x-openregister": {
@@ -951,7 +570,7 @@
         "icon": "SetMerge",
         "version": "0.1.0",
         "title": "Governance body composition",
-        "description": "A gremium composed of other gremia. Two kinds, and the distinction matters: 'direct' means the component's members ARE members of the composite (the same people); 'representation' means the component sends a number of representatives, and seatPosition references a PositionType on the composite — so the representation IS ITSELF A POSITION and a delegate's tenure is an ordinary PositionHold with a duration and a hold type, able to be interim like any other office-holder. DISTINCT from GovernanceBody.parentBody, which expresses HIERARCHY ('sits under') rather than composition ('is made of'); a body may have both, and keeping them apart stops parentBody becoming an overloaded field meaning three things depending on bodyType. Supersedes BodyParticipation, which had sharedBody/participant/seats but no seatPosition, so its seats were anonymous (configurable-types-domain-model REQ-CTM-009).",
+        "description": "A gremium composed of other gremia. Two kinds, and the distinction matters: 'direct' means the component's members ARE members of the composite (the same people); 'representation' means the component sends a number of representatives, and seatPosition references a PositionType on the composite, so the representation IS ITSELF A POSITION and a delegate's tenure is an ordinary PositionHold with a duration and a hold type, able to be interim like any other office-holder. DISTINCT from GovernanceBody.parentBody, which expresses HIERARCHY ('sits under') rather than composition ('is made of'); a body may have both, and keeping them apart stops parentBody becoming an overloaded field meaning three things depending on bodyType. Supersedes BodyParticipation, which had sharedBody/participant/seats but no seatPosition, so its seats were anonymous (configurable-types-domain-model).",
         "type": "object",
         "x-schema-org": "schema:OrganizationRole",
         "x-openregister": {
@@ -1046,7 +665,7 @@
       "Meeting": {
         "slug": "meeting",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` reference to MeetingType. The existing `meetingType` enum is RETAINED and deprecated for one release so meetings seeded before this change keep rendering; a meeting carrying neither is invalid (REQ-CTM-001 Scenario 3).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` reference to MeetingType. The existing `meetingType` enum is RETAINED and deprecated for one release so meetings seeded before this change keep rendering; a meeting carrying neither is invalid (Scenario 3).",
         "properties": {
           "type": {
             "title": "Meeting type",
@@ -1071,7 +690,7 @@
       "AgendaItem": {
         "slug": "agenda-item",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` reference to AgendaItemType. The existing `itemType` enum (informational/discussion/decision) is retained as a coarse rendering hint; `type` carries the configurable kind. An item's OWNER comes from its type's owningBody and need not be the body holding the meeting (REQ-CTM-002).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` reference to AgendaItemType. The existing `itemType` enum (informational/discussion/decision) is retained as a coarse rendering hint; `type` carries the configurable kind. An item's OWNER comes from its type's owningBody and need not be the body holding the meeting.",
         "properties": {
           "type": {
             "title": "Agenda item type",
@@ -1095,7 +714,7 @@
       "Decision": {
         "slug": "decision",
         "version": "1.1.0",
-        "description": "Patched by configurable-types-domain-model: gains a `type` REFERENCE to a DecisionType. The reference is resolved at decision time, never copied at creation — which is the whole difference between a template and a type: a template is copied once, a type is consulted at every decision, so changing a type's voting rule governs every subsequent decision of that type (REQ-CTM-003).",
+        "description": "Patched by configurable-types-domain-model: gains a `type` REFERENCE to a DecisionType. The reference is resolved at decision time, never copied at creation: which is the whole difference between a template and a type: a template is copied once, a type is consulted at every decision, so changing a type's voting rule governs every subsequent decision of that type.",
         "properties": {
           "type": {
             "title": "Decision type",
@@ -1112,7 +731,7 @@
       "DecisionTemplate": {
         "slug": "decision-template",
         "version": "1.1.0",
-        "description": "Promoted by configurable-types-domain-model from a copy-once TEMPLATE to a live TYPE. It already carried stateMachine, votingRule, quorumRule, voteThreshold and checklist; it lacked the one thing that matters for authorisation — which gremium is competent to take the decision — and nothing referenced it. Both are added here (REQ-CTM-003, REQ-CTM-004).",
+        "description": "Promoted by configurable-types-domain-model from a copy-once TEMPLATE to a live TYPE. It already carried stateMachine, votingRule, quorumRule, voteThreshold and checklist; it lacked the one thing that matters for authorisation: which gremium is competent to take the decision, and nothing referenced it. Both are added here.",
         "properties": {
           "competentBody": {
             "title": "Competent body",

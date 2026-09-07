@@ -1,0 +1,3890 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Decidiq example set: Municipality",
+		"version": "1.0.0",
+		"description": "A council with committees and factions. Motions, commitments, information letters and a regulations register."
+	},
+	"x-openregister": {
+		"type": "profile",
+		"app": "decidiq",
+		"profile": {
+			"id": "municipality",
+			"label": "Municipality",
+			"description": "A council with committees and factions. Motions, commitments, information letters and a regulations register.",
+			"order": 1,
+			"objectCount": 185,
+			"icon": "Domain"
+		},
+		"description": "An example set an operator picks in the first-time setup wizard (ADR-042). NEVER imported on install: the register.d fragments declare schemas only, so a bare install has zero objects. Every object carries @self.configuration/register/schema so the import resolves the live decidiq register WITHOUT this descriptor declaring components.registers. That is deliberate and load-bearing: ImportHandler::importRegister() calls setApplication($appId) unconditionally on an existing register, so a descriptor that declared the register would re-point the decidiq register at this profile config id and hydrate over its authorization baseline. Verified on a live instance: importing this shape left application=decidiq, version and authorization byte-identical. Import is idempotent by slug, so loading a profile twice adds nothing. Descriptors live in this SUBDIRECTORY on purpose: RegisterDescriptorService scans lib/Settings/*.json non-recursively and matches descriptors by declared register slug, so four profile files in lib/Settings would collide with each other and with decidesk_register.json.",
+		"seedData": {
+			"description": "Example objects for the municipality set.",
+			"objects": {
+				"action-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-besluiten-ori-publicatie",
+						"title": "Besluiten raadsvergadering publiceren via ORI-koppeling",
+						"description": "Informatiemanager controleert ORI-export en bevestigt succesvolle aanlevering bij PLOOI.",
+						"assignee": "Informatiemanager",
+						"dueDate": "2025-03-22T00:00:00Z",
+						"taskStatus": "overdue"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-bestemmingsplan-publiceren",
+						"title": "Bestemmingsplan Groningen-Noord publiceren op ruimtelijkeplannen.nl",
+						"assignee": "Ruimtelijke Ordening",
+						"dueDate": "2025-04-10T00:00:00Z",
+						"taskStatus": "overdue"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-communicatie-begroting-2026",
+						"title": "Begroting 2026 communiceren naar inwoners",
+						"assignee": "Communicatieafdeling",
+						"dueDate": "2025-05-01T00:00:00Z",
+						"taskStatus": "completed",
+						"completedAt": "2025-04-25T14:30:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-fusie-dorpsraden-convenant",
+						"title": "Convenant fusie dorpsraden Noord en Oost opstellen en laten ondertekenen",
+						"description": "Gemeentelijke contactpersoon stelt convenant op in samenspraak met beide dorpsraden.",
+						"assignee": "Beleidsmedewerker Participatie",
+						"dueDate": "2025-10-01T00:00:00Z",
+						"taskStatus": "open"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-notulen-distribueren",
+						"title": "Definitieve notulen raadsvergadering 20 maart distribueren",
+						"description": "Griffier verstuurt vastgestelde notulen aan alle raadsleden en publiceert op gemeentelijke website.",
+						"assignee": "Griffier",
+						"dueDate": "2025-04-11T00:00:00Z",
+						"taskStatus": "completed",
+						"completedAt": "2025-04-11T09:30:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-plan-zonnepanelen",
+						"title": "Plan van aanpak zonnepanelen gemeentelijke gebouwen opstellen",
+						"description": "College presenteert plan voor 1 januari 2026 conform aangenomen motie.",
+						"assignee": "Wethouder Duurzaamheid",
+						"dueDate": "2026-01-01T00:00:00Z",
+						"taskStatus": "open"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-woningbouw-uitvoeringsplan",
+						"title": "Uitvoeringsplan Woningbouwplan Oost opstellen",
+						"description": "College stelt uitvoeringsplan op inclusief fasering, budgetten en planning.",
+						"assignee": "Wethouder Wonen",
+						"dueDate": "2025-07-01T00:00:00Z",
+						"taskStatus": "in-progress"
+					}
+				],
+				"agenda-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "begroting-2026-bespreking",
+						"title": "Kadernota begroting 2026",
+						"itemType": "discussion",
+						"orderNumber": 4,
+						"estimatedDuration": 60,
+						"description": "Eerste bespreking van de financiële kaders voor begrotingsjaar 2026"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "jaarrekening-2024",
+						"title": "Jaarrekening 2024: ter goedkeuring",
+						"itemType": "decision",
+						"orderNumber": 3,
+						"estimatedDuration": 45,
+						"description": "Bespreking en vaststelling van de jaarrekening over het boekjaar 2024"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "lijst-ingekomen-stukken-2025-01-15",
+						"title": "Lijst ingekomen stukken",
+						"itemType": "decision",
+						"orderNumber": 5,
+						"estimatedDuration": 10,
+						"description": "Hamerstuk-verzamelagendapunt voor de lijst ingekomen stukken; de griffie-routeringsadviezen worden en bloc bekrachtigd via de hamerstuk-flow (agenda-live-management). AgendaItem draagt geen tag-veld, zodat 'hamerstuk' hier conventioneel via itemType 'decision' + deze omschrijving is vastgelegd.",
+						"meeting": "raadsvergadering-2025-01-15"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "notulen-2024-12-18",
+						"title": "Vaststellen notulen vergadering 18 december 2024",
+						"itemType": "decision",
+						"orderNumber": 2,
+						"estimatedDuration": 10,
+						"isRecurring": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "opening-raad-2025-01-15",
+						"title": "Opening vergadering",
+						"itemType": "informational",
+						"orderNumber": 1,
+						"estimatedDuration": 5
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "rondvraag",
+						"title": "Rondvraag",
+						"itemType": "informational",
+						"orderNumber": 99,
+						"estimatedDuration": 10,
+						"isRecurring": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "vragenuur-2025-01-15",
+						"title": "Vragenuur",
+						"itemType": "discussion",
+						"orderNumber": 6,
+						"estimatedDuration": 30,
+						"description": "Vragenuur van de raad (Reglement van Orde): raadsleden stellen mondelinge vragen aan de portefeuillehouders. Toegelaten mondelinge vragen hangen als subagendapunt onder dit punt; sinds questions-as-agenda-items is een mondelinge vraag zelf een agendapunt met het type \"Mondelinge vraag\", dus de koppeling is nu parentItem in plaats van een aparte administratie.",
+						"meeting": "raadsvergadering-2025-01-15"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-mv-opvang-statushouders",
+						"title": "Opvangcapaciteit statushouders Q3",
+						"itemType": "discussion",
+						"orderNumber": 100,
+						"type": "agendapunttype-mondelinge-vraag",
+						"description": "Graag inzicht in de opvangcapaciteit voor statushouders in het derde kwartaal en de gevolgen voor de taakstelling.",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"questionNumber": "MV-2026-004",
+							"submitter": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "rejected",
+							"rejectionReason": "Betreft een individuele casus, geen algemeen belang"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-mv-sluiting-zwembad",
+						"title": "Voorgenomen sluiting zwembad De Plons",
+						"itemType": "discussion",
+						"orderNumber": 101,
+						"type": "agendapunttype-mondelinge-vraag",
+						"description": "In de media wordt gesproken over een voorgenomen sluiting van zwembad De Plons. Klopt dit en is de raad hierover tijdig geïnformeerd?",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"questionNumber": "MV-2026-003",
+							"submitter": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "submitted"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-mv-verkeersveiligheid-lindelaan",
+						"title": "Verkeersveiligheid schoolzone Lindelaan",
+						"itemType": "discussion",
+						"orderNumber": 2,
+						"type": "agendapunttype-mondelinge-vraag",
+						"description": "Ouders melden onveilige situaties tijdens de spits bij de schoolzone Lindelaan. Welke korte-termijnmaatregelen ziet het college?",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"questionNumber": "MV-2026-002",
+							"submitter": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "scheduled"
+						},
+						"parentItem": "vragenuur-2025-01-15"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-mv-wachtlijsten-jeugdzorg",
+						"title": "Wachtlijsten jeugdzorg na aanbesteding",
+						"itemType": "discussion",
+						"orderNumber": 1,
+						"type": "agendapunttype-mondelinge-vraag",
+						"description": "Na de recente aanbesteding jeugdhulp bereiken de fractie signalen van oplopende wachttijden. Graag een toelichting van de portefeuillehouder op de actuele stand en de te nemen maatregelen.",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"questionNumber": "MV-2026-001",
+							"submitter": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "answered",
+							"answerSummary": "Wethouder erkent oplopende wachttijden; raadsbrief met plan van aanpak toegezegd vóór 1 maart.",
+							"answeredBy": "00000000-0000-0000-0000-000000000000",
+							"followUpCommitment": "toezegging-raadsbrief-jeugdzorg",
+							"sourceWrittenQuestion": "00000000-0000-0000-0000-000000000000"
+						},
+						"parentItem": "vragenuur-2025-01-15"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-int-jaarrekening-grondbedrijf",
+						"title": "Tekorten jaarrekening grondbedrijf",
+						"itemType": "discussion",
+						"orderNumber": 200,
+						"type": "agendapunttype-interpellatieverzoek",
+						"description": "De omvang van de tekorten en het uitblijven van informatie aan de raad vragen om een interpellatie.",
+						"typeFields": {
+							"requestNumber": "INT-2026-002",
+							"requester": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"questions": "1. Waarom is de raad niet geïnformeerd over de tekorten in het grondbedrijf? 2. Welke gevolgen heeft dit voor de meerjarenbegroting?",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "submitted",
+							"steunbetuigingen": [
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-int-subsidie-cultuurhuis",
+						"title": "Subsidieverlening cultuurhuis",
+						"itemType": "discussion",
+						"orderNumber": 201,
+						"type": "agendapunttype-interpellatieverzoek",
+						"description": "De onderbouwing van de subsidieverhoging is voor de raad onvoldoende inzichtelijk.",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"requestNumber": "INT-2026-003",
+							"requester": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"questions": "1. Op welke grond is de subsidie aan het cultuurhuis verhoogd? 2. Voldoet de verhoging aan het geldende subsidiekader?",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "agendised",
+							"steunbetuigingen": [
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000"
+							],
+							"councilResolutionDate": "2026-06-30"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "agendapunt-int-veiligheid-stationsgebied",
+						"title": "Veiligheid stationsgebied",
+						"itemType": "discussion",
+						"orderNumber": 202,
+						"type": "agendapunttype-interpellatieverzoek",
+						"description": "De aanhoudende onveiligheid in het stationsgebied rechtvaardigt een interpellatiedebat buiten de orde van de dag.",
+						"meeting": "raadsvergadering-2025-01-15",
+						"typeFields": {
+							"requestNumber": "INT-2026-001",
+							"requester": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "00000000-0000-0000-0000-000000000000",
+							"questions": "1. Sinds wanneer was het college bekend met de toename van incidenten in het stationsgebied? 2. Welke maatregelen zijn getroffen en waarom is de raad hierover niet eerder geïnformeerd?",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "handled",
+							"steunbetuigingen": [
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000",
+								"00000000-0000-0000-0000-000000000000"
+							],
+							"councilResolutionDate": "2026-05-12"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "brief-verkeersveiligheid-schoolzone",
+						"title": "Brief inzake verkeersveiligheid schoolzone Lindelaan",
+						"itemType": "informational",
+						"orderNumber": 300,
+						"type": "type-ingekomen-stuk",
+						"parentItem": "lijst-ingekomen-stukken-2025-01-15",
+						"typeFields": {
+							"sender": "J. Jansen",
+							"senderType": "natural-person",
+							"receivedAt": "2026-01-12",
+							"category": "letter-resident",
+							"routingAdvice": "referred-to-executive-board-for-disposal",
+							"lifecycle": "routing-determined"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "collegestuk-jaarverantwoording",
+						"title": "Jaarverantwoording kinderopvang 2025",
+						"itemType": "informational",
+						"orderNumber": 301,
+						"type": "type-ingekomen-stuk",
+						"parentItem": "lijst-ingekomen-stukken-2025-01-15",
+						"typeFields": {
+							"sender": "College van B&W",
+							"senderType": "governingBody",
+							"receivedAt": "2026-01-18",
+							"category": "executive-board-paper",
+							"routingAdvice": "noted-for-information",
+							"lifecycle": "routing-determined"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "petitie-behoud-zwembad",
+						"title": "Petitie behoud zwembad De Plons (1.243 ondertekenaars)",
+						"itemType": "informational",
+						"orderNumber": 302,
+						"type": "type-ingekomen-stuk",
+						"parentItem": "lijst-ingekomen-stukken-2025-01-15",
+						"typeFields": {
+							"sender": "Actiecomité De Plons",
+							"senderType": "organisation",
+							"receivedAt": "2026-01-15",
+							"category": "petition",
+							"routingAdvice": "include-with-agenda-item",
+							"lifecycle": "agendised",
+							"targetAgendaItem": "begroting-2026-bespreking"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "uitnodiging-veiligheidsregio",
+						"title": "Uitnodiging werkbezoek Veiligheidsregio",
+						"itemType": "informational",
+						"orderNumber": 303,
+						"type": "type-ingekomen-stuk",
+						"typeFields": {
+							"sender": "Veiligheidsregio Midden-Nederland",
+							"senderType": "governingBody",
+							"receivedAt": "2026-01-19",
+							"category": "invitation",
+							"routingAdvice": "noted-for-information",
+							"lifecycle": "registered"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "rib-2026-012-wachtlijsten-jeugdzorg",
+						"title": "Wachtlijsten jeugdzorg: stand van zaken en maatregelen",
+						"itemType": "informational",
+						"orderNumber": 304,
+						"type": "type-raadsinformatiebrief",
+						"parentItem": "lijst-ingekomen-stukken-2025-01-15",
+						"typeFields": {
+							"number": "RIB-2026-012",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"category": "toezegging-afdoening",
+							"sentAt": "2026-02-20",
+							"letterDocument": "Decidesk/Gemeenteraad Amsterdam/Raadsinformatiebrieven/RIB-2026-012 Wachtlijsten jeugdzorg.pdf",
+							"attachments": [
+								"Decidesk/Gemeenteraad Amsterdam/Raadsinformatiebrieven/RIB-2026-012 Bijlage rapportage wachtlijsten.pdf"
+							],
+							"settledCommitment": "toezegging-raadsbrief-jeugdzorg",
+							"lifecycle": "agendised",
+							"publicationDate": "2026-02-21T09:00:00Z"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "rib-2026-013-energietransitie",
+						"title": "Voortgang energietransitie gebouwde omgeving",
+						"itemType": "informational",
+						"orderNumber": 305,
+						"type": "type-raadsinformatiebrief",
+						"typeFields": {
+							"number": "RIB-2026-013",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"category": "actieve-informatieplicht",
+							"sentAt": "2026-03-05",
+							"letterDocument": "Decidesk/Gemeenteraad Amsterdam/Raadsinformatiebrieven/RIB-2026-013 Voortgang energietransitie.pdf",
+							"lifecycle": "sent"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "rib-2026-014-afdoening-motie-fietsve",
+						"title": "Afdoening motie Fietsveiligheid schoolroutes",
+						"itemType": "informational",
+						"orderNumber": 306,
+						"type": "type-raadsinformatiebrief",
+						"parentItem": "lijst-ingekomen-stukken-2025-01-15",
+						"typeFields": {
+							"number": "RIB-2026-014",
+							"portfolioHolder": "00000000-0000-0000-0000-000000000000",
+							"category": "motie-afdoening",
+							"sentAt": "2026-03-12",
+							"letterDocument": "Decidesk/Gemeenteraad Amsterdam/Raadsinformatiebrieven/RIB-2026-014 Afdoening motie fietsveiligheid.pdf",
+							"relatedMotion": "00000000-0000-0000-0000-000000000000",
+							"lifecycle": "involved-in-handling",
+							"publicationDate": "2026-03-13T09:00:00Z"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "tv-rib-2026-012-doorlooptijd",
+						"title": "Hoe verhoudt de genoemde gemiddelde doorlooptijd zich tot de landelijke norm?",
+						"itemType": "discussion",
+						"orderNumber": 307,
+						"type": "type-technische-vraag",
+						"parentItem": "rib-2026-012-wachtlijsten-jeugdzorg",
+						"typeFields": {
+							"question": "Hoe verhoudt de genoemde gemiddelde doorlooptijd zich tot de landelijke norm?",
+							"setBy": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "GroenLinks",
+							"setOn": "2026-02-24",
+							"answer": "De doorlooptijd ligt 12% boven de landelijke norm; het plan van aanpak voorziet in een reductie naar de norm binnen twee kwartalen.",
+							"answeredBy": "Afdeling Sociaal Domein",
+							"answeredOn": "2026-03-02",
+							"lifecycle": "answered"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "tv-rib-2026-012-regiocijfers",
+						"title": "Kunnen de wachtlijstcijfers worden uitgesplitst per regiogemeente?",
+						"itemType": "discussion",
+						"orderNumber": 308,
+						"type": "type-technische-vraag",
+						"parentItem": "rib-2026-012-wachtlijsten-jeugdzorg",
+						"typeFields": {
+							"question": "Kunnen de wachtlijstcijfers worden uitgesplitst per regiogemeente?",
+							"setBy": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "VVD",
+							"setOn": "2026-02-25",
+							"lifecycle": "put"
+						}
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "tv-rib-2026-013-netcapaciteit",
+						"title": "Welke wijken lopen vertraging op door netcapaciteit?",
+						"itemType": "discussion",
+						"orderNumber": 309,
+						"type": "type-technische-vraag",
+						"parentItem": "rib-2026-013-energietransitie",
+						"typeFields": {
+							"question": "Welke wijken lopen vertraging op door netcapaciteit?",
+							"setBy": "00000000-0000-0000-0000-000000000000",
+							"politicalGroup": "D66",
+							"setOn": "2026-03-08",
+							"lifecycle": "put"
+						}
+					}
+				],
+				"agenda-item-type": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "agendapunttype-mondelinge-vraag",
+						"name": "Mondelinge vraag",
+						"description": "Een raadslid stelt het college een vraag die in het vragenuur mondeling wordt beantwoord.",
+						"owningBody": "gemeenteraad-amsterdam",
+						"votable": false,
+						"initialLifecycle": "submitted",
+						"lifecycleStates": [
+							"submitted",
+							"admitted",
+							"rejected",
+							"scheduled",
+							"answered",
+							"not-handled",
+							"withdrawn"
+						],
+						"submissionWindowHours": 24,
+						"order": 10,
+						"isDraft": false,
+						"active": true,
+						"fields": [
+							{
+								"key": "questionNumber",
+								"label": "Nummer",
+								"fieldType": "string",
+								"required": true
+							},
+							{
+								"key": "submitter",
+								"label": "Indiener",
+								"fieldType": "reference"
+							},
+							{
+								"key": "politicalGroup",
+								"label": "Fractie",
+								"fieldType": "reference"
+							},
+							{
+								"key": "portfolioHolder",
+								"label": "Portefeuillehouder",
+								"fieldType": "reference"
+							},
+							{
+								"key": "lifecycle",
+								"label": "Status",
+								"fieldType": "enum",
+								"enumValues": [
+									"submitted",
+									"admitted",
+									"rejected",
+									"scheduled",
+									"answered",
+									"not-handled",
+									"withdrawn"
+								]
+							},
+							{
+								"key": "rejectionReason",
+								"label": "Reden van afwijzing",
+								"fieldType": "text"
+							},
+							{
+								"key": "answerSummary",
+								"label": "Samenvatting van het antwoord",
+								"fieldType": "text"
+							},
+							{
+								"key": "answeredBy",
+								"label": "Beantwoord door",
+								"fieldType": "reference"
+							}
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "agendapunttype-interpellatieverzoek",
+						"name": "Interpellatieverzoek",
+						"description": "Een raadslid vraagt het college ter verantwoording. Het verzoek wordt pas geagendeerd als genoeg raadsleden het steunen.",
+						"owningBody": "gemeenteraad-amsterdam",
+						"votable": true,
+						"initialLifecycle": "submitted",
+						"lifecycleStates": [
+							"submitted",
+							"admitted",
+							"rejected",
+							"agendised",
+							"handled",
+							"withdrawn"
+						],
+						"submissionWindowHours": 24,
+						"supportThresholdType": "fraction",
+						"supportThresholdValue": 0.2,
+						"order": 20,
+						"isDraft": false,
+						"active": true,
+						"fields": [
+							{
+								"key": "requestNumber",
+								"label": "Nummer",
+								"fieldType": "string",
+								"required": true
+							},
+							{
+								"key": "requester",
+								"label": "Aanvrager",
+								"fieldType": "reference"
+							},
+							{
+								"key": "politicalGroup",
+								"label": "Fractie",
+								"fieldType": "reference"
+							},
+							{
+								"key": "questions",
+								"label": "Vragen",
+								"fieldType": "text",
+								"required": true
+							},
+							{
+								"key": "portfolioHolder",
+								"label": "Portefeuillehouder",
+								"fieldType": "reference"
+							},
+							{
+								"key": "steunbetuigingen",
+								"label": "Steunbetuigingen",
+								"fieldType": "reference"
+							},
+							{
+								"key": "lifecycle",
+								"label": "Status",
+								"fieldType": "enum",
+								"enumValues": [
+									"submitted",
+									"admitted",
+									"rejected",
+									"agendised",
+									"handled",
+									"withdrawn"
+								]
+							},
+							{
+								"key": "councilResolutionDate",
+								"label": "Datum raadsbesluit",
+								"fieldType": "date"
+							},
+							{
+								"key": "rejectionReason",
+								"label": "Reden van afwijzing",
+								"fieldType": "text"
+							}
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "type-ingekomen-stuk",
+						"name": "Ingekomen stuk",
+						"description": "Post die bij de griffie binnenkomt en op de lijst van ingekomen stukken wordt geplaatst.",
+						"owningBody": "gemeenteraad-amsterdam",
+						"votable": false,
+						"order": 10,
+						"isDraft": false,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "type-raadsinformatiebrief",
+						"name": "Raadsinformatiebrief",
+						"description": "Een brief van het college aan de raad, ter kennisname of ter bespreking geagendeerd.",
+						"owningBody": "gemeenteraad-amsterdam",
+						"votable": false,
+						"order": 30,
+						"isDraft": false,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "type-technische-vraag",
+						"name": "Technische vraag",
+						"description": "Een technische vraag van een raadslid over een raadsinformatiebrief, met het antwoord erbij.",
+						"owningBody": "gemeenteraad-amsterdam",
+						"votable": false,
+						"order": 40,
+						"isDraft": false,
+						"active": true
+					}
+				],
+				"ancillary-position": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "ancillary-position"
+						},
+						"slug": "nf-adviseur-beeindigd",
+						"person": "jan-de-vries",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"organisation": "Adviesbureau De Kern",
+						"role": "adviseur",
+						"remunerated": true,
+						"qualitateQua": false,
+						"startDate": "2021-06-01",
+						"endDate": "2025-12-31",
+						"declaredAt": "2021-06-05",
+						"lifecycle": "ended",
+						"publicationDate": "2021-06-10T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "ancillary-position"
+						},
+						"slug": "nf-bestuurslid-welzijn",
+						"person": "marie-janssen",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"organisation": "Stichting Welzijn Noord",
+						"role": "bestuurslid",
+						"remunerated": false,
+						"hoursIndication": "4 uur/week",
+						"qualitateQua": false,
+						"startDate": "2024-03-01",
+						"declaredAt": "2024-03-05",
+						"reviewedAt": "2025-05-15",
+						"lifecycle": "public",
+						"publicationDate": "2024-03-10T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "ancillary-position"
+						},
+						"slug": "nf-docent-hogeschool",
+						"person": "marie-janssen",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"organisation": "Hogeschool Amsterdam",
+						"role": "docent bestuurskunde",
+						"remunerated": true,
+						"hoursIndication": "8 uur/week",
+						"qualitateQua": false,
+						"startDate": "2025-09-01",
+						"declaredAt": "2025-09-03",
+						"lifecycle": "reported"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "ancillary-position"
+						},
+						"slug": "nf-gr-afvalschap-qq",
+						"person": "jan-de-vries",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"organisation": "Gemeenschappelijke Regeling Afvalschap",
+						"role": "lid algemeen bestuur",
+						"remunerated": false,
+						"qualitateQua": true,
+						"startDate": "2023-05-01",
+						"declaredAt": "2023-05-08",
+						"reviewedAt": "2026-06-15",
+						"lifecycle": "public",
+						"publicationDate": "2023-05-12T09:00:00Z"
+					}
+				],
+				"approval-route": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "approval-route"
+						},
+						"slug": "collegeadvies-standaard",
+						"name": "Collegeadvies — standaard parafering",
+						"subjectType": "collegeadvies",
+						"isDefault": true,
+						"description": "Advies, twee paraferingen en een accordering. The shape a Dutch collegeadvies travels before it reaches the college.",
+						"steps": [
+							{
+								"order": 1,
+								"stageType": "advisory",
+								"actorType": "role",
+								"actor": "juridisch-adviseur",
+								"mandatory": true,
+								"label": "Juridisch advies"
+							},
+							{
+								"order": 2,
+								"stageType": "endorsement",
+								"actorType": "role",
+								"actor": "afdelingshoofd",
+								"mandatory": true,
+								"label": "Parafering afdelingshoofd"
+							},
+							{
+								"order": 3,
+								"stageType": "endorsement",
+								"actorType": "role",
+								"actor": "concerncontroller",
+								"mandatory": false,
+								"label": "Parafering concerncontrol"
+							},
+							{
+								"order": 4,
+								"stageType": "decisive",
+								"actorType": "role",
+								"actor": "gemeentesecretaris",
+								"mandatory": true,
+								"label": "Accordering gemeentesecretaris"
+							}
+						]
+					}
+				],
+				"authority-delegation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "authority-delegation"
+						},
+						"slug": "delegatie-uitwerkingsplannen",
+						"type": "delegation",
+						"subject": "Vaststellen van uitwerkingsplannen als bedoeld in art. 3.6 Wro",
+						"subMandatePermitted": false,
+						"statutoryBasis": [
+							"Awb art. 10:13",
+							"Wro art. 3.6"
+						],
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"validFrom": "2026-01-01",
+						"status": "effective",
+						"publicationDate": "2026-01-05T09:00:00Z",
+						"delegatingBody": "gemeenteraad-amsterdam",
+						"delegateBody": "00000000-0000-0000-0000-000000000000",
+						"restrictions": "Uitsluitend binnen door de raad vastgestelde kaders"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "authority-delegation"
+						},
+						"slug": "machtiging-woo-vertegenwoordiging",
+						"type": "authorisation",
+						"delegateRole": "juridisch adviseur team Recht",
+						"delegatePerson": "00000000-0000-0000-0000-000000000000",
+						"subject": "Vertegenwoordiging bij Woo-bezwaarprocedures",
+						"subMandatePermitted": false,
+						"statutoryBasis": [
+							"Awb art. 10:3"
+						],
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"validFrom": "2025-01-01",
+						"validTo": "2026-01-01",
+						"status": "withdrawn",
+						"withdrawnBy": "00000000-0000-0000-0000-000000000000",
+						"publicationDate": "2025-01-10T09:00:00Z",
+						"delegatingBody": "00000000-0000-0000-0000-000000000000"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "authority-delegation"
+						},
+						"slug": "mandaat-subsidies-secretaris",
+						"type": "mandate",
+						"delegateRole": "gemeentesecretaris",
+						"subject": "Beslissen op subsidieaanvragen tot het genoemde plafond",
+						"financialCeiling": 25000,
+						"subMandatePermitted": true,
+						"statutoryBasis": [
+							"Awb art. 10:3",
+							"Asv 2026 art. 4"
+						],
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"validFrom": "2026-01-01",
+						"status": "effective",
+						"publicationDate": "2026-01-05T09:00:00Z",
+						"delegatingBody": "00000000-0000-0000-0000-000000000000",
+						"restrictions": "Geen subsidies met precedentwerking"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "authority-delegation"
+						},
+						"slug": "ondermandaat-subsidies-samenleving",
+						"type": "mandate",
+						"delegateRole": "afdelingshoofd Samenleving",
+						"subject": "Beslissen op subsidieaanvragen binnen het programma Samenleving",
+						"financialCeiling": 5000,
+						"subMandatePermitted": false,
+						"statutoryBasis": [
+							"Awb art. 10:9"
+						],
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"parentAllocation": "mandaat-subsidies-secretaris",
+						"validFrom": "2026-02-01",
+						"validTo": "2026-08-15",
+						"status": "effective",
+						"publicationDate": "2026-02-05T09:00:00Z",
+						"delegatingDescription": "gemeentesecretaris",
+						"restrictions": "Uitsluitend reguliere subsidieregelingen"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "authority-delegation"
+						},
+						"slug": "volmacht-inkoop-teamleider",
+						"type": "power-of-attorney",
+						"delegateRole": "teamleider Inkoop",
+						"subject": "Aangaan van privaatrechtelijke rechtshandelingen voor inkoop",
+						"financialCeiling": 50000,
+						"subMandatePermitted": false,
+						"statutoryBasis": [
+							"BW art. 3:60",
+							"Gemeentewet art. 171"
+						],
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"validFrom": "2026-03-01",
+						"status": "draft",
+						"delegatingDescription": "burgemeester",
+						"restrictions": "Binnen het vastgestelde inkoopbeleid"
+					}
+				],
+				"body-governance-configuration": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "body-governance-configuration"
+						},
+						"slug": "beleid-gemeenteraad",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"ancillaryPositionDisclosureDefault": "public",
+						"giftThresholdAmount": 50,
+						"giftsPublic": true,
+						"integrityNotificationGroup": "decidesk-burgemeester"
+					}
+				],
+				"body-participation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "body-participation"
+						},
+						"slug": "deelname-noorderbrug-noz",
+						"sharedBody": "bestuur-noz-organisatie",
+						"participant": "gemeenteraad-noorderbrug",
+						"seats": 2,
+						"votingWeight": 2,
+						"accessionDate": "2015-01-01T00:00:00Z",
+						"label": "Deelnemer per oprichting"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "body-participation"
+						},
+						"slug": "deelname-oostwoud-noz",
+						"sharedBody": "bestuur-noz-organisatie",
+						"participant": "gemeenteraad-oostwoud",
+						"seats": 2,
+						"votingWeight": 2,
+						"accessionDate": "2015-01-01T00:00:00Z",
+						"label": "Deelnemer per oprichting"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "body-participation"
+						},
+						"slug": "deelname-zuidermeer-noz",
+						"sharedBody": "bestuur-noz-organisatie",
+						"participant": "gemeenteraad-zuidermeer",
+						"seats": 1,
+						"votingWeight": 1,
+						"accessionDate": "2015-01-01T00:00:00Z",
+						"label": "Deelnemer per oprichting"
+					}
+				],
+				"confidentiality-ground": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-collegestukken",
+						"name": "Geheimhouding collegestukken",
+						"citation": "Gemeentewet art. 87-89",
+						"legacyCitation": "voorheen art. 55",
+						"category": "municipalities-act",
+						"requiresRatification": false,
+						"description": "Geheimhouding opgelegd door of namens het college op collegestukken. Post-2023 Gemeentewet art. 87-89; voorheen art. 55.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-commissiestukken",
+						"name": "Geheimhouding commissiestukken",
+						"citation": "Gemeentewet art. 87-89",
+						"legacyCitation": "voorheen art. 86",
+						"category": "municipalities-act",
+						"requiresRatification": true,
+						"description": "Geheimhouding opgelegd in een raadscommissie op commissiestukken; bekrachtiging door de raad vereist. Post-2023 Gemeentewet art. 87-89; voorheen art. 86.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-raadsstukken",
+						"name": "Geheimhouding raadsstukken",
+						"citation": "Gemeentewet art. 87-89",
+						"legacyCitation": "voorheen art. 25",
+						"category": "municipalities-act",
+						"requiresRatification": true,
+						"description": "Geheimhouding opgelegd op stukken bestemd voor of behandeld door de raad. Onder het regime van de Wet bevorderen integriteit en functioneren decentraal bestuur (2023) geldt Gemeentewet art. 87-89; voorheen art. 25.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-woo-bedrijfsgegevens",
+						"name": "Vertrouwelijk verstrekte bedrijfs- en fabricagegegevens",
+						"citation": "Woo art. 5.1 lid 1",
+						"legacyCitation": null,
+						"category": "woo-absolute",
+						"requiresRatification": false,
+						"description": "Absolute uitzonderingsgrond (Woo art. 5.1 lid 1): vertrouwelijk aan de overheid meegedeelde bedrijfs- en fabricagegegevens.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-woo-financieel-economisch",
+						"name": "Financiële en economische belangen van het bestuursorgaan",
+						"citation": "Woo art. 5.1 lid 2",
+						"legacyCitation": null,
+						"category": "woo-relative",
+						"requiresRatification": false,
+						"description": "Relatieve uitzonderingsgrond (Woo art. 5.1 lid 2): financiële en economische belangen van het bestuursorgaan.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-woo-kroon-veiligheid",
+						"name": "Eenheid van de Kroon / veiligheid van de Staat",
+						"citation": "Woo art. 5.1 lid 1",
+						"legacyCitation": null,
+						"category": "woo-absolute",
+						"requiresRatification": false,
+						"description": "Absolute uitzonderingsgrond (Woo art. 5.1 lid 1): eenheid van de Kroon en veiligheid van de Staat.",
+						"builtIn": true,
+						"active": true
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-ground"
+						},
+						"slug": "grond-woo-persoonlijke-levenssfeer",
+						"name": "Eerbiediging van de persoonlijke levenssfeer",
+						"citation": "Woo art. 5.1 lid 2",
+						"legacyCitation": null,
+						"category": "woo-relative",
+						"requiresRatification": false,
+						"description": "Relatieve uitzonderingsgrond (Woo art. 5.1 lid 2): eerbiediging van de persoonlijke levenssfeer.",
+						"builtIn": true,
+						"active": true
+					}
+				],
+				"confidentiality-restriction": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-restriction"
+						},
+						"slug": "geheimhouding-besluit-personeel",
+						"scope": "decision",
+						"targetDecision": "00000000-0000-0000-0000-000000000000",
+						"ground": "grond-woo-persoonlijke-levenssfeer",
+						"imposedBy": "body",
+						"imposedByBody": "gemeenteraad-amsterdam",
+						"imposedAt": "2026-01-19T09:00:00Z",
+						"lifecycle": "dissolved",
+						"dissolutionDecision": "00000000-0000-0000-0000-000000000000",
+						"liftingDate": "2026-06-25",
+						"liftingConditions": "openbaar na afronding onderhandelingen"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-restriction"
+						},
+						"slug": "geheimhouding-commissiestuk-vastgoed",
+						"scope": "item",
+						"targetAgendaItem": "00000000-0000-0000-0000-000000000000",
+						"ground": "grond-commissiestukken",
+						"imposedBy": "chair",
+						"imposedByBody": "gemeenteraad-amsterdam",
+						"imposedAt": "2026-03-02T13:30:00Z",
+						"lifecycle": "imposed",
+						"ratificationDeadline": "2026-04-01"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "confidentiality-restriction"
+						},
+						"slug": "geheimhouding-raadsnota-grondexploitatie",
+						"scope": "document",
+						"targetDocument": "00000000-0000-0000-0000-000000000000",
+						"ground": "grond-raadsstukken",
+						"imposedBy": "executive-board",
+						"imposedByBody": "gemeenteraad-amsterdam",
+						"imposedAt": "2026-06-08T10:00:00Z",
+						"lifecycle": "imposed",
+						"ratificationDeadline": "2026-09-30"
+					}
+				],
+				"conflict-of-interest": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-david-r008",
+						"boardMember": "david-cohen-audit-noord",
+						"agendaItem": "r-2025-008-audit-charter",
+						"declarationType": "none",
+						"actionTaken": "no-action-needed",
+						"declarationTimestamp": "2025-06-04T10:05:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-rachid-q3",
+						"boardMember": "rachid-el-amrani-audit-noord",
+						"declarationType": "competing-business",
+						"description": "Tweede bestuursfunctie bij vergelijkbare wooncorporatie.",
+						"severity": "material",
+						"actionTaken": "recused-from-discussion",
+						"declarationTimestamp": "2025-06-04T10:10:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-wethouder-vastgoedbelang",
+						"boardMember": "m-marie-amsterdam",
+						"declarationType": "financial-interest",
+						"description": "Lid meldt een financieel belang in een vastgoedontwikkeling die onderwerp is van het agendapunt en onthoudt zich van beraadslaging en stemming.",
+						"severity": "material",
+						"actionTaken": "recused-from-vote",
+						"declarationTimestamp": "2026-06-15T19:05:00Z"
+					}
+				],
+				"contact-detail": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "contact-detail"
+						},
+						"slug": "cd-amsterdam-address",
+						"type": "address",
+						"value": "Amstel 1, Amsterdam",
+						"label": "Stadhuis",
+						"governanceBody": "gemeenteraad-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "contact-detail"
+						},
+						"slug": "cd-femke-email",
+						"type": "email",
+						"value": "f.halsema@amsterdam.nl",
+						"label": "Werk",
+						"person": "femke-halsema"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "contact-detail"
+						},
+						"slug": "cd-femke-phone",
+						"type": "phone",
+						"value": "+31 20 624 1111",
+						"label": "Bestuurssecretariaat",
+						"person": "femke-halsema"
+					}
+				],
+				"decision": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "amendement-cultuursubsidie",
+						"decisionType": "amendment",
+						"title": "Amendement Cultuursubsidie verhogen",
+						"text": "De raad besluit post 6.1 (cultuursubsidies) in de programmabegroting te verhogen met €50.000, ten laste van de post onvoorzien.",
+						"proposer": "Fatima El-Amrani",
+						"proposedText": "Verhoog post 6.1 met €50.000",
+						"lifecycle": "decided",
+						"outcome": "adopted",
+						"decisionDate": "2025-04-10T21:05:00Z",
+						"isPublished": "public",
+						"amends": "motie-duurzaamheid-2025"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "benoeming-lid-auditcommissie",
+						"decisionType": "appointment",
+						"title": "Benoeming lid auditcommissie",
+						"text": "Voordracht van mevrouw M. Janssen als lid van de auditcommissie, vanwege gewenste financiële expertise.",
+						"lifecycle": "proposed",
+						"targetBody": "auditcommissie-provincie-nh",
+						"targetPosts": [],
+						"targetRole": "member",
+						"candidates": [
+							{
+								"person": "marie-janssen",
+								"notes": "Financiële expertise gewenst in de auditcommissie."
+							}
+						],
+						"nominatingParty": {
+							"type": "politicalGroup",
+							"name": "D66"
+						},
+						"appointedMemberships": [],
+						"isPublished": "internal"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "benoeming-voorzitter-auditcommissie-ingetrokken",
+						"decisionType": "appointment",
+						"title": "Benoeming voorzitter auditcommissie (ingetrokken)",
+						"text": "Voordracht van de heer K. Bakker als voorzitter van de auditcommissie; kandidaat heeft zich teruggetrokken voor behandeling.",
+						"lifecycle": "withdrawn",
+						"targetBody": "auditcommissie-provincie-nh",
+						"targetPosts": [],
+						"targetRole": "chair",
+						"candidates": [
+							{
+								"externalName": "K. Bakker",
+								"notes": "Kandidaat trekt zich terug voor behandeling."
+							}
+						],
+						"nominatingParty": {
+							"type": "politicalGroup",
+							"name": "GroenLinks"
+						},
+						"appointedMemberships": [],
+						"isPublished": "internal"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-amendement-cultuursubsidie-afgewezen",
+						"decisionType": "meeting-outcome",
+						"title": "Amendement verhoging cultuursubsidie: niet aanvaard",
+						"text": "Het amendement tot verhoging van het cultuursubsidiebudget 2026 met €75.000 wordt niet aanvaard.",
+						"decisionDate": "2025-04-10T21:00:00Z",
+						"outcome": "rejected",
+						"isPublished": "internal",
+						"lifecycle": "decided"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-begroting-2026",
+						"decisionType": "meeting-outcome",
+						"title": "Vaststelling Programmabegroting 2026",
+						"text": "De gemeenteraad van Westerkwartier stelt de programmabegroting 2026 vast.",
+						"decisionDate": "2025-04-10T21:38:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"publishedAt": "2025-04-11T09:00:00Z",
+						"legalBasis": "Gemeentewet art. 189",
+						"lifecycle": "enacted",
+						"enactedAt": "2025-04-11T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-begroting-2027",
+						"decisionType": "meeting-outcome",
+						"title": "Vaststelling Programmabegroting 2027",
+						"text": "De gemeenteraad stelt de programmabegroting 2027 vast conform het raadsvoorstel van het college.",
+						"decisionDate": "2026-04-15T19:30:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"legalBasis": "Gemeentewet art. 189",
+						"lifecycle": "enacted",
+						"enactedAt": "2026-04-16T09:00:00Z",
+						"supersedes": [
+							"besluit-begroting-2026"
+						],
+						"route": [
+							"stage-begroting-2027-1-prep",
+							"stage-begroting-2027-2-adv",
+							"stage-begroting-2027-3-dec"
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-bestemmingsplan-groningen-noord",
+						"decisionType": "meeting-outcome",
+						"title": "Vaststelling bestemmingsplan Groningen-Noord",
+						"text": "De raad stelt het bestemmingsplan Groningen-Noord ongewijzigd vast.",
+						"decisionDate": "2025-03-27T20:45:00Z",
+						"outcome": "adopted",
+						"isPublished": "internal",
+						"legalBasis": "Wet ruimtelijke ordening art. 3.1",
+						"lifecycle": "decided"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-duurzaamheid-2025",
+						"decisionType": "meeting-outcome",
+						"title": "Motie Duurzaamheid aangenomen",
+						"text": "De raad verzoekt het college een plan van aanpak zonnepanelen te presenteren voor 1 januari 2026.",
+						"decisionDate": "2025-04-10T21:05:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"publishedAt": "2025-04-11T09:00:00Z",
+						"lifecycle": "enacted",
+						"enactedAt": "2025-04-11T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-duurzaamheidsagenda-2026",
+						"decisionType": "meeting-outcome",
+						"title": "Vaststelling Duurzaamheidsagenda 2026",
+						"text": "De raad stelt de Duurzaamheidsagenda Westerkwartier 2026 vast en stelt €200.000 beschikbaar voor uitvoering van de daarin opgenomen maatregelen.",
+						"decisionDate": "2025-03-20T20:45:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"publishedAt": "2025-03-21T09:00:00Z",
+						"legalBasis": "Gemeentewet art. 147",
+						"lifecycle": "enacted",
+						"enactedAt": "2025-03-21T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-fusie-dorpsraden",
+						"decisionType": "meeting-outcome",
+						"title": "Instemming fusie dorpsraden Noord en Oost per 1 januari 2026",
+						"text": "De raad stemt in met de samenvoeging van dorpsraad Noord en dorpsraad Oost tot één dorpsraad Noord-Oost, ingaande 1 januari 2026.",
+						"decisionDate": "2025-04-10T20:30:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"publishedAt": "2025-04-11T08:30:00Z",
+						"lifecycle": "enacted",
+						"enactedAt": "2025-04-11T08:30:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-vaststelling-rvo-amsterdam",
+						"decisionType": "resolution",
+						"title": "Besluit vaststelling reglement van orde gemeenteraad Amsterdam",
+						"text": "Besluit van de gemeenteraad van Amsterdam tot vaststelling van het reglement van orde (Gemeentewet art. 16).",
+						"lifecycle": "enacted",
+						"decisionDate": "2023-03-01",
+						"outcome": "adopted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-verordening-parkeren-2026",
+						"decisionType": "resolution",
+						"title": "Verordening parkeren 2026",
+						"text": "Vaststelling van de verordening parkeren 2026, voortvloeiend uit de bespreking van de kadernota begroting 2026.",
+						"lifecycle": "decided",
+						"decisionDate": "2026-06-15",
+						"outcome": "adopted",
+						"meeting": "raadsvergadering-2025-01-15",
+						"agendaItem": "begroting-2026-bespreking"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-woningbouwplan-oost",
+						"decisionType": "meeting-outcome",
+						"title": "Vaststelling Woningbouwplan Oost 2025-2030",
+						"text": "De gemeenteraad van Westerkwartier stelt het Woningbouwplan Oost 2025-2030 vast en machtigt het college tot uitvoering conform bijgaande planning en budgettering.",
+						"decisionDate": "2025-03-20T21:15:00Z",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"publishedAt": "2025-03-21T09:00:00Z",
+						"legalBasis": "Wet ruimtelijke ordening art. 3.1",
+						"lifecycle": "enacted",
+						"enactedAt": "2025-03-21T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "motie-duurzaamheid-2025",
+						"decisionType": "motion",
+						"title": "Motie Duurzaamheid: zonnepanelen op gemeentelijke daken",
+						"text": "De raad verzoekt het college om voor 1 januari 2026 een concreet plan van aanpak op te stellen voor de plaatsing van zonnepanelen op alle gemeentelijke daken, inclusief een kostenraming en tijdlijn.",
+						"motionType": "motion",
+						"proposer": "Roos de Vries",
+						"lifecycle": "decided",
+						"outcome": "adopted",
+						"isPublished": "public",
+						"submittedAt": "2025-04-10T19:00:00Z",
+						"decisionDate": "2025-04-10T21:10:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "motie-woonlasten-2025",
+						"decisionType": "motion",
+						"title": "Motie Woonlasten verlagen",
+						"text": "De raad verzoekt het college de gemeentelijke woonlasten voor 2027 niet verder te verhogen dan de inflatiecorrectie en daartoe bij de Kadernota een dekkingsvoorstel voor te leggen.",
+						"motionType": "motion",
+						"proposer": "Jan de Boer",
+						"lifecycle": "voting",
+						"isPublished": "public"
+					}
+				],
+				"decision-stage": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-begroting-2027-1-prep",
+						"sequence": 1,
+						"stageType": "preparatory",
+						"status": "decided",
+						"outcome": "adopted",
+						"decidedAt": "2026-03-02T14:00:00Z",
+						"method": "manual",
+						"decisionMakerType": "body",
+						"label": "Voorbereiding & vaststelling concept",
+						"note": "Concept vastgesteld door het directieteam. Doorgestuurd naar de commissie.",
+						"decision": "besluit-begroting-2027",
+						"assignedBody": "directieteam-gemeente-utrecht"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-begroting-2027-2-adv",
+						"sequence": 2,
+						"stageType": "advisory",
+						"status": "decided",
+						"outcome": "advised",
+						"decidedAt": "2026-03-20T17:30:00Z",
+						"method": "advice",
+						"decisionMakerType": "person",
+						"label": "Advies raadscommissie",
+						"note": "Commissie adviseert de raad de begroting ongewijzigd vast te stellen.",
+						"decision": "besluit-begroting-2027",
+						"assignedPerson": "femke-halsema"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-begroting-2027-3-dec",
+						"sequence": 3,
+						"stageType": "decisive",
+						"status": "decided",
+						"outcome": "adopted",
+						"decidedAt": "2026-04-15T21:30:00Z",
+						"method": "vote",
+						"decisionMakerType": "body",
+						"label": "Besluit gemeenteraad",
+						"decision": "besluit-begroting-2027",
+						"assignedBody": "gemeenteraad-amsterdam",
+						"votingRound": "stemming-begroting-2027-gemeenteraad"
+					}
+				],
+				"decision-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "corporate-board",
+						"name": "Corporate Board (BV)",
+						"description": "Decision process for the management board of a Dutch private limited company (BV).",
+						"context": "corporate",
+						"builtIn": true,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "voting"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "openVoting",
+									"from": "deliberating",
+									"to": "voting",
+									"chairOnly": true,
+									"guards": [
+										"quorum_met"
+									]
+								},
+								{
+									"name": "decide",
+									"from": "voting",
+									"to": "decided"
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "chair-decides"
+						},
+						"quorumRequired": true,
+						"quorumRule": "Quorum per the articles of association",
+						"allowDecideWithoutVote": false,
+						"checklist": []
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "municipal-council",
+						"name": "Municipal Council",
+						"description": "Legislative decision process for a municipal council (gemeenteraad), Gemeentewet.",
+						"context": "legislative",
+						"builtIn": true,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "voting"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "openVoting",
+									"from": "deliberating",
+									"to": "voting",
+									"chairOnly": true,
+									"guards": [
+										"quorum_met",
+										"all_amendments_resolved"
+									]
+								},
+								{
+									"name": "decide",
+									"from": "voting",
+									"to": "decided",
+									"chairOnly": true
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "rejected"
+						},
+						"quorumRequired": true,
+						"quorumRule": "More than half of the seats occupied (Gemeentewet art. 20)",
+						"allowDecideWithoutVote": false,
+						"checklist": []
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "municipal-council-urgent",
+						"name": "Municipal Council (urgency-enabled)",
+						"description": "Municipal council (gemeenteraad) process template with the urgent-decision procedure enabled: college spoedbesluit routed to a mandatory ratification stage at the next regular raadsvergadering.",
+						"context": "legislative",
+						"builtIn": false,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "voting"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "openVoting",
+									"from": "deliberating",
+									"to": "voting",
+									"chairOnly": true,
+									"guards": [
+										"quorum_met",
+										"all_amendments_resolved"
+									]
+								},
+								{
+									"name": "decide",
+									"from": "voting",
+									"to": "decided",
+									"chairOnly": true
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "rejected"
+						},
+						"quorumRequired": true,
+						"quorumRule": "More than half of the seats occupied (Gemeentewet art. 20)",
+						"allowDecideWithoutVote": false,
+						"urgencyPolicy": {
+							"allowedTriggerRoles": [
+								"chair"
+							],
+							"minimumNoticeFloorHours": 24,
+							"responseDeadlineHours": {
+								"min": 12,
+								"max": 96
+							},
+							"ratificationRequired": true,
+							"ratifyingBody": "gemeenteraad-amsterdam"
+						},
+						"checklist": []
+					}
+				],
+				"declared-gift": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "declared-gift"
+						},
+						"slug": "gs-boek-delegatie",
+						"recipient": "marie-janssen",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"type": "gift",
+						"giver": "Delegatie gemeente Aken",
+						"description": "Fotoboek stedenband",
+						"estimatedValue": 20,
+						"receivedOn": "2026-01-20",
+						"decision": "accepted",
+						"declaredAt": "2026-01-21",
+						"publicationDate": "2026-01-25T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "declared-gift"
+						},
+						"slug": "gs-diner-projectontwikkelaar",
+						"recipient": "marie-janssen",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"type": "invitation",
+						"giver": "Projectontwikkelaar BV",
+						"description": "Diner nieuwjaarsreceptie",
+						"estimatedValue": 95,
+						"receivedOn": "2026-01-08",
+						"decision": "refused",
+						"notes": "Boven het drempelbedrag; uitnodiging geweigerd conform gedragscode.",
+						"declaredAt": "2026-01-09",
+						"publicationDate": "2026-01-15T09:00:00Z"
+					}
+				],
+				"engagement-record": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "engagement-record"
+						},
+						"slug": "engagement-raadsvergadering-fatima",
+						"meeting": "raadsvergadering-2025-01-15",
+						"participant": "fatima-el-idrissi",
+						"speeches": [
+							{
+								"duration": 300
+							},
+							{
+								"duration": 120
+							}
+						],
+						"questionsRaised": [
+							{
+								"text": "Vraag over klimaatbeleid"
+							}
+						],
+						"topicsSuggested": [
+							{
+								"title": "Woningbouw versnellen"
+							}
+						],
+						"speakingDuration": 420,
+						"engagementScore": 32
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "engagement-record"
+						},
+						"slug": "engagement-raadsvergadering-jan-de-boer",
+						"meeting": "raadsvergadering-2025-01-15",
+						"participant": "jan-de-boer",
+						"speeches": [
+							{
+								"duration": 180
+							}
+						],
+						"questionsRaised": [
+							{
+								"text": "Vraag over begroting"
+							}
+						],
+						"topicsSuggested": [],
+						"speakingDuration": 180,
+						"engagementScore": 15
+					}
+				],
+				"goal": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "goal"
+						},
+						"slug": "goal-amsterdam-klimaatneutraal-2050",
+						"title": "Amsterdam klimaatneutraal",
+						"description": "Netto CO2-uitstoot van de gemeentelijke organisatie naar nul in 2050, conform het raadsbesluit klimaatakkoord.",
+						"horizon": "multi-year",
+						"body": "gemeenteraad-amsterdam",
+						"owner": "femke-halsema",
+						"startDate": "2026-01-01",
+						"deadline": "2050-01-01",
+						"status": "active",
+						"targetValue": 100,
+						"currentValue": 42,
+						"unit": "% CO2-reductie behaald"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "goal"
+						},
+						"slug": "goal-amsterdam-parkeerbeleid",
+						"title": "Herzien parkeerbeleid vastgesteld",
+						"description": "Vaststellen van het herziene parkeerbeleid binnenstad (koppeling met de termijnagenda).",
+						"horizon": "quarterly",
+						"body": "gemeenteraad-amsterdam",
+						"owner": "00000000-0000-0000-0000-000000000000",
+						"startDate": "2026-04-01",
+						"deadline": "2026-09-30",
+						"status": "at-risk",
+						"parentGoal": "goal-amsterdam-klimaatneutraal-2050"
+					}
+				],
+				"governance-body": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "adviesraad-sociaal-domein",
+						"name": "Adviesraad Sociaal Domein",
+						"bodyType": "advisory-body",
+						"domain": "municipality",
+						"workflowTemplate": "legislative"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "auditcommissie-provincie-nh",
+						"name": "Auditcommissie Provincie Noord-Holland",
+						"bodyType": "legislative",
+						"domain": "province",
+						"votingDefault": "for-against-abstain"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "bestuur-noz-organisatie",
+						"name": "Bestuur NOZ organisatie",
+						"bodyType": "shared-body",
+						"domain": "municipal",
+						"workflowTemplate": "legislative"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "bezwaaradviescommissie-amsterdam",
+						"name": "Bezwaaradviescommissie Amsterdam",
+						"bodyType": "advisory-body",
+						"domain": "municipality",
+						"statutoryBasis": "Awb 7:13",
+						"jurisdiction": "Gemeente Amsterdam — algemene bezwaren",
+						"quorum": 3,
+						"quorumRule": "majority",
+						"active": true,
+						"termStart": "2024-01-01T00:00:00Z",
+						"termEnd": "2028-01-01T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "d66-fractie-amsterdam",
+						"name": "D66-fractie",
+						"bodyType": "faction",
+						"domain": "municipality",
+						"parentBody": "gemeenteraad-amsterdam",
+						"votingDefault": "for-against-abstain"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "directieteam-gemeente-utrecht",
+						"name": "Directieteam Gemeente Utrecht",
+						"bodyType": "operational",
+						"domain": "municipality",
+						"votingDefault": "show-of-hands"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "gemeenteraad-amsterdam",
+						"name": "Gemeenteraad Amsterdam",
+						"bodyType": "legislative",
+						"domain": "municipality",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2022-03-16T00:00:00Z",
+						"termEnd": "2026-03-15T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "gemeenteraad-noorderbrug",
+						"name": "Gemeenteraad Noorderbrug",
+						"bodyType": "legislative",
+						"domain": "municipal",
+						"workflowTemplate": "legislative"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "gemeenteraad-oostwoud",
+						"name": "Gemeenteraad Oostwoud",
+						"bodyType": "legislative",
+						"domain": "municipal",
+						"workflowTemplate": "legislative"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "gemeenteraad-zuidermeer",
+						"name": "Gemeenteraad Zuidermeer",
+						"bodyType": "legislative",
+						"domain": "municipal",
+						"workflowTemplate": "legislative"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "groenlinks-fractie-amsterdam",
+						"name": "GroenLinks-fractie",
+						"bodyType": "faction",
+						"domain": "municipality",
+						"parentBody": "gemeenteraad-amsterdam",
+						"votingDefault": "for-against-abstain"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "jongerenraad",
+						"name": "Jongerenraad",
+						"bodyType": "advisory-body",
+						"domain": "municipality",
+						"workflowTemplate": "citizen"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "rvc-waterschap-amstel",
+						"name": "Raad van Commissarissen Waterschap Amstel, Gooi en Vecht",
+						"bodyType": "corporate-board",
+						"domain": "water-authority",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2023-01-01T00:00:00Z",
+						"termEnd": "2026-12-31T00:00:00Z"
+					}
+				],
+				"governance-commitment": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-commitment"
+						},
+						"slug": "toezegging-evaluatie-afvalbeleid",
+						"text": "Het college zegt toe de evaluatie van het afvalbeleid gelijktijdig met de kadernota aan te bieden.",
+						"madeBy": "00000000-0000-0000-0000-000000000000",
+						"meeting": "raadsvergadering-2025-01-15",
+						"directedTo": "gemeenteraad-amsterdam",
+						"deadline": "2026-06-30",
+						"lifecycle": "disposed",
+						"settlementNotes": "Evaluatierapport aangeboden bij kadernota 2026; besproken in commissie Middelen.",
+						"settlementEvidence": "https://gemeente-voorbeeldingen.nl/raadsbrieven/evaluatie-afvalbeleid-2026.pdf",
+						"relatedMotion": "00000000-0000-0000-0000-000000000000",
+						"publicationDate": "2026-02-10T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-commitment"
+						},
+						"slug": "toezegging-raadsbrief-jeugdzorg",
+						"text": "Wethouder Van Dijk zegt toe de raad vóór 1 maart per raadsbrief te informeren over de wachtlijsten jeugdzorg.",
+						"madeBy": "00000000-0000-0000-0000-000000000000",
+						"meeting": "raadsvergadering-2025-01-15",
+						"agendaItem": "begroting-2026-bespreking",
+						"directedTo": "gemeenteraad-amsterdam",
+						"deadline": "2026-03-01",
+						"lifecycle": "open",
+						"publicationDate": "2026-01-20T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-commitment"
+						},
+						"slug": "toezegging-schouw-marktplein",
+						"text": "Wethouder Pietersen zegt toe binnen zes weken een schouw van het Marktplein te organiseren met de klankbordgroep.",
+						"madeBy": "00000000-0000-0000-0000-000000000000",
+						"meeting": "raadsvergadering-2025-01-15",
+						"agendaItem": "rondvraag",
+						"directedTo": "gemeenteraad-amsterdam",
+						"deadline": "2026-05-15",
+						"lifecycle": "in-execution",
+						"goal": "goal-amsterdam-klimaatneutraal-2050",
+						"publicationDate": "2026-02-10T09:00:00Z"
+					}
+				],
+				"governance-consultation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "adviesaanvraag-inkoopbeleid-wmo",
+						"subject": "Herziening inkoopbeleid Wmo-ondersteuning",
+						"askingBody": "00000000-0000-0000-0000-000000000000",
+						"audienceType": "bodies",
+						"audienceBody": "adviesraad-sociaal-domein",
+						"binding": true,
+						"deadline": "2026-04-13",
+						"question": "Welke gevolgen heeft het voorgenomen inkoopbeleid voor cliënten en mantelzorgers?",
+						"lifecycle": "advice-issued",
+						"relatedDecision": "00000000-0000-0000-0000-000000000000"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "adviesaanvraag-jongerenhuisvesting",
+						"subject": "Beleidsnota jongerenhuisvesting 2027–2031",
+						"askingBody": "gemeenteraad-amsterdam",
+						"audienceType": "bodies",
+						"audienceBody": "jongerenraad",
+						"binding": true,
+						"deadline": "2026-06-15",
+						"question": "Sluit de nota aan bij de woonbehoeften van jongeren van 18–27 jaar?",
+						"lifecycle": "in-progress"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "adviesaanvraag-skatepark-locatie",
+						"subject": "Locatiekeuze skatepark centrum",
+						"askingBody": "gemeenteraad-amsterdam",
+						"audienceType": "bodies",
+						"audienceBody": "jongerenraad",
+						"binding": true,
+						"deadline": "2026-02-16",
+						"question": "Welke van de drie kandidaat-locaties heeft de voorkeur van jongeren?",
+						"lifecycle": "completed",
+						"relatedDecision": "00000000-0000-0000-0000-000000000000",
+						"accountabilityText": "De raad kiest locatie B in afwijking van het advies (locatie A) vanwege geluidsnormen; met de jongerenraad is een evaluatie na één jaar afgesproken.",
+						"accountabilityDate": "2026-03-24"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "zienswijzeronde-begroting-2027",
+						"subject": "Zienswijzeronde ontwerpbegroting 2027 NOZ organisatie",
+						"askingBody": "bestuur-noz-organisatie",
+						"audienceType": "bodies",
+						"binding": false,
+						"deadline": "2026-06-15",
+						"subjectType": "draft-budget",
+						"subjectDescription": "Ontwerpbegroting 2027, aangeboden aan de raden conform art. 35 Wgr.",
+						"cycleStep": "00000000-0000-0000-0000-000000000000",
+						"lifecycle": "draft"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "zienswijzeronde-wijziging-gr-2026",
+						"subject": "Zienswijzeronde wijziging gemeenschappelijke regeling",
+						"askingBody": "bestuur-noz-organisatie",
+						"audienceType": "bodies",
+						"binding": false,
+						"deadline": "2026-09-30",
+						"subjectType": "amendment-of-arrangement",
+						"subjectDescription": "Voorstel tot wijziging van de regeling i.v.m. taakuitbreiding vergunningverlening.",
+						"lifecycle": "draft"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "raadpleging-fractie-parkeervisie",
+						"subject": "Steunt de fractie het raadsvoorstel Parkeervisie 2026–2030 in de huidige vorm?",
+						"askingBody": "gemeenteraad-amsterdam",
+						"audienceType": "political-group",
+						"audienceBody": "gemeenteraad-amsterdam",
+						"binding": false,
+						"deadline": "2026-03-10T17:00:00Z",
+						"description": "Niet-bindende peiling ter voorbereiding op de raadsvergadering van 12 maart.",
+						"responseType": "single-choice",
+						"choiceOptions": [
+							"Voor",
+							"Tegen",
+							"Voor, mits aangepast"
+						],
+						"audienceParty": "Groen Voorbeeldingen",
+						"agendaItem": "begroting-2026-bespreking",
+						"opensAt": "2026-02-20T09:00:00Z",
+						"anonymousResponses": false,
+						"lifecycle": "open"
+					}
+				],
+				"governance-consultation-response": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "advies-inkoopbeleid-wmo",
+						"consultation": "adviesaanvraag-inkoopbeleid-wmo",
+						"position": "positive-with-reservations",
+						"text": "De adviesraad adviseert positief, mits de continuïteit van lopende ondersteuning wordt geborgd en cliënten actief worden geïnformeerd.",
+						"respondentPerson": "00000000-0000-0000-0000-000000000000",
+						"submittedAt": "2026-04-10",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "advies-skatepark-locatie",
+						"consultation": "adviesaanvraag-skatepark-locatie",
+						"position": "negative",
+						"text": "De jongerenraad adviseert negatief over locatie B en positief over locatie A vanwege bereikbaarheid.",
+						"respondentPerson": "00000000-0000-0000-0000-000000000000",
+						"submittedAt": "2026-02-14",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "zienswijze-noorderbrug-begroting-2027",
+						"consultation": "zienswijzeronde-begroting-2027",
+						"position": "positive-with-reservations",
+						"text": "De raad stemt in met de ontwerpbegroting, met de kanttekening dat de indexatie van de gemeentelijke bijdrage maximaal 3% mag bedragen.",
+						"respondentBody": "gemeenteraad-noorderbrug",
+						"submittedAt": "2026-06-10T00:00:00Z",
+						"deadline": "2026-06-15",
+						"processing": "partly-adopted",
+						"processingNotes": "Indexatie verlaagd naar 3,2%; volledige inwilliging niet mogelijk binnen de CAO-ontwikkeling.",
+						"status": "processed"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "zienswijze-noorderbrug-wijziging-gr",
+						"consultation": "zienswijzeronde-wijziging-gr-2026",
+						"respondentBody": "gemeenteraad-noorderbrug",
+						"deadline": "2026-09-30",
+						"status": "outstanding"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "zienswijze-oostwoud-begroting-2027",
+						"consultation": "zienswijzeronde-begroting-2027",
+						"position": "positive",
+						"text": "De raad stemt zonder opmerkingen in met de ontwerpbegroting 2027.",
+						"respondentBody": "gemeenteraad-oostwoud",
+						"submittedAt": "2026-06-02T00:00:00Z",
+						"deadline": "2026-06-15",
+						"processing": "adopted",
+						"processingNotes": "Voor kennisgeving aangenomen.",
+						"status": "processed"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "zienswijze-zuidermeer-begroting-2027",
+						"consultation": "zienswijzeronde-begroting-2027",
+						"respondentBody": "gemeenteraad-zuidermeer",
+						"deadline": "2026-06-15",
+						"status": "not-submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-parkeervisie-lid-1",
+						"consultation": "raadpleging-fractie-parkeervisie",
+						"text": "Mits de parkeernorm voor de binnenstad wordt verlaagd.",
+						"submittedAt": "2026-02-21T10:15:00Z",
+						"respondentId": "jvandenberg",
+						"choices": [
+							"Voor, mits aangepast"
+						],
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-parkeervisie-lid-2",
+						"consultation": "raadpleging-fractie-parkeervisie",
+						"submittedAt": "2026-02-22T08:40:00Z",
+						"respondentId": "mjansen",
+						"choices": [
+							"Tegen"
+						],
+						"status": "submitted"
+					}
+				],
+				"governing-document": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "reglement-van-orde-raad-amsterdam",
+						"type": "rules-of-procedure",
+						"citationTitle": "Reglement van orde gemeenteraad Amsterdam",
+						"description": "Reglement van orde van de gemeenteraad (Gemeentewet art. 16), vastgesteld bij raadsbesluit.",
+						"governingBody": "gemeenteraad-amsterdam",
+						"isPublic": false,
+						"status": "in-force"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "afvalstoffenverordening-amsterdam",
+						"type": "by-law",
+						"citationTitle": "Afvalstoffenverordening Amsterdam",
+						"officialTitle": "Verordening op de inzameling en verwerking van huishoudelijke afvalstoffen Amsterdam",
+						"statutoryBasis": [
+							"Gemeentewet art. 149",
+							"Wet milieubeheer art. 10.23"
+						],
+						"governingBody": "gemeenteraad-amsterdam",
+						"externalRegisterIdentifier": "CVDR641871",
+						"currentVersionNumber": 2,
+						"currentEffectiveDate": "2025-06-01",
+						"status": "in-effect"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "beleidsregel-terrassen-amsterdam",
+						"type": "policy-rule",
+						"citationTitle": "Beleidsregel terrassen Amsterdam 2025",
+						"officialTitle": "Beleidsregel inzake terrasvergunningen Amsterdam 2025",
+						"statutoryBasis": [
+							"APV Amsterdam art. 3.17"
+						],
+						"governingBody": "gemeenteraad-amsterdam",
+						"currentVersionNumber": 1,
+						"currentEffectiveDate": "2025-03-01",
+						"status": "in-effect"
+					}
+				],
+				"governing-document-versie": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "rvo-amsterdam-v1",
+						"document": "reglement-van-orde-raad-amsterdam",
+						"versionNumber": 1,
+						"determinedBy": "besluit-vaststelling-rvo-amsterdam",
+						"effectiveDate": "2023-03-01",
+						"notes": "Vaststelling van het reglement van orde door de gemeenteraad.",
+						"status": "in-effect"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "afvalstoffen-v1",
+						"document": "afvalstoffenverordening-amsterdam",
+						"versionNumber": 1,
+						"determinedBy": "00000000-0000-0000-0000-000000000000",
+						"effectiveDate": "2024-01-01",
+						"notes": "Eerste vaststelling van de Afvalstoffenverordening Amsterdam.",
+						"status": "replaced"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "afvalstoffen-v2",
+						"document": "afvalstoffenverordening-amsterdam",
+						"versionNumber": 2,
+						"determinedBy": "00000000-0000-0000-0000-000000000000",
+						"effectiveDate": "2025-06-01",
+						"notes": "Wijziging 2025: gescheiden inzameling GFT-e uitgebreid naar het hele beheergebied.",
+						"status": "in-effect"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document-versie"
+						},
+						"slug": "terrassen-v1",
+						"document": "beleidsregel-terrassen-amsterdam",
+						"versionNumber": 1,
+						"determinedBy": "00000000-0000-0000-0000-000000000000",
+						"effectiveDate": "2025-03-01",
+						"notes": "Vaststelling beleidsregel terrassen 2025.",
+						"status": "in-effect"
+					}
+				],
+				"meeting": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "raadsvergadering-2025-01-15",
+						"title": "Raadsvergadering 15 januari 2025",
+						"meetingType": "regular",
+						"scheduledDate": "2025-01-15T19:30:00Z",
+						"endDate": "2025-01-15T23:00:00Z",
+						"location": "Stadhuis Amsterdam, Raadzaal",
+						"meetingMode": "hybrid",
+						"lifecycle": "closed"
+					}
+				],
+				"membership": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-terpstra-noz",
+						"role": "member",
+						"person": "persoon-a-terpstra",
+						"governanceBody": "bestuur-noz-organisatie",
+						"onBehalfOf": "gemeenteraad-zuidermeer",
+						"votingWeight": 1,
+						"startDate": "2018-04-01"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-van-dam-noz",
+						"role": "chair",
+						"person": "persoon-w-van-dam",
+						"governanceBody": "bestuur-noz-organisatie",
+						"onBehalfOf": "gemeenteraad-noorderbrug",
+						"votingWeight": 2,
+						"startDate": "2018-04-01"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-femke-amsterdam",
+						"role": "chair",
+						"label": "Voorzitter raad",
+						"party": "GroenLinks",
+						"votingWeight": 1,
+						"startDate": "2018-05-30T00:00:00Z",
+						"person": "femke-halsema",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"post": "post-voorzitter-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-jan-amstel",
+						"role": "secretary",
+						"label": "Raadsgriffier",
+						"votingWeight": 0,
+						"startDate": "2021-01-15T00:00:00Z",
+						"person": "jan-de-vries",
+						"governanceBody": "rvc-waterschap-amstel",
+						"post": "post-griffier-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-marie-amsterdam",
+						"role": "member",
+						"label": "Raadslid",
+						"party": "D66",
+						"votingWeight": 1,
+						"startDate": "2022-03-16T00:00:00Z",
+						"person": "marie-janssen",
+						"governanceBody": "gemeenteraad-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-marie-groenlinks-fractie",
+						"role": "member",
+						"label": "Fractielid",
+						"party": "GroenLinks",
+						"votingWeight": 1,
+						"startDate": "2022-03-16T00:00:00Z",
+						"person": "marie-janssen",
+						"governanceBody": "groenlinks-fractie-amsterdam"
+					}
+				],
+				"minutes": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-ab-waterschap-2025-02-13",
+						"title": "Notulen AB Waterschap Aa en Maas 13 februari 2025",
+						"lifecycle": "draft",
+						"version": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-ab-waterschap-2025-04-10",
+						"title": "Notulen Vergadering Algemeen Bestuur Waterschap Aa en Maas 10 april 2025",
+						"lifecycle": "review",
+						"content": "Concept-verslag ter vaststelling. De vergadering van het Algemeen Bestuur wordt geopend door de dijkgraaf om 14:00 uur.",
+						"version": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-commissie-ruimte-2025-03-04",
+						"title": "Notulen Commissievergadering Ruimte & Wonen 4 maart 2025",
+						"lifecycle": "signed",
+						"content": "De commissievergadering Ruimte & Wonen wordt geopend...",
+						"approvedAt": "2025-04-01T10:00:00Z",
+						"signedBy": [
+							"Henk Bakker"
+						],
+						"version": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-commissie-wonen-2025-04-01",
+						"title": "Notulen Commissievergadering Wonen & Ruimte 1 april 2025",
+						"lifecycle": "signed",
+						"content": "Aanvang: 19:00 uur. Voorzitter: Henk Bakker. Commissieleden aanwezig: 7 van 9. Agendapunt 2 — bestemmingsplan Groningen-Noord: de commissie adviseert de raad het plan ongewijzigd vast te stellen.",
+						"approvedAt": "2025-04-15T10:00:00Z",
+						"signedBy": [
+							"Henk Bakker"
+						],
+						"version": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-raad-2025-03-20",
+						"title": "Notulen Gemeenteraadsvergadering 20 maart 2025",
+						"lifecycle": "published",
+						"content": "De vergadering wordt geopend door de voorzitter om 19:30 uur. Aanwezig: 33 van 37 raadsleden. Punt 5 — Woningbouwplan Oost 2025-2030: na bespreking wordt het plan aangenomen met 30 stemmen voor en 3 tegen.",
+						"approvedAt": "2025-04-10T19:45:00Z",
+						"signedBy": [
+							"Roos de Vries",
+							"Jan Bakker"
+						],
+						"version": 2
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-raad-2025-04-10",
+						"title": "Notulen Raadsvergadering 10 april 2025",
+						"lifecycle": "approved",
+						"content": "De vergadering wordt geopend door de voorzitter om 19:30 uur...",
+						"approvedAt": "2025-05-08T19:45:00Z",
+						"signedBy": [
+							"Roos de Vries",
+							"Jan Bakker"
+						],
+						"version": 2
+					}
+				],
+				"member-offboarding": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "member-offboarding"
+						},
+						"slug": "offboarding-jan-de-vries-raadswisseling",
+						"person": "jan-de-vries",
+						"body": "gemeenteraad-amsterdam",
+						"membership": "00000000-0000-0000-0000-000000000000",
+						"trigger": "council-turnover-batch",
+						"batch": "raadswisseling-2026",
+						"endDate": "2026-03-29",
+						"endReason": "end-of-council-membership",
+						"lifecycle": "in-execution",
+						"steps": [
+							{
+								"stepType": "end-membership",
+								"title": "Lidmaatschap einddateren",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-03-29T18:00:00Z",
+								"completedBy": "griffier",
+								"note": "endDate = eindeDatum (person-and-membership)."
+							},
+							{
+								"stepType": "revoke-groups",
+								"title": "Groepen en RBAC-scope intrekken",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-03-30",
+								"note": "Fail-closed en altijd verplicht: traject kan niet naar afgerond zolang deze stap open is (REQ-MOB-008)."
+							},
+							{
+								"stepType": "personal-data-note",
+								"title": "Persoonsgegevens-notitie (AVG)",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-04-05",
+								"note": "Verwijst naar de eigen-annotaties-export van document-annotations; geen eigen export."
+							},
+							{
+								"stepType": "exit-confirmation",
+								"title": "Exit bevestigen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-04-05"
+							}
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "member-offboarding"
+						},
+						"slug": "offboarding-janneke-de-bruin-individueel",
+						"person": "janneke-de-bruin",
+						"body": "gemeenteraad-amsterdam",
+						"membership": "00000000-0000-0000-0000-000000000000",
+						"trigger": "individual",
+						"endDate": "2026-01-15",
+						"endReason": "resignation",
+						"lifecycle": "completed",
+						"exitConfirmedBy": "griffier",
+						"exitConfirmedOn": "2026-01-20T14:00:00Z",
+						"steps": [
+							{
+								"stepType": "end-membership",
+								"title": "Lidmaatschap einddateren",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-01-15T17:00:00Z",
+								"completedBy": "griffier"
+							},
+							{
+								"stepType": "revoke-groups",
+								"title": "Groepen en RBAC-scope intrekken",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-01-15T17:30:00Z",
+								"completedBy": "griffier",
+								"note": "Body-role-gemapte groepen verwijderd; niet-gerelateerde groepen ongemoeid."
+							},
+							{
+								"stepType": "personal-data-note",
+								"title": "Persoonsgegevens-notitie (AVG)",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-01-18T11:00:00Z",
+								"completedBy": "griffier"
+							},
+							{
+								"stepType": "exit-confirmation",
+								"title": "Exit bevestigen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-01-20T14:00:00Z",
+								"completedBy": "griffier"
+							}
+						]
+					}
+				],
+				"member-onboarding": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "member-onboarding"
+						},
+						"slug": "onboarding-jan-de-vries-opvolging",
+						"person": "jan-de-vries",
+						"targetBody": "gemeenteraad-amsterdam",
+						"targetRole": "member",
+						"trigger": "interim-succession",
+						"lifecycle": "started",
+						"steps": [
+							{
+								"stepType": "installation",
+								"title": "Beëdiging vastleggen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-08-15"
+							},
+							{
+								"stepType": "account-linking",
+								"title": "Nextcloud-account koppelen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-08-15"
+							},
+							{
+								"stepType": "assign-groups",
+								"title": "Groepen en RBAC-scope toewijzen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-08-20"
+							},
+							{
+								"stepType": "induction-pack",
+								"title": "Introductiepakket bezorgen",
+								"status": "open",
+								"mandatory": false,
+								"dueDate": "2026-08-22"
+							},
+							{
+								"stepType": "ancillary-positions-intake",
+								"title": "Nevenfuncties uitvragen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-08-22"
+							},
+							{
+								"stepType": "body-group-assignment",
+								"title": "Fractie toewijzen",
+								"status": "open",
+								"mandatory": false,
+								"dueDate": "2026-08-22"
+							}
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "member-onboarding"
+						},
+						"slug": "onboarding-janneke-de-bruin-nieuw-lid",
+						"person": "janneke-de-bruin",
+						"targetBody": "gemeenteraad-amsterdam",
+						"targetRole": "treasurer",
+						"trigger": "new-member",
+						"lifecycle": "completed",
+						"ncAccount": "jdebruin",
+						"membership": "00000000-0000-0000-0000-000000000000",
+						"installedOn": "2025-11-10",
+						"installationType": "oath",
+						"installationMeeting": "raadsvergadering-2025-01-15",
+						"steps": [
+							{
+								"stepType": "installation",
+								"title": "Beëdiging vastleggen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2025-11-10T20:00:00Z",
+								"completedBy": "griffier",
+								"reference": "raadsvergadering-2025-01-15",
+								"note": "Eed afgelegd bij aanvang bestuurslidmaatschap (ALV-gekozen — vereniging-analoog, demonstreert het niet-gemeentelijke domein)."
+							},
+							{
+								"stepType": "account-linking",
+								"title": "Nextcloud-account koppelen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2025-11-11T09:00:00Z",
+								"completedBy": "griffier",
+								"reference": "jdebruin"
+							},
+							{
+								"stepType": "assign-groups",
+								"title": "Groepen en RBAC-scope toewijzen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2025-11-11T09:30:00Z",
+								"completedBy": "griffier",
+								"note": "Toegevoegd aan penningmeester-groep; RBAC-scope volgt via de role→scope-projectie."
+							},
+							{
+								"stepType": "induction-pack",
+								"title": "Introductiepakket bezorgen",
+								"status": "completed",
+								"mandatory": false,
+								"completedAt": "2025-11-12T10:00:00Z",
+								"completedBy": "griffier",
+								"reference": "/Introductiepakket-JdeBruin"
+							},
+							{
+								"stepType": "ancillary-positions-intake",
+								"title": "Nevenfuncties uitvragen",
+								"status": "skipped",
+								"mandatory": false,
+								"note": "Geen nevenfuncties opgegeven; stap overgeslagen (verplicht false)."
+							},
+							{
+								"stepType": "body-group-assignment",
+								"title": "Fractie toewijzen",
+								"status": "completed",
+								"mandatory": false,
+								"completedAt": "2025-11-12T10:15:00Z",
+								"completedBy": "griffier"
+							}
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "member-onboarding"
+						},
+						"slug": "onboarding-marie-janssen-raadswisseling",
+						"person": "marie-janssen",
+						"targetBody": "gemeenteraad-amsterdam",
+						"targetRole": "member",
+						"trigger": "council-turnover-batch",
+						"batch": "raadswisseling-2026",
+						"lifecycle": "in-execution",
+						"ncAccount": "mjanssen",
+						"membership": "00000000-0000-0000-0000-000000000000",
+						"installedOn": "2026-03-26",
+						"installationType": "affirmation",
+						"installationMeeting": "raadsvergadering-2025-01-15",
+						"steps": [
+							{
+								"stepType": "installation",
+								"title": "Beëdiging vastleggen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-03-26T20:15:00Z",
+								"completedBy": "griffier",
+								"reference": "raadsvergadering-2025-01-15",
+								"note": "Belofte afgelegd tijdens de installatievergadering."
+							},
+							{
+								"stepType": "account-linking",
+								"title": "Nextcloud-account koppelen",
+								"status": "completed",
+								"mandatory": true,
+								"completedAt": "2026-03-27T09:00:00Z",
+								"completedBy": "griffier",
+								"reference": "mjanssen"
+							},
+							{
+								"stepType": "assign-groups",
+								"title": "Groepen en RBAC-scope toewijzen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-06-01",
+								"note": "Wacht op bevestiging body-role→groep-mapping (drijft de overdue-KPI en het overdue-rappel)."
+							},
+							{
+								"stepType": "induction-pack",
+								"title": "Introductiepakket bezorgen",
+								"status": "open",
+								"mandatory": false,
+								"dueDate": "2026-06-15",
+								"note": "iPad reserveren."
+							},
+							{
+								"stepType": "ancillary-positions-intake",
+								"title": "Nevenfuncties uitvragen",
+								"status": "open",
+								"mandatory": true,
+								"dueDate": "2026-06-15"
+							},
+							{
+								"stepType": "body-group-assignment",
+								"title": "Fractie toewijzen",
+								"status": "open",
+								"mandatory": false,
+								"dueDate": "2026-06-15"
+							}
+						]
+					}
+				],
+				"participant": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "femke-halsema",
+						"displayName": "Femke Halsema",
+						"role": "chair",
+						"email": "f.halsema@amsterdam.nl",
+						"joinedAt": "2018-05-30T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "jan-de-vries",
+						"displayName": "Jan de Vries",
+						"role": "secretary",
+						"email": "j.devries@waterschap.nl",
+						"joinedAt": "2021-01-15T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "marie-janssen",
+						"displayName": "Marie Janssen",
+						"role": "member",
+						"party": "D66",
+						"email": "m.janssen@amsterdam.nl",
+						"joinedAt": "2022-03-16T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "pieter-bakker",
+						"displayName": "Pieter Bakker",
+						"role": "chair",
+						"email": "p.bakker@utrecht.nl",
+						"joinedAt": "2020-06-01T00:00:00Z",
+						"votingWeight": 1
+					}
+				],
+				"person": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "femke-halsema",
+						"name": "Femke Halsema",
+						"givenName": "Femke",
+						"familyName": "Halsema",
+						"gender": "female",
+						"email": "f.halsema@amsterdam.nl",
+						"biography": "Burgemeester van Amsterdam, voorzitter van de gemeenteraad."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "jan-de-vries",
+						"name": "Jan de Vries",
+						"givenName": "Jan",
+						"familyName": "de Vries",
+						"gender": "male",
+						"email": "j.devries@waterschap.nl",
+						"biography": "Secretaris / griffier."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "janneke-de-bruin",
+						"name": "Janneke de Bruin",
+						"givenName": "Janneke",
+						"familyName": "de Bruin",
+						"gender": "female",
+						"email": "j.debruin@acme.example",
+						"biography": "Voorzitter Raad van Commissarissen.",
+						"nationality": "NL"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "marie-janssen",
+						"name": "Marie Janssen",
+						"givenName": "Marie",
+						"familyName": "Janssen",
+						"gender": "female",
+						"email": "m.janssen@amsterdam.nl",
+						"biography": "Raadslid en lid van de VNG-ledenraad."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "persoon-a-terpstra",
+						"name": "A. Terpstra",
+						"familyName": "Terpstra",
+						"givenName": "A."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "persoon-w-van-dam",
+						"name": "W. van Dam",
+						"familyName": "van Dam",
+						"givenName": "W."
+					}
+				],
+				"planned-agenda-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planned-agenda-item"
+						},
+						"slug": "lta-herziening-parkeerbeleid",
+						"subject": "Herziening parkeerbeleid binnenstad",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"plannedPeriod": "2026-Q2",
+						"expectedType": "council-proposal",
+						"ownerType": "executive-board",
+						"notes": "Voortkomend uit de aangenomen motie parkeerdruk; college bereidt een raadsvoorstel voor.",
+						"lifecycle": "postponed",
+						"shiftHistory": [
+							{
+								"van": "2026-Q1",
+								"toPeriod": "2026-Q2",
+								"reason": "Wacht op uitkomst parkeeronderzoek regio",
+								"door": "00000000-0000-0000-0000-000000000000",
+								"op": "2026-03-15T10:00:00Z"
+							}
+						],
+						"originMotion": "00000000-0000-0000-0000-000000000000",
+						"goal": "goal-amsterdam-parkeerbeleid",
+						"publicationDate": "2026-06-20T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planned-agenda-item"
+						},
+						"slug": "lta-kadernota-2027",
+						"subject": "Kadernota 2027",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"plannedPeriod": "2027-Q2",
+						"expectedType": "budget-document",
+						"ownerType": "executive-board",
+						"notes": "Reguliere jaarlijkse kadernota in de P&C-cyclus.",
+						"lifecycle": "planned",
+						"shiftHistory": [],
+						"originDecision": "00000000-0000-0000-0000-000000000000"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planned-agenda-item"
+						},
+						"slug": "lta-rib-wachtlijsten-jeugdzorg",
+						"subject": "RIB wachtlijsten jeugdzorg",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"plannedPeriod": "2026-11",
+						"expectedType": "council-information-letter",
+						"ownerType": "portfolio-holder",
+						"owner": "00000000-0000-0000-0000-000000000000",
+						"notes": "Toegezegde raadsinformatiebrief over de aanpak van de wachtlijsten jeugdzorg.",
+						"lifecycle": "planned",
+						"shiftHistory": [],
+						"originCommitment": "00000000-0000-0000-0000-000000000000",
+						"publicationDate": "2026-06-20T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planned-agenda-item"
+						},
+						"slug": "lta-themabijeenkomst-energietransitie",
+						"subject": "Themabijeenkomst energietransitie",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"plannedPeriod": "2027-Q1",
+						"expectedType": "theme-session",
+						"ownerType": "council-registry",
+						"notes": "Beeldvormende bijeenkomst ter voorbereiding op de warmtevisie.",
+						"lifecycle": "planned",
+						"shiftHistory": [],
+						"publicationDate": "2026-06-20T09:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planned-agenda-item"
+						},
+						"slug": "lta-verordening-marktgelden",
+						"subject": "Actualisatie verordening marktgelden",
+						"governanceBody": "gemeenteraad-amsterdam",
+						"plannedPeriod": "2026-Q1",
+						"expectedType": "council-proposal",
+						"ownerType": "portfolio-holder",
+						"owner": "00000000-0000-0000-0000-000000000000",
+						"lifecycle": "lapsed",
+						"shiftHistory": [],
+						"reasonExpired": "Opgegaan in de bredere herziening van de legesverordening",
+						"publicationDate": "2026-06-20T09:00:00Z"
+					}
+				],
+				"planning-cycle": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle"
+						},
+						"slug": "pc-cyclus-2026-gemeenteraad",
+						"name": "P&C-cyclus 2026",
+						"year": 2026,
+						"governanceBody": "gemeenteraad-amsterdam",
+						"template": "municipal-pc-cyclus",
+						"stepCount": 5,
+						"completedStepCount": 2,
+						"overdueStepCount": 1
+					}
+				],
+				"planning-cycle-step": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "begroting-2027-gemeenteraad",
+						"sequence": 5,
+						"stepType": "begroting",
+						"label": "Programmabegroting",
+						"concernsYear": 2027,
+						"deliveryDeadline": "2026-09-15",
+						"technicalQuestionsStart": "2026-09-16",
+						"technicalQuestionsEnd": "2026-10-05",
+						"handlingCommittee": "00000000-0000-0000-0000-000000000000",
+						"committeeDate": "2026-10-20",
+						"decisionMakingBody": "gemeenteraad-amsterdam",
+						"handlingDate": "2026-11-05",
+						"documentSlots": [
+							{
+								"name": "Programmabegroting",
+								"required": true,
+								"file": "Programmabegroting 2027 (concept).pdf"
+							},
+							{
+								"name": "Aanbiedingsbrief",
+								"required": true
+							},
+							{
+								"name": "Beantwoording technische vragen",
+								"required": false
+							}
+						],
+						"status": "planned",
+						"cycle": "pc-cyclus-2026-gemeenteraad"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "berap-1-2026-gemeenteraad",
+						"sequence": 2,
+						"stepType": "berap",
+						"label": "Eerste bestuursrapportage (berap-1)",
+						"concernsYear": 2026,
+						"deliveryDeadline": "2026-05-01",
+						"decisionMakingBody": "gemeenteraad-amsterdam",
+						"handlingDate": "2026-06-10",
+						"documentSlots": [
+							{
+								"name": "Bestuursrapportage",
+								"required": true
+							}
+						],
+						"status": "completed",
+						"cycle": "pc-cyclus-2026-gemeenteraad"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "berap-2-2026-gemeenteraad",
+						"sequence": 4,
+						"stepType": "berap",
+						"label": "Tweede bestuursrapportage (berap-2)",
+						"concernsYear": 2026,
+						"deliveryDeadline": "2026-07-10",
+						"decisionMakingBody": "gemeenteraad-amsterdam",
+						"handlingDate": "2026-11-04",
+						"documentSlots": [
+							{
+								"name": "Bestuursrapportage",
+								"required": true
+							}
+						],
+						"status": "planned",
+						"cycle": "pc-cyclus-2026-gemeenteraad"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "jaarrekening-2025-gemeenteraad",
+						"sequence": 1,
+						"stepType": "jaarrekening",
+						"label": "Jaarrekening",
+						"concernsYear": 2025,
+						"deliveryDeadline": "2026-04-15",
+						"decisionMakingBody": "gemeenteraad-amsterdam",
+						"handlingDate": "2026-07-02",
+						"documentSlots": [
+							{
+								"name": "Jaarrekening",
+								"required": true,
+								"file": "00000000-0000-0000-0000-000000000000"
+							},
+							{
+								"name": "Accountantsverslag",
+								"required": true
+							}
+						],
+						"agendaItem": "00000000-0000-0000-0000-000000000000",
+						"decision": "00000000-0000-0000-0000-000000000000",
+						"status": "adopted",
+						"outcome": "vastgesteld",
+						"cycle": "pc-cyclus-2026-gemeenteraad"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-step"
+						},
+						"slug": "kadernota-2027-gemeenteraad",
+						"sequence": 3,
+						"stepType": "kadernota",
+						"label": "Kadernota",
+						"concernsYear": 2027,
+						"deliveryDeadline": "2026-05-15",
+						"decisionMakingBody": "gemeenteraad-amsterdam",
+						"handlingDate": "2026-07-02",
+						"documentSlots": [
+							{
+								"name": "Kadernota",
+								"required": true
+							}
+						],
+						"agendaItem": "00000000-0000-0000-0000-000000000000",
+						"status": "in-progress",
+						"cycle": "pc-cyclus-2026-gemeenteraad"
+					}
+				],
+				"planning-cycle-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "planning-cycle-template"
+						},
+						"slug": "municipal-pc-cyclus",
+						"name": "Gemeentelijke P&C-cyclus",
+						"context": "legislative",
+						"builtIn": true,
+						"steps": [
+							{
+								"stepType": "jaarrekening",
+								"label": "Jaarrekening",
+								"subjectYearOffset": -1,
+								"deliveryDeadline": "04-15",
+								"handlingDate": "07-02",
+								"documentSlots": [
+									{
+										"name": "Jaarrekening",
+										"required": true
+									},
+									{
+										"name": "Accountantsverslag",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "berap",
+								"label": "Eerste bestuursrapportage (berap-1)",
+								"subjectYearOffset": 0,
+								"deliveryDeadline": "05-01",
+								"handlingDate": "06-10",
+								"documentSlots": [
+									{
+										"name": "Bestuursrapportage",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "kadernota",
+								"label": "Kadernota",
+								"subjectYearOffset": 1,
+								"deliveryDeadline": "05-15",
+								"handlingDate": "07-02",
+								"documentSlots": [
+									{
+										"name": "Kadernota",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "berap",
+								"label": "Tweede bestuursrapportage (berap-2)",
+								"subjectYearOffset": 0,
+								"deliveryDeadline": "09-20",
+								"handlingDate": "11-04",
+								"documentSlots": [
+									{
+										"name": "Bestuursrapportage",
+										"required": true
+									}
+								]
+							},
+							{
+								"stepType": "begroting",
+								"label": "Programmabegroting",
+								"subjectYearOffset": 1,
+								"deliveryDeadline": "09-15",
+								"technicalQuestionsStart": "09-16",
+								"technicalQuestionsEnd": "10-05",
+								"committeeDate": "10-20",
+								"handlingDate": "11-05",
+								"documentSlots": [
+									{
+										"name": "Programmabegroting",
+										"required": true
+									},
+									{
+										"name": "Aanbiedingsbrief",
+										"required": true
+									},
+									{
+										"name": "Beantwoording technische vragen",
+										"required": false
+									}
+								]
+							}
+						]
+					}
+				],
+				"position-type": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "position-type"
+						},
+						"slug": "termijn-regeling-auditcommissie",
+						"name": "Member",
+						"governanceBody": "auditcommissie-provincie-nh",
+						"termDurationMonths": 48,
+						"notes": "Benoeming voor de duur van de raadsperiode; geen maximum aan aansluitende termijnen."
+					}
+				],
+				"post": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-griffier-amsterdam",
+						"label": "Raadsgriffier",
+						"role": "secretary",
+						"startDate": "2021-01-15T00:00:00Z",
+						"governanceBody": "gemeenteraad-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-voorzitter-amsterdam",
+						"label": "Voorzitter gemeenteraad",
+						"role": "chair",
+						"startDate": "2018-05-30T00:00:00Z",
+						"governanceBody": "gemeenteraad-amsterdam"
+					}
+				],
+				"proxy-authorization": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "proxy-authorization"
+						},
+						"slug": "machtiging-devries-ingetrokken",
+						"grantor": "jan-de-vries",
+						"holder": "pieter-bakker",
+						"meeting": "raadsvergadering-2025-01-15",
+						"document": "00000000-0000-0000-0000-000000000000",
+						"signatureStatus": "signed",
+						"signedAt": "2026-05-01T10:00:00Z",
+						"revokedAt": "2026-05-20T14:30:00Z",
+						"revocationSignatureStatus": "signed",
+						"revocationSigningReference": "docudesk:sign:seed-devries-revocatie"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "proxy-authorization"
+						},
+						"slug": "machtiging-vandam-begroting",
+						"grantor": "00000000-0000-0000-0000-000000000000",
+						"holder": "jan-de-vries",
+						"meeting": "raadsvergadering-2025-01-15",
+						"proxyVote": "stem-proxy-vandam-begroting",
+						"document": "00000000-0000-0000-0000-000000000000",
+						"signatureStatus": "signed",
+						"signedAt": "2026-06-02T09:15:00Z",
+						"signingReference": "docudesk:sign:seed-vandam-begroting",
+						"countersignStatus": "signed",
+						"countersignedAt": "2026-06-02T11:40:00Z"
+					}
+				],
+				"vote": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-bakker-motie-duurzaamheid",
+						"value": "against",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2025-04-10T21:02:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-devries-motie-duurzaamheid",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2025-04-10T21:01:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-elamrani-begroting-2026",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2025-04-10T21:31:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-femke-begroting-2027",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-04-15T21:05:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-begroting-2027-gemeenteraad",
+						"participant": "femke-halsema"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-marie-begroting-2027",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-04-15T21:06:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-begroting-2027-gemeenteraad",
+						"participant": "marie-janssen"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-proxy-vandam-begroting",
+						"value": "for",
+						"weight": 1,
+						"isProxy": true,
+						"castAt": "2025-04-10T21:32:00Z"
+					}
+				],
+				"voting-round": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-amendement-a",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"openedAt": "2025-04-10T20:55:00Z",
+						"closedAt": "2025-04-10T21:00:00Z",
+						"quorumWith": true,
+						"result": "rejected",
+						"votesFor": 11,
+						"votesAgainst": 20,
+						"votesAbstain": 2
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-begroting-2026",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"openedAt": "2025-04-10T21:30:00Z",
+						"closedAt": "2025-04-10T21:38:00Z",
+						"quorumWith": true,
+						"result": "adopted",
+						"votesFor": 25,
+						"votesAgainst": 6,
+						"votesAbstain": 2
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-begroting-2027-gemeenteraad",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"openedAt": "2026-04-15T21:00:00Z",
+						"closedAt": "2026-04-15T21:15:00Z",
+						"quorumWith": true,
+						"result": "adopted",
+						"votesFor": 28,
+						"votesAgainst": 3,
+						"votesAbstain": 2,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "exclude",
+						"decisionStage": "stage-begroting-2027-3-dec"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-motie-duurzaamheid-2025",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"openedAt": "2025-04-10T21:00:00Z",
+						"closedAt": "2025-04-10T21:05:00Z",
+						"quorumWith": true,
+						"result": "adopted",
+						"votesFor": 28,
+						"votesAgainst": 3,
+						"votesAbstain": 2
+					}
+				]
+			}
+		}
+	},
+	"paths": {},
+	"components": {}
+}

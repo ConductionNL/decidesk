@@ -46,8 +46,10 @@ export const STATUTORY_ALV_ITEMS = [
 		synonyms: ['financial statements', 'jaarrekening', 'financieel verslag'],
 	},
 	{
-		id: 'kascommissie-report',
-		label: 'Kascommissie report',
+		id: 'audit-committee-report',
+		label: 'Audit committee report',
+		// The SYNONYMS stay Dutch on purpose: they match the words a Dutch
+		// agenda actually uses. Only the label a reader sees is generic.
 		synonyms: ['kascommissie', 'audit committee report', 'kascontrole'],
 	},
 	{

@@ -1,219 +1,32 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Urgent-decision-procedure register fragment (ADR-037 additive pattern; OpenSpec change urgent-decision-procedure). Declarative core ONLY: additive urgency fields on the existing Decision schema (isUrgent, urgencyReason, urgencyDeclaredBy, urgencyDeclaredAt) plus the awaitingRatification derivation and two notification rules, additive shortened-notice deviation fields on Meeting, and a per-template urgencyPolicy object on ProcessTemplate. The urgency-trigger guard (who may set isUrgent), ratification-stage orchestration, expedited-round mechanics, and the declare/banner/badge/KPI UI are IMPERATIVE and live in the change's Service/Controller/Vue tasks (design.md seams A/B + Task 7) — out of this declarative fragment. Seeds here are two urgency-enabled CUSTOM process templates (municipal + corporate), because the built-in templates in 43-process-config-v1.json are read-only (design D5). NOTE (app-wide limitation, consistent with sibling fragments 45/54/55): relation refs stored as slugs (urgencyPolicy.ratifyingBody -> governance-body) may not resolve on detail pages until the register import maps them to UUIDs.",
-      "objects": {
-        "process-template": [
-          {
-            "slug": "municipal-council-urgent",
-            "name": "Municipal Council (urgency-enabled)",
-            "description": "Municipal council (gemeenteraad) process template with the urgent-decision procedure enabled: college spoedbesluit routed to a mandatory ratification stage at the next regular raadsvergadering (design seed table, municipal column).",
-            "context": "legislative",
-            "builtIn": false,
-            "initialState": "draft",
-            "stateMachine": {
-              "states": [
-                {
-                  "name": "draft"
-                },
-                {
-                  "name": "proposed"
-                },
-                {
-                  "name": "deliberating"
-                },
-                {
-                  "name": "voting"
-                },
-                {
-                  "name": "decided"
-                },
-                {
-                  "name": "enacted"
-                },
-                {
-                  "name": "archived"
-                }
-              ],
-              "transitions": [
-                {
-                  "name": "propose",
-                  "from": "draft",
-                  "to": "proposed"
-                },
-                {
-                  "name": "deliberate",
-                  "from": "proposed",
-                  "to": "deliberating"
-                },
-                {
-                  "name": "openVoting",
-                  "from": "deliberating",
-                  "to": "voting",
-                  "chairOnly": true,
-                  "guards": [
-                    "quorum_met",
-                    "all_amendments_resolved"
-                  ]
-                },
-                {
-                  "name": "decide",
-                  "from": "voting",
-                  "to": "decided",
-                  "chairOnly": true
-                },
-                {
-                  "name": "enact",
-                  "from": "decided",
-                  "to": "enacted"
-                },
-                {
-                  "name": "archive",
-                  "from": "enacted",
-                  "to": "archived"
-                }
-              ]
-            },
-            "votingRule": {
-              "voteThreshold": "simple-majority",
-              "abstentionHandling": "exclude",
-              "tieBreakRule": "rejected"
-            },
-            "quorumRequired": true,
-            "quorumRule": "More than half of the seats occupied (Gemeentewet art. 20)",
-            "allowDecideWithoutVote": false,
-            "urgencyPolicy": {
-              "allowedTriggerRoles": [
-                "chair"
-              ],
-              "minimumNoticeFloorHours": 24,
-              "responseDeadlineHours": {
-                "min": 12,
-                "max": 96
-              },
-              "ratificationRequired": true,
-              "ratifyingBody": "gemeenteraad-amsterdam"
-            }
-          },
-          {
-            "slug": "corporate-board-urgent",
-            "name": "Corporate Board (urgency-enabled)",
-            "description": "Corporate management board (RvB) process template with the urgent-decision procedure enabled: urgent resolution decided via an expedited 24h written round, ratified by the Raad van Commissarissen (design seed table, corporate column).",
-            "context": "corporate",
-            "builtIn": false,
-            "initialState": "draft",
-            "stateMachine": {
-              "states": [
-                {
-                  "name": "draft"
-                },
-                {
-                  "name": "proposed"
-                },
-                {
-                  "name": "deliberating"
-                },
-                {
-                  "name": "voting"
-                },
-                {
-                  "name": "decided"
-                },
-                {
-                  "name": "enacted"
-                },
-                {
-                  "name": "archived"
-                }
-              ],
-              "transitions": [
-                {
-                  "name": "propose",
-                  "from": "draft",
-                  "to": "proposed"
-                },
-                {
-                  "name": "deliberate",
-                  "from": "proposed",
-                  "to": "deliberating"
-                },
-                {
-                  "name": "openVoting",
-                  "from": "deliberating",
-                  "to": "voting",
-                  "chairOnly": true,
-                  "guards": [
-                    "quorum_met"
-                  ]
-                },
-                {
-                  "name": "decide",
-                  "from": "voting",
-                  "to": "decided"
-                },
-                {
-                  "name": "enact",
-                  "from": "decided",
-                  "to": "enacted"
-                },
-                {
-                  "name": "archive",
-                  "from": "enacted",
-                  "to": "archived"
-                }
-              ]
-            },
-            "votingRule": {
-              "voteThreshold": "simple-majority",
-              "abstentionHandling": "exclude",
-              "tieBreakRule": "chair-decides"
-            },
-            "quorumRequired": true,
-            "quorumRule": "Quorum per the articles of association",
-            "allowDecideWithoutVote": false,
-            "urgencyPolicy": {
-              "allowedTriggerRoles": [
-                "chair",
-                "secretary"
-              ],
-              "minimumNoticeFloorHours": 12,
-              "responseDeadlineHours": {
-                "min": 4,
-                "max": 72
-              },
-              "ratificationRequired": true,
-              "ratifyingBody": "raad-van-commissarissen-acme-bv"
-            }
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
       "Decision": {
         "slug": "decision",
         "version": "0.8.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern; OpenSpec urgent-decision-procedure). This fragment merges ONLY the four optional urgency properties (isUrgent, urgencyReason, urgencyDeclaredBy, urgencyDeclaredAt), one ratifying-stage aggregation, the awaitingRatification calculation, and two notification rules onto the existing decision schema. It adds NO required field and modifies NO existing property, aggregation, calculation, or notification — the register deep-merge (SettingsService::deepMergeConfig) unions these by key with the base schema, so decisions created before this change stay valid and the existing x-openregister-lifecycle transition map is untouched (urgency is orthogonal to lifecycle, exactly like isPublished). Version bumped to 0.8.0 (the sibling governing-documents fragment sets 0.7.0; ONE fragment wins the scalar version — this one uses the higher number). CONDITIONAL/GUARDED RULES are SAVE-TIME imperative, NOT schema constraints (no allOf/anyOf/oneOf in an OR register schema): urgencyReason is required when isUrgent is true (enforced by the trigger flow); the urgency fields are writable ONLY through the guarded urgency-trigger endpoint and rejected on direct object update (same posture as isPublished); every write path carries the urgency fields forward (saveObject is PUT-semantic). See design.md seams A/B and Task 3.",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern; OpenSpec urgent-decision-procedure). This fragment merges ONLY the four optional urgency properties (isUrgent, urgencyReason, urgencyDeclaredBy, urgencyDeclaredAt), one ratifying-stage aggregation, the awaitingRatification calculation, and two notification rules onto the existing decision schema. It adds NO required field and modifies NO existing property, aggregation, calculation, or notification: the register deep-merge (SettingsService:deepMergeConfig) unions these by key with the base schema, so decisions created before this change stay valid and the existing x-openregister-lifecycle transition map is untouched (urgency is orthogonal to lifecycle, exactly like isPublished). Version bumped to 0.8.0 (the sibling governing-documents fragment sets 0.7.0; ONE fragment wins the scalar version: this one uses the higher number). CONDITIONAL/GUARDED RULES are SAVE-TIME imperative, NOT schema constraints (no allOf/anyOf/oneOf in an OR register schema): urgencyReason is required when isUrgent is true (enforced by the trigger flow); the urgency fields are writable ONLY through the guarded urgency-trigger endpoint and rejected on direct object update (same posture as isPublished); every write path carries the urgency fields forward (saveObject is PUT-semantic). See design.md seams A/B and Task 3.",
         "properties": {
           "isUrgent": {
             "title": "Urgent",
             "type": "boolean",
             "facetable": true,
             "default": false,
-            "description": "Whether this decision has been declared urgent (spoedbesluit). Orthogonal to lifecycle/outcome/isPublished — no lifecycle state or transition is added. Additive optional field. Server-guarded: settable ONLY through the guarded urgency-trigger flow (UrgencyTriggerGuard, imperative seam A), rejected on a direct object update — the same field-guard posture as isPublished. Because saveObject is PUT-semantic, every decision write path MUST carry this forward.",
+            "description": "Whether this decision has been declared urgent (spoedbesluit). Orthogonal to lifecycle/outcome/isPublished: no lifecycle state or transition is added. Additive optional field. Server-guarded: settable ONLY through the guarded urgency-trigger flow (UrgencyTriggerGuard, imperative seam A), rejected on a direct object update, the same field-guard posture as isPublished. Because saveObject is PUT-semantic, every decision write path MUST carry this forward.",
             "example": true
           },
           "urgencyReason": {
             "title": "Urgency reason",
             "type": "string",
-            "description": "Free-text justification for the urgency declaration (the statutory/urgency basis, e.g. a Gemeentewet college spoedbevoegdheid or an articles-of-association urgent-resolution clause). CONDITIONALLY REQUIRED when isUrgent is true — enforced save-time by the trigger flow, not by a JSON Schema constraint (OR rejects allOf/anyOf/oneOf). Stored verbatim (length-validated on input, escaped on output). Defaults the emergency meeting's noticeDeviationReason.",
+            "description": "Free-text justification for the urgency declaration (the statutory/urgency basis, e.g. a Gemeentewet college spoedbevoegdheid or an articles-of-association urgent-resolution clause). CONDITIONALLY REQUIRED when isUrgent is true: enforced save-time by the trigger flow, not by a JSON Schema constraint (OR rejects allOf/anyOf/oneOf). Stored verbatim (length-validated on input, escaped on output). Defaults the emergency meeting's noticeDeviationReason.",
             "example": "Acute opvangcrisis; eerstvolgende reguliere raadsvergadering is pas over drie weken (Gemeentewet-spoedbevoegdheid college)."
           },
           "urgencyDeclaredBy": {
             "title": "Urgency declared by",
             "type": "string",
-            "description": "Nextcloud user id of the actor who declared the urgency (resolved and stored by the trigger guard). Not a Person/participant reference — a uid string for audit attribution; no kind:field notification recipient references it (recipient rule).",
+            "description": "Nextcloud user id of the actor who declared the urgency (resolved and stored by the trigger guard). Not a Person/participant reference: a uid string for audit attribution; no kind:field notification recipient references it (recipient rule).",
             "example": "burgemeester"
           },
           "urgencyDeclaredAt": {
@@ -318,7 +131,7 @@
       "ProcessTemplate": {
         "slug": "process-template",
         "version": "0.3.0",
-        "description": "Additive delta (ADR-037; OpenSpec urgent-decision-procedure, process-configuration delta). Merges ONLY the optional urgencyPolicy object onto the existing process-template schema (defined in 43-process-config-v1.json) so each governance body configures whether and how the urgent procedure is available. Fail-closed posture: a template with NO urgencyPolicy makes the urgent procedure UNAVAILABLE for its bodies — never available-with-no-limits. Server-side template validation (ProcessTemplateService, Task 2) rejects an urgencyPolicy with empty allowedTriggerRoles, an unrecognised role token, min>max deadline bounds, or ratificationRequired=true without a resolvable ratifyingBody — SAVE-TIME imperative rules, NOT schema constraints (OR rejects allOf/anyOf/oneOf). Built-in templates stay read-only; urgency is enabled by duplicating and editing (see the two urgency-enabled custom seeds in this fragment).",
+        "description": "Additive delta (ADR-037; OpenSpec urgent-decision-procedure, process-configuration delta). Merges ONLY the optional urgencyPolicy object onto the existing process-template schema (defined in 43-process-config-v1.json) so each governance body configures whether and how the urgent procedure is available. Fail-closed posture: a template with NO urgencyPolicy makes the urgent procedure UNAVAILABLE for its bodies, never available-with-no-limits. Server-side template validation (ProcessTemplateService, Task 2) rejects an urgencyPolicy with empty allowedTriggerRoles, an unrecognised role token, min>max deadline bounds, or ratificationRequired=true without a resolvable ratifyingBody. SAVE-TIME imperative rules, NOT schema constraints (OR rejects allOf/anyOf/oneOf). Built-in templates stay read-only; urgency is enabled by duplicating and editing (see the two urgency-enabled custom seeds in this fragment).",
         "properties": {
           "urgencyPolicy": {
             "title": "Urgency policy",

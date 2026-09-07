@@ -10,30 +10,30 @@
 			"order": 55
 		},
 		{
-			"id": "Nevenfuncties",
+			"id": "AncillaryPositions",
 			"label": "Other positions",
 			"icon": "Domain",
-			"route": "Nevenfuncties",
+			"route": "AncillaryPositions",
 			"order": 60
 		},
 		{
-			"id": "Geschenken",
+			"id": "DeclaredGifts",
 			"label": "Gifts",
 			"icon": "Star",
-			"route": "Geschenken",
+			"route": "DeclaredGifts",
 			"order": 65
 		}
 	],
 	"pages": [
 		{
 			"id": "MyDeclarations",
-			"route": "/mijn-opgaven",
+			"route": "/my-declarations",
 			"type": "index",
 			"title": "My declarations",
 			"_note": "spec: openspec/changes/interests-and-integrity/specs/interests-and-integrity/spec.md#requirement-req-int-010. Self-service page (REQ-INT-010) — stable deep-link target for member-onboarding's nevenfuncties-intake step. Declarative index shell over the current user's own nevenfuncties; add/edit, end-position, and annual-confirm actions plus the member's geschenken block are plain saveObject field writes wired by frontend components (Task 4, out of the declarative core). Members see and edit only their own objects via OR per-object RBAC (owner scope).",
 			"config": {
 				"register": "decidiq",
-				"schema": "nevenfunctie",
+				"schema": "ancillary-position",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"_note": "Current-user filtering (own declarations only) is applied client-side / via OR owner-scoped RBAC; the manifest cannot express a 'current user' filter token declaratively.",
@@ -55,21 +55,21 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "NevenfunctieDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "AncillaryPositionDetail", "primary": true }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
 		{
-			"id": "Nevenfuncties",
-			"route": "/nevenfuncties",
+			"id": "AncillaryPositions",
+			"route": "/ancillary-positions",
 			"type": "index",
 			"title": "Other positions",
 			"_note": "spec: openspec/changes/interests-and-integrity/specs/interests-and-integrity/spec.md#requirement-req-int-010. Per-body nevenfunctiesregister (REQ-INT-001/REQ-INT-010). Columns person/organisatie/functie/remunerated/qualitateQua/governanceBody/lifecycle; quick filters on lifecycle; per-body filtering via the index facet on governanceBody. CSV export via ExportService + CnMassExportDialog. The overdue-review KPI deep-link (Dashboard, base manifest) targets this page pre-filtered; the per-body compliance panel (client-side join of memberships × nevenfuncties) is a frontend addition (Task 5), not part of this declarative fragment.",
 			"config": {
 				"register": "decidiq",
-				"schema": "nevenfunctie",
+				"schema": "ancillary-position",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"quickFilterMode": "dropdown",
@@ -91,7 +91,7 @@
 					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "NevenfunctieDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "AncillaryPositionDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -99,14 +99,14 @@
 			}
 		},
 		{
-			"id": "NevenfunctieDetail",
-			"route": "/nevenfuncties/:id",
+			"id": "AncillaryPositionDetail",
+			"route": "/ancillary-positions/:id",
 			"type": "detail",
 			"title": "Other position",
 			"_note": "spec: openspec/changes/interests-and-integrity/specs/interests-and-integrity/spec.md#requirement-req-int-001. Nevenfunctie detail. Declaration data leads 8-wide, publication stacked right; the linked person/governanceBody render as resolved references in the data + Related widgets. Publish/withdraw, end-position, and annual-confirm are plain saveObject field writes wired by frontend components (Task 4). Audit trail is a sidebar tab.",
 			"config": {
 				"register": "decidiq",
-				"schema": "nevenfunctie",
+				"schema": "ancillary-position",
 				"widgets": [
 					{ "id": "nevenfunctie-data", "type": "data", "title": "Other position", "icon": "Briefcase", "content": { "columns": 2 } },
 					{ "id": "nevenfunctie-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
@@ -126,14 +126,14 @@
 			}
 		},
 		{
-			"id": "Geschenken",
-			"route": "/geschenken",
+			"id": "DeclaredGifts",
+			"route": "/declared-gifts",
 			"type": "index",
 			"title": "Gifts",
 			"_note": "spec: openspec/changes/interests-and-integrity/specs/interests-and-integrity/spec.md#requirement-req-int-005. Per-body geschenkenregister (REQ-INT-005/REQ-INT-006/REQ-INT-010). Columns recipient/type/gever/omschrijving/geschatteWaarde/besluit; quick filters on type and besluit; per-body filtering and the boven-drempel filter via the index facet (boven-drempel is a frontend render rule comparing geschatteWaarde to the body's policy threshold — REQ-INT-006). CSV export via ExportService + CnMassExportDialog.",
 			"config": {
 				"register": "decidiq",
-				"schema": "geschenk",
+				"schema": "declared-gift",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"quickFilterMode": "dropdown",
@@ -155,7 +155,7 @@
 					{ "key": "decision", "label": "Decision", "widget": "badge" }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "GeschenkDetail", "primary": true }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "DeclaredGiftDetail", "primary": true }
 				],
 				"showMassExport": true,
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -163,14 +163,14 @@
 			}
 		},
 		{
-			"id": "GeschenkDetail",
-			"route": "/geschenken/:id",
+			"id": "DeclaredGiftDetail",
+			"route": "/declared-gifts/:id",
 			"type": "detail",
 			"title": "Gift",
 			"_note": "spec: openspec/changes/interests-and-integrity/specs/interests-and-integrity/spec.md#requirement-req-int-005. Geschenk detail. Registration data leads 8-wide, publication stacked right; the linked recipient/governanceBody render as resolved references in the data + Related widgets. The boven-drempel badge and publish/withdraw (per body policy) are frontend actions (Task 4/5). Audit trail is a sidebar tab.",
 			"config": {
 				"register": "decidiq",
-				"schema": "geschenk",
+				"schema": "declared-gift",
 				"widgets": [
 					{ "id": "geschenk-data", "type": "data", "title": "Gift", "icon": "Package", "content": { "columns": 2 } },
 					{ "id": "geschenk-related", "type": "related", "title": "Related", "icon": "LinkVariant" }

@@ -26,6 +26,7 @@
 
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
+import { BASE_URL } from './tests/e2e/base-url.ts'
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -43,9 +44,33 @@ export default defineConfig({
 	// still renders as "fail" in `gh pr checks` while carrying no information.
 	// Runs cancelled at ~45m16s have been observed in this fleet. Measured
 	// overhead before `Run Playwright tests` starts is 2.0-2.4 min and the
-	// uploads after it take seconds, so 38m keeps ~7 min of margin while
-	// guaranteeing both a tally and the artifacts that explain it.
-	globalTimeout: 38 * 60_000,
+	// uploads after it take seconds, so the budget here has to stay clear of
+	// 45m by that overhead plus room to write the report.
+	//
+	// 38m stopped being enough on 2026-09-05. every-index-route-resolves added
+	// 39 navigations at ~20s each, and the arithmetic since:
+	//
+	//   development 6b564ca2  31.8 min  205 passed, completed with ~6 min spare
+	//   development 59376666  TIMED OUT at 38m, 200 passed, 47 skipped,
+	//                         "5 did not run" — NOTHING FAILED, it ran out of
+	//                         time, and a timeout reads in `gh pr checks`
+	//                         exactly like a broken test
+	//
+	// Those 5 are ~2 min, so a slow run needs ~40. 41m leaves ~1.1 min under
+	// the cap after the 2.4 min of setup, which is thin on purpose: it is the
+	// ceiling this repo can reach alone, because `timeout-minutes: 45` is
+	// hardcoded in ConductionNL/.github with no input to override it.
+	//
+	// 🔴 THIS BUYS HEADROOM, IT DOES NOT FIX THE SHAPE. decidiq is now the
+	// fleet outlier: quality.yml sized that 45 against runs of 4-10 min
+	// (planix 0.8, doriath 4.2, openconnector 7.7, opencatalogi 10.0). If this
+	// times out again, the two real options are deduplicating the sweep — 20
+	// of its 38 routes are already navigated by another spec, worth ~6.7 min —
+	// or raising the cap in .github. Measured and rejected as fixes: reusing
+	// one page across routes saves 8% (the cost is the app's own boot, not the
+	// browser context), and in-app router navigation is not reachable from the
+	// DOM.
+	globalTimeout: 41 * 60_000,
 	reporter: [
 		['html', { open: 'never', outputFolder: 'tests/e2e/playwright-report' }],
 		['list'],
@@ -53,7 +78,22 @@ export default defineConfig({
 	outputDir: 'tests/e2e/test-results',
 
 	use: {
-		baseURL: process.env.NEXTCLOUD_URL || 'http://localhost:8080',
+		// 🔴 RESOLVED BY base-url.ts, NEVER INLINE HERE.
+		//
+		// This line used to read `process.env.NEXTCLOUD_URL || 'http://localhost:8080'`,
+		// which is a SECOND resolution disagreeing with the guard in
+		// tests/e2e/base-url.ts. That guard accepts PLAYWRIGHT_BASE_URL
+		// (its own documented preference), so setting only that variable
+		// satisfied it, no error was raised, and this line still resolved to
+		// the SHARED dev instance.
+		//
+		// Measured 2026-09-04: a full run launched with
+		// PLAYWRIGHT_BASE_URL=http://localhost:8710 against a private throwaway
+		// container logged in to, and wrote governance fixtures into,
+		// localhost:8080 instead. The private instance was never contacted.
+		// The guard's whole purpose is to stop exactly that, and a hardcoded
+		// fallback beside it made the guard decorative.
+		baseURL: BASE_URL,
 		storageState: path.resolve(__dirname, 'tests/e2e/.auth/admin.json'),
 		// `on-first-retry` captures nothing on the first attempt, so a failure that
 		// a retry then fixes is the ONLY one that gets a trace — exactly inverted.

@@ -9,7 +9,7 @@
  * data layer; Task 1).
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchCollection = vi.fn()
 
@@ -18,15 +18,15 @@ vi.mock('../../../src/store/store.js', () => ({
 }))
 
 import {
-	getMeetings,
-	getVotingRounds,
-	getVotes,
 	getActionItems,
-	getMotions,
 	getDecisions,
-	getParticipants,
-	getMinutes,
 	getGovernanceBodies,
+	getMeetings,
+	getMinutes,
+	getMotions,
+	getParticipants,
+	getVotes,
+	getVotingRounds,
 } from '../../../src/services/dashboardData.js'
 
 beforeEach(() => {

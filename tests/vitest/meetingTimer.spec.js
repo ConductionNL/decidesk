@@ -13,16 +13,16 @@
 import { describe, expect, it } from 'vitest'
 import {
 	createTimer,
-	startTimer,
-	pauseTimer,
-	resumeTimer,
+	elapsedSeconds,
 	extendTimer,
 	finishTimer,
-	elapsedSeconds,
-	pausedSeconds,
-	remainingSeconds,
-	isOverTime,
 	formatClock,
+	isOverTime,
+	pausedSeconds,
+	pauseTimer,
+	remainingSeconds,
+	resumeTimer,
+	startTimer,
 } from '../../src/utils/meetingTimer.js'
 
 const T0 = 1_000_000_000_000 // arbitrary fixed epoch

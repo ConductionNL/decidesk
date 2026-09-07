@@ -7,10 +7,10 @@
  *
  * @spec openspec/specs/motion-amendment/spec.md
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	diffWords,
 	changeMagnitude,
+	diffWords,
 	suggestVotingOrder,
 	tokenizeWords,
 } from '../../src/utils/textDiff.js'

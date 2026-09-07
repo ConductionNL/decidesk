@@ -13,9 +13,8 @@
  * @e2e openspec/specs/dashboard/spec.md#show-upcoming-meetings-with-context
  * @e2e openspec/specs/dashboard/spec.md#view-decidiq-widget-on-nextcloud-dashboard
  */
-import { test, expect } from '@playwright/test'
-
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 
 // @e2e openspec/specs/dashboard/spec.md#default-grid-layout-on-first-load
 // @e2e openspec/specs/dashboard/spec.md#display-active-decisions-count

@@ -1,0 +1,1840 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Decidiq example set: Company board",
+		"version": "1.0.0",
+		"description": "A supervisory board, an executive board and a management team. Terms, conflicts of interest and evaluations."
+	},
+	"x-openregister": {
+		"type": "profile",
+		"app": "decidiq",
+		"profile": {
+			"id": "corporate",
+			"label": "Company board",
+			"description": "A supervisory board, an executive board and a management team. Terms, conflicts of interest and evaluations.",
+			"order": 3,
+			"objectCount": 84,
+			"icon": "BriefcaseOutline"
+		},
+		"description": "An example set an operator picks in the first-time setup wizard (ADR-042). NEVER imported on install: the register.d fragments declare schemas only, so a bare install has zero objects. Every object carries @self.configuration/register/schema so the import resolves the live decidiq register WITHOUT this descriptor declaring components.registers. That is deliberate and load-bearing: ImportHandler::importRegister() calls setApplication($appId) unconditionally on an existing register, so a descriptor that declared the register would re-point the decidiq register at this profile config id and hydrate over its authorization baseline. Verified on a live instance: importing this shape left application=decidiq, version and authorization byte-identical. Import is idempotent by slug, so loading a profile twice adds nothing. Descriptors live in this SUBDIRECTORY on purpose: RegisterDescriptorService scans lib/Settings/*.json non-recursively and matches descriptors by declared register slug, so four profile files in lib/Settings would collide with each other and with decidesk_register.json.",
+		"seedData": {
+			"description": "Example objects for the company board set.",
+			"objects": {
+				"action-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "actie-duurzaamheid-offerteverzoek",
+						"title": "Offerteverzoek zonnepanelen gemeentelijke gebouwen uitzetten",
+						"description": "Inkoopteam vraagt offertes op bij minimaal 3 leveranciers conform gemeentelijk aanbestedingsbeleid.",
+						"assignee": "Inkoopcoördinator",
+						"dueDate": "2025-05-15T00:00:00Z",
+						"taskStatus": "completed",
+						"completedAt": "2025-05-10T16:00:00Z"
+					}
+				],
+				"agenda-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "pub-quiz-2026-09-opening",
+						"title": "Welcome and rules",
+						"type": "c7d10000-0000-4000-a000-000000000022",
+						"itemType": "informational",
+						"orderNumber": 1,
+						"estimatedDuration": 5,
+						"meeting": "c7d10000-0000-4000-a000-000000000041",
+						"description": "The quizmaster opens the evening."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "pub-quiz-2026-09-q1",
+						"title": "Which team ships more Friday deploys?",
+						"type": "c7d10000-0000-4000-a000-000000000021",
+						"itemType": "decision",
+						"orderNumber": 2,
+						"estimatedDuration": 10,
+						"meeting": "c7d10000-0000-4000-a000-000000000041",
+						"description": "Votable quiz question. The teams present are the Management team and the Development team, resolved through the Pub quiz body's two direct compositions: nobody was added to the Pub quiz by hand.",
+						"id": "c7d10000-0000-4000-a000-000000000042",
+						"uuid": "c7d10000-0000-4000-a000-000000000042"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "pub-quiz-2026-09-q2",
+						"title": "Should the next quiz be held off-site?",
+						"type": "c7d10000-0000-4000-a000-000000000021",
+						"itemType": "decision",
+						"orderNumber": 3,
+						"estimatedDuration": 10,
+						"meeting": "c7d10000-0000-4000-a000-000000000041",
+						"description": "Votable quiz question.",
+						"id": "c7d10000-0000-4000-a000-000000000043",
+						"uuid": "c7d10000-0000-4000-a000-000000000043"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "pub-quiz-2026-09-q3",
+						"title": "Is a tie broken by the quizmaster?",
+						"type": "c7d10000-0000-4000-a000-000000000021",
+						"itemType": "decision",
+						"orderNumber": 4,
+						"estimatedDuration": 10,
+						"meeting": "c7d10000-0000-4000-a000-000000000041",
+						"description": "Votable quiz question.",
+						"id": "c7d10000-0000-4000-a000-000000000044",
+						"uuid": "c7d10000-0000-4000-a000-000000000044"
+					}
+				],
+				"agenda-item-type": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "agenda-item-type-quiz-question",
+						"name": "Quiz question",
+						"owningBody": "c7d10000-0000-4000-a000-000000000003",
+						"votable": true,
+						"order": 1,
+						"isDraft": false,
+						"active": true,
+						"initialLifecycle": "open",
+						"lifecycleStates": [
+							"open",
+							"voting",
+							"scored"
+						],
+						"description": "A question the assembled teams vote on. Votable, so it carries a voting round; owned by the Pub quiz body.",
+						"fields": [
+							{
+								"key": "correctAnswer",
+								"label": "Correct answer",
+								"fieldType": "string",
+								"required": false
+							},
+							{
+								"key": "points",
+								"label": "Points",
+								"fieldType": "number",
+								"required": false
+							}
+						],
+						"id": "c7d10000-0000-4000-a000-000000000021",
+						"uuid": "c7d10000-0000-4000-a000-000000000021"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item-type"
+						},
+						"slug": "agenda-item-type-quiz-round-opening",
+						"name": "Round opening",
+						"owningBody": "c7d10000-0000-4000-a000-000000000003",
+						"votable": false,
+						"order": 0,
+						"isDraft": false,
+						"active": true,
+						"initialLifecycle": "open",
+						"description": "Non-votable housekeeping item: proves a meeting type admits more than one item kind.",
+						"id": "c7d10000-0000-4000-a000-000000000022",
+						"uuid": "c7d10000-0000-4000-a000-000000000022"
+					}
+				],
+				"ancillary-position": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "ancillary-position"
+						},
+						"slug": "nf-rvc-stedin",
+						"person": "janneke-de-bruin",
+						"governanceBody": "rvc-waterschap-amstel",
+						"organisation": "Stedin",
+						"role": "RvC vice-voorzitter",
+						"remunerated": true,
+						"qualitateQua": false,
+						"startDate": "2022-01-01",
+						"declaredAt": "2022-01-10",
+						"reviewedAt": "2026-06-15",
+						"lifecycle": "internal"
+					}
+				],
+				"board-evaluation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "board-evaluation"
+						},
+						"slug": "evaluatie-acme-rvc-2026",
+						"cycleLabel": "2026",
+						"lifecycle": "open",
+						"openedAt": "2026-06-01T09:00:00Z",
+						"invitedMemberCount": 5,
+						"respondedCount": 2,
+						"minRespondentThreshold": 3,
+						"invitedParticipantIds": [
+							"acme-lid-1",
+							"acme-lid-2",
+							"acme-lid-3",
+							"acme-lid-4",
+							"acme-lid-5"
+						],
+						"respondedParticipantIds": [
+							"acme-lid-1",
+							"acme-lid-2"
+						],
+						"chairUserId": "acme.chair",
+						"secretaryUserId": "acme.secretary",
+						"governanceBody": "raad-van-commissarissen-acme-bv",
+						"template": "template-bestuurlijke-effectiviteit"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "board-evaluation"
+						},
+						"slug": "evaluatie-rvc-waterschap-amstel-2025",
+						"cycleLabel": "2025",
+						"lifecycle": "closed",
+						"openedAt": "2025-11-01T09:00:00Z",
+						"closedAt": "2025-12-20T17:00:00Z",
+						"invitedMemberCount": 3,
+						"respondedCount": 2,
+						"minRespondentThreshold": 3,
+						"invitedParticipantIds": [
+							"jan-de-vries",
+							"femke-halsema",
+							"marie-janssen"
+						],
+						"respondedParticipantIds": [
+							"jan-de-vries",
+							"femke-halsema"
+						],
+						"chairUserId": "femke.halsema",
+						"secretaryUserId": "jan.devries",
+						"scoreSummary": "{\"overallScore\":3.6,\"respondentCount\":2,\"invitedMemberCount\":3,\"minRespondentThreshold\":3,\"thresholdMet\":false,\"suppressed\":true,\"dimensionScores\":null,\"themes\":null,\"computedAt\":\"2025-12-20T17:05:00Z\"}",
+						"governanceBody": "rvc-waterschap-amstel",
+						"template": "template-bestuurlijke-effectiviteit"
+					}
+				],
+				"body-governance-configuration": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "body-governance-configuration"
+						},
+						"slug": "beleid-rvc-waterschap",
+						"governanceBody": "rvc-waterschap-amstel",
+						"ancillaryPositionDisclosureDefault": "internal",
+						"giftThresholdAmount": 100,
+						"giftsPublic": false,
+						"integrityNotificationGroup": "decidesk-compliance"
+					}
+				],
+				"conflict-of-interest": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-ben-r002",
+						"boardMember": "ben-okonkwo-rvc-acme",
+						"agendaItem": "r-2025-002-appointment-cfo",
+						"declarationType": "personal-relationship",
+						"description": "Familierelatie met kandidaat-CFO.",
+						"severity": "material",
+						"actionTaken": "recused-from-vote",
+						"declarationTimestamp": "2025-03-12T16:50:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-hannah-r002",
+						"boardMember": "hannah-stein-rvc-acme",
+						"agendaItem": "r-2025-002-appointment-cfo",
+						"declarationType": "none",
+						"actionTaken": "no-action-needed",
+						"declarationTimestamp": "2025-03-12T16:48:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-klaas-strategy",
+						"boardMember": "klaas-mulder-rvc-acme",
+						"declarationType": "prior-involvement",
+						"description": "Voormalig CEO van strategieadviseur die de strategiedag faciliteert.",
+						"severity": "non-material",
+						"actionTaken": "disclosed-and-participated",
+						"declarationTimestamp": "2025-09-18T09:05:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-mark-r003",
+						"boardMember": "mark-van-den-berg-rvb-acme",
+						"agendaItem": "r-2025-003-financial-acquisition",
+						"declarationType": "financial-interest",
+						"description": "Indirect aandelenbelang in target via family-trust (<1%).",
+						"severity": "non-material",
+						"actionTaken": "disclosed-and-participated",
+						"declarationTimestamp": "2025-04-22T17:45:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-petra-r005",
+						"boardMember": "petra-jansen-rvc-acme",
+						"agendaItem": "r-2025-005-policy-procurement",
+						"declarationType": "competing-business",
+						"description": "Bestuurslid bij Stichting Procurement Excellence.",
+						"severity": "non-material",
+						"actionTaken": "disclosed-and-participated",
+						"declarationTimestamp": "2025-03-12T17:10:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "conflict-of-interest"
+						},
+						"slug": "coi-sandra-r004",
+						"boardMember": "sandra-yilmaz-rvb-acme",
+						"declarationType": "prior-involvement",
+						"description": "Eerder consultancy-werk voor ESG-adviseur die de strategie heeft opgesteld.",
+						"severity": "non-material",
+						"actionTaken": "no-action-needed",
+						"declarationTimestamp": "2025-04-22T17:30:00Z"
+					}
+				],
+				"decision": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "benoeming-lid-rvc-acme-van-duin",
+						"decisionType": "appointment",
+						"title": "Benoeming lid Raad van Commissarissen ACME B.V.",
+						"text": "Voordracht van mevrouw J. van Duin (externe werving) als lid van de Raad van Commissarissen, conform profielschets — herbenoeming van de huidige commissaris was niet mogelijk op grond van het rooster van aftreden.",
+						"lifecycle": "enacted",
+						"outcome": "adopted",
+						"decisionDate": "2026-04-10T19:00:00Z",
+						"targetBody": "raad-van-commissarissen-acme-bv",
+						"targetPosts": [],
+						"targetRole": "member",
+						"candidates": [
+							{
+								"externalName": "Mw. J. van Duin",
+								"notes": "Externe werving; nog geen Person-registratie — wordt na benoeming aangemaakt."
+							}
+						],
+						"nominatingParty": {
+							"type": "body",
+							"name": "Raad van Commissarissen (coöptatie-voordracht)"
+						},
+						"appointedMemberships": [],
+						"isPublished": "internal"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "besluit-investering-acme",
+						"decisionType": "management-point",
+						"title": "Investeringsbesluit Datacenteruitbreiding ACME B.V.",
+						"text": "Het MT besluit tot investering in uitbreiding van het datacentercapaciteit met €2,4M conform de goedgekeurde businesscase.",
+						"decisionDate": "2026-05-01T10:00:00Z",
+						"outcome": "adopted",
+						"isPublished": "confidential",
+						"lifecycle": "decided",
+						"route": [
+							"stage-investering-acme-1-prep",
+							"stage-investering-acme-2-dec",
+							"stage-investering-acme-3-rat"
+						]
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "contract-schoonmaak-2026",
+						"decisionType": "contract",
+						"title": "Gunning schoonmaakcontract 2026",
+						"text": "Het MT gunt het schoonmaakcontract aan Leverancier X.",
+						"legalBasis": "Aanbestedingswet 2012",
+						"lifecycle": "decided",
+						"outcome": "adopted",
+						"decisionDate": "2026-01-22T14:00:00Z",
+						"isPublished": "confidential"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "mt-go-nogo-zonnepark",
+						"decisionType": "management-point",
+						"title": "Go/No-go zonnepark fase 2",
+						"text": "Het MT besluit fase 2 van het zonnepark vrij te geven voor realisatie, onder voorbehoud van de definitieve netaansluiting.",
+						"lifecycle": "decided",
+						"outcome": "adopted",
+						"decisionDate": "2026-03-03T09:45:00Z",
+						"isPublished": "internal"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "pub-quiz-2026-09-decision-q1",
+						"id": "c7d10000-0000-4000-a000-000000000071",
+						"uuid": "c7d10000-0000-4000-a000-000000000071",
+						"title": "Which team ships more Friday deploys?",
+						"text": "Resolution recorded for quiz question 1 of the September 2026 pub quiz.",
+						"decisionType": "motion",
+						"type": "c7d10000-0000-4000-a000-000000000051",
+						"agendaItem": "c7d10000-0000-4000-a000-000000000042",
+						"lifecycle": "voting",
+						"votingOrder": 1,
+						"voteType": "named",
+						"voteThreshold": "simple-majority"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "pub-quiz-2026-09-decision-q2",
+						"id": "c7d10000-0000-4000-a000-000000000072",
+						"uuid": "c7d10000-0000-4000-a000-000000000072",
+						"title": "Should the next quiz be held off-site?",
+						"text": "Resolution recorded for quiz question 2 of the September 2026 pub quiz.",
+						"decisionType": "motion",
+						"type": "c7d10000-0000-4000-a000-000000000051",
+						"agendaItem": "c7d10000-0000-4000-a000-000000000043",
+						"lifecycle": "voting",
+						"votingOrder": 2,
+						"voteType": "named",
+						"voteThreshold": "simple-majority"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "pub-quiz-2026-09-decision-q3",
+						"id": "c7d10000-0000-4000-a000-000000000073",
+						"uuid": "c7d10000-0000-4000-a000-000000000073",
+						"title": "Is a tie broken by the quizmaster?",
+						"text": "Resolution recorded for quiz question 3 of the September 2026 pub quiz.",
+						"decisionType": "motion",
+						"type": "c7d10000-0000-4000-a000-000000000051",
+						"agendaItem": "c7d10000-0000-4000-a000-000000000044",
+						"lifecycle": "voting",
+						"votingOrder": 3,
+						"voteType": "named",
+						"voteThreshold": "simple-majority"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "r-2025-001-goedkeuring-jaarrekening",
+						"decisionType": "resolution",
+						"title": "Goedkeuring jaarrekening 2024",
+						"text": "De RvC verleent goedkeuring aan de jaarrekening 2024.",
+						"resolutionNumber": "R-2025-001",
+						"voteType": "named",
+						"voteThreshold": "simple-majority",
+						"legalBasis": "art. 2:101 BW",
+						"lifecycle": "enacted",
+						"outcome": "adopted",
+						"decisionDate": "2025-05-14T10:30:00Z",
+						"isPublished": "internal"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "r-2025-002-benoeming-cfo",
+						"decisionType": "resolution",
+						"title": "Benoeming CFO",
+						"text": "De RvC benoemt met ingang van 1 juli 2025 mevrouw A. Jansen tot Chief Financial Officer van de vennootschap.",
+						"resolutionNumber": "R-2025-002",
+						"voteType": "anonymous",
+						"voteThreshold": "simple-majority",
+						"lifecycle": "enacted",
+						"outcome": "adopted",
+						"decisionDate": "2025-05-14T11:15:00Z",
+						"isPublished": "confidential"
+					}
+				],
+				"decision-stage": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "pub-quiz-2026-09-stage-q1",
+						"id": "c7d10000-0000-4000-a000-000000000081",
+						"uuid": "c7d10000-0000-4000-a000-000000000081",
+						"sequence": 1,
+						"mandatory": true,
+						"stageType": "decisive",
+						"status": "active",
+						"method": "vote",
+						"decisionMakerType": "body",
+						"label": "Vote on question 1",
+						"decision": "c7d10000-0000-4000-a000-000000000071",
+						"assignedBody": "c7d10000-0000-4000-a000-000000000003",
+						"votingRound": "c7d10000-0000-4000-a000-000000000061"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "pub-quiz-2026-09-stage-q2",
+						"id": "c7d10000-0000-4000-a000-000000000082",
+						"uuid": "c7d10000-0000-4000-a000-000000000082",
+						"sequence": 1,
+						"mandatory": true,
+						"stageType": "decisive",
+						"status": "active",
+						"method": "vote",
+						"decisionMakerType": "body",
+						"label": "Vote on question 2",
+						"decision": "c7d10000-0000-4000-a000-000000000072",
+						"assignedBody": "c7d10000-0000-4000-a000-000000000003",
+						"votingRound": "c7d10000-0000-4000-a000-000000000062"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "pub-quiz-2026-09-stage-q3",
+						"id": "c7d10000-0000-4000-a000-000000000083",
+						"uuid": "c7d10000-0000-4000-a000-000000000083",
+						"sequence": 1,
+						"mandatory": true,
+						"stageType": "decisive",
+						"status": "active",
+						"method": "vote",
+						"decisionMakerType": "body",
+						"label": "Vote on question 3",
+						"decision": "c7d10000-0000-4000-a000-000000000073",
+						"assignedBody": "c7d10000-0000-4000-a000-000000000003",
+						"votingRound": "c7d10000-0000-4000-a000-000000000063"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-investering-acme-1-prep",
+						"sequence": 1,
+						"stageType": "preparatory",
+						"status": "decided",
+						"outcome": "adopted",
+						"decidedAt": "2026-04-05T11:00:00Z",
+						"method": "chair-register",
+						"decisionMakerType": "body",
+						"label": "MT-voorbereiding investering",
+						"note": "Businesscase goedgekeurd door MT-voorzitter.",
+						"decision": "besluit-investering-acme",
+						"assignedBody": "managementteam-acme-bv",
+						"registeredBy": "mark-van-den-berg"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-investering-acme-2-dec",
+						"sequence": 2,
+						"stageType": "decisive",
+						"status": "decided",
+						"outcome": "adopted",
+						"decidedAt": "2026-04-18T15:30:00Z",
+						"method": "vote",
+						"decisionMakerType": "body",
+						"label": "Besluit Raad van Bestuur",
+						"note": "Investeringsbesluit aangenomen — geheime stemming, unanime uitkomst.",
+						"decision": "besluit-investering-acme",
+						"assignedBody": "raad-van-bestuur-acme-bv",
+						"votingRound": "stemming-investering-acme-rvb-geheim"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-stage"
+						},
+						"slug": "stage-investering-acme-3-rat",
+						"sequence": 3,
+						"stageType": "ratifying",
+						"status": "decided",
+						"outcome": "adopted",
+						"decidedAt": "2026-05-01T09:15:00Z",
+						"method": "signature",
+						"decisionMakerType": "body",
+						"label": "Goedkeuring Raad van Commissarissen: eIDAS ondertekening",
+						"note": "RvC-besluit bekrachtigd via QES-handtekeningen. Notulen ondertekend door voorzitter en secretaris.",
+						"decision": "besluit-investering-acme",
+						"assignedBody": "raad-van-commissarissen-acme-bv",
+						"signedDocument": "notulen-rvc-investering-acme-signed"
+					}
+				],
+				"decision-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "corporate-board",
+						"name": "Corporate Board (BV)",
+						"description": "Decision process for the management board of a Dutch private limited company (BV).",
+						"context": "corporate",
+						"builtIn": true,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "voting"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "openVoting",
+									"from": "deliberating",
+									"to": "voting",
+									"chairOnly": true,
+									"guards": [
+										"quorum_met"
+									]
+								},
+								{
+									"name": "decide",
+									"from": "voting",
+									"to": "decided"
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "chair-decides"
+						},
+						"quorumRequired": true,
+						"quorumRule": "Quorum per the articles of association",
+						"allowDecideWithoutVote": false,
+						"checklist": []
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "corporate-board-urgent",
+						"name": "Corporate Board (urgency-enabled)",
+						"description": "Corporate management board (RvB) process template with the urgent-decision procedure enabled: urgent resolution decided via an expedited 24h written round, ratified by the Raad van Commissarissen.",
+						"context": "corporate",
+						"builtIn": false,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "voting"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "openVoting",
+									"from": "deliberating",
+									"to": "voting",
+									"chairOnly": true,
+									"guards": [
+										"quorum_met"
+									]
+								},
+								{
+									"name": "decide",
+									"from": "voting",
+									"to": "decided"
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "chair-decides"
+						},
+						"quorumRequired": true,
+						"quorumRule": "Quorum per the articles of association",
+						"allowDecideWithoutVote": false,
+						"urgencyPolicy": {
+							"allowedTriggerRoles": [
+								"chair",
+								"secretary"
+							],
+							"minimumNoticeFloorHours": 12,
+							"responseDeadlineHours": {
+								"min": 4,
+								"max": 72
+							},
+							"ratificationRequired": true,
+							"ratifyingBody": "raad-van-commissarissen-acme-bv"
+						},
+						"checklist": []
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "decision-type-quiz-answer",
+						"id": "c7d10000-0000-4000-a000-000000000051",
+						"uuid": "c7d10000-0000-4000-a000-000000000051",
+						"name": "Quiz answer",
+						"description": "A quiz question put to the assembled teams. Demonstrates 004: the decision references this TYPE rather than copying it, and the type names the gremium competent to take it.",
+						"decisionType": "motion",
+						"context": "operations",
+						"builtIn": false,
+						"competentBody": "c7d10000-0000-4000-a000-000000000003",
+						"competentPositionTypes": [
+							"c7d10000-0000-4000-a000-000000000011"
+						],
+						"quorumRequired": true,
+						"quorumRule": "majority",
+						"allowDecideWithoutVote": false,
+						"initialState": "proposed"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "operational-team",
+						"name": "Operational Team",
+						"description": "Lightweight decision process for an operational/management team; formal voting rounds are optional.",
+						"context": "operations",
+						"builtIn": true,
+						"initialState": "draft",
+						"stateMachine": {
+							"states": [
+								{
+									"name": "draft"
+								},
+								{
+									"name": "proposed"
+								},
+								{
+									"name": "deliberating"
+								},
+								{
+									"name": "decided"
+								},
+								{
+									"name": "enacted"
+								},
+								{
+									"name": "archived"
+								}
+							],
+							"transitions": [
+								{
+									"name": "propose",
+									"from": "draft",
+									"to": "proposed"
+								},
+								{
+									"name": "deliberate",
+									"from": "proposed",
+									"to": "deliberating"
+								},
+								{
+									"name": "decide",
+									"from": "deliberating",
+									"to": "decided"
+								},
+								{
+									"name": "enact",
+									"from": "decided",
+									"to": "enacted"
+								},
+								{
+									"name": "archive",
+									"from": "enacted",
+									"to": "archived"
+								}
+							]
+						},
+						"votingRule": {
+							"voteThreshold": "simple-majority",
+							"abstentionHandling": "exclude",
+							"tieBreakRule": "rejected"
+						},
+						"quorumRequired": false,
+						"quorumRule": "No formal quorum",
+						"allowDecideWithoutVote": true,
+						"checklist": []
+					}
+				],
+				"declared-gift": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "declared-gift"
+						},
+						"slug": "gs-congres-uitnodiging",
+						"recipient": "janneke-de-bruin",
+						"governanceBody": "rvc-waterschap-amstel",
+						"type": "invitation",
+						"giver": "Brancheorganisatie Water",
+						"description": "Congres met overnachting",
+						"estimatedValue": 400,
+						"receivedOn": "2026-02-03",
+						"decision": "transferred",
+						"notes": "Deelname overgedragen aan de organisatie; geen persoonlijk voordeel.",
+						"declaredAt": "2026-02-04"
+					}
+				],
+				"digital-document": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "digital-document"
+						},
+						"slug": "notulen-rvc-investering-acme-signed",
+						"name": "Ondertekende notulen RvC — Investeringsbesluit Datacenteruitbreiding ACME B.V.",
+						"documentType": "signed-minutes",
+						"description": "QES-ondertekende notulen van de RvC-vergadering betreffende het investeringsbesluit datacenteruitbreiding. Ondertekend door voorzitter en secretaris via eIDAS-gekwalificeerde elektronische handtekening.",
+						"encodingFormat": "application/pdf",
+						"contentSize": "1.2 MB"
+					}
+				],
+				"engagement-record": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "engagement-record"
+						},
+						"slug": "engagement-rvc-q1-pieter",
+						"meeting": "rvc-vergadering-q1-2025",
+						"participant": "pieter-van-den-berg",
+						"speeches": [],
+						"questionsRaised": [],
+						"topicsSuggested": [
+							{
+								"title": "Duurzaamheidsrapportage"
+							}
+						],
+						"speakingDuration": 0,
+						"engagementScore": 6
+					}
+				],
+				"evaluation-response": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "evaluation-response"
+						},
+						"slug": "reactie-evaluatie-acme-rvc-2026-a",
+						"answers": [
+							{
+								"questionId": "q-strategy-likert",
+								"dimension": "strategy-and-oversight",
+								"likertValue": 5
+							},
+							{
+								"questionId": "q-dynamics-text",
+								"dimension": "board-dynamics",
+								"freeText": "The board is respectful but could challenge management more."
+							}
+						],
+						"submittedAt": "2026-06-10T09:30:00Z",
+						"responseToken": "3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+						"boardEvaluation": "evaluatie-acme-rvc-2026"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "evaluation-response"
+						},
+						"slug": "reactie-evaluatie-acme-rvc-2026-b",
+						"answers": [
+							{
+								"questionId": "q-strategy-likert",
+								"dimension": "strategy-and-oversight",
+								"likertValue": 3
+							},
+							{
+								"questionId": "q-information-likert",
+								"dimension": "information-quality",
+								"likertValue": 3
+							}
+						],
+						"submittedAt": "2026-06-11T11:05:00Z",
+						"responseToken": "5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f",
+						"boardEvaluation": "evaluatie-acme-rvc-2026"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "evaluation-response"
+						},
+						"slug": "reactie-evaluatie-rvc-waterschap-amstel-2025-a",
+						"answers": [
+							{
+								"questionId": "q-strategy-likert",
+								"dimension": "strategy-and-oversight",
+								"likertValue": 4
+							},
+							{
+								"questionId": "q-strategy-text",
+								"dimension": "strategy-and-oversight",
+								"freeText": "More time for scenario discussion ahead of budget decisions."
+							},
+							{
+								"questionId": "q-chair-likert",
+								"dimension": "chair-effectiveness",
+								"likertValue": 3
+							}
+						],
+						"submittedAt": "2025-12-05T10:12:00Z",
+						"responseToken": "8f2b6a1e9d3c4f5a7b6e8d1c2a3f4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a",
+						"boardEvaluation": "evaluatie-rvc-waterschap-amstel-2025"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "evaluation-response"
+						},
+						"slug": "reactie-evaluatie-rvc-waterschap-amstel-2025-b",
+						"answers": [
+							{
+								"questionId": "q-strategy-likert",
+								"dimension": "strategy-and-oversight",
+								"likertValue": 4
+							},
+							{
+								"questionId": "q-composition-likert",
+								"dimension": "board-composition",
+								"likertValue": 3
+							},
+							{
+								"questionId": "q-chair-likert",
+								"dimension": "chair-effectiveness",
+								"likertValue": 4
+							}
+						],
+						"submittedAt": "2025-12-08T14:40:00Z",
+						"responseToken": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+						"boardEvaluation": "evaluatie-rvc-waterschap-amstel-2025"
+					}
+				],
+				"evaluation-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "evaluation-template"
+						},
+						"slug": "template-bestuurlijke-effectiviteit",
+						"title": "Board effectiveness self-evaluation (NL Corporate Governance Code)",
+						"description": "Default reusable annual board self-evaluation (zelfevaluatie) covering the five standard effectiveness dimensions. Editable per body.",
+						"dimensions": [
+							"strategy-and-oversight",
+							"board-composition",
+							"board-dynamics",
+							"information-quality",
+							"chair-effectiveness"
+						],
+						"questions": [
+							{
+								"id": "q-strategy-likert",
+								"dimension": "strategy-and-oversight",
+								"prompt": "The board sets clear strategic direction and exercises effective oversight of management.",
+								"type": "likert",
+								"scaleMin": 1,
+								"scaleMax": 5
+							},
+							{
+								"id": "q-strategy-text",
+								"dimension": "strategy-and-oversight",
+								"prompt": "What would most improve the board's strategic oversight?",
+								"type": "free-text"
+							},
+							{
+								"id": "q-composition-likert",
+								"dimension": "board-composition",
+								"prompt": "The board's composition (skills, diversity, independence) matches the organisation's needs.",
+								"type": "likert",
+								"scaleMin": 1,
+								"scaleMax": 5
+							},
+							{
+								"id": "q-composition-text",
+								"dimension": "board-composition",
+								"prompt": "What skills or perspectives is the board missing?",
+								"type": "free-text"
+							},
+							{
+								"id": "q-dynamics-likert",
+								"dimension": "board-dynamics",
+								"prompt": "Board discussions are open, constructive, and every member's voice is heard.",
+								"type": "likert",
+								"scaleMin": 1,
+								"scaleMax": 5
+							},
+							{
+								"id": "q-dynamics-text",
+								"dimension": "board-dynamics",
+								"prompt": "Describe one dynamic that helps or hinders the board's functioning.",
+								"type": "free-text"
+							},
+							{
+								"id": "q-information-likert",
+								"dimension": "information-quality",
+								"prompt": "The board receives timely, complete, and understandable information ahead of meetings.",
+								"type": "likert",
+								"scaleMin": 1,
+								"scaleMax": 5
+							},
+							{
+								"id": "q-information-text",
+								"dimension": "information-quality",
+								"prompt": "What information gap most affects the board's decision-making?",
+								"type": "free-text"
+							},
+							{
+								"id": "q-chair-likert",
+								"dimension": "chair-effectiveness",
+								"prompt": "The chair runs meetings effectively and ensures balanced participation.",
+								"type": "likert",
+								"scaleMin": 1,
+								"scaleMax": 5
+							},
+							{
+								"id": "q-chair-text",
+								"dimension": "chair-effectiveness",
+								"prompt": "What is one suggestion for the chair?",
+								"type": "free-text"
+							}
+						]
+					}
+				],
+				"goal": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "goal"
+						},
+						"slug": "goal-acme-groeidoelstelling-2028",
+						"title": "Duurzame omzetgroei 2028",
+						"description": "Structurele omzetgroei realiseren binnen de duurzaamheidsdoelstellingen van de raad van bestuur.",
+						"horizon": "multi-year",
+						"body": "raad-van-bestuur-acme-bv",
+						"owner": "00000000-0000-0000-0000-000000000000",
+						"startDate": "2026-01-01",
+						"deadline": "2028-12-31",
+						"status": "active",
+						"targetValue": 20,
+						"currentValue": 6,
+						"unit": "% omzetgroei"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "goal"
+						},
+						"slug": "goal-acme-mt-operationele-effectiviteit-2026",
+						"title": "Operationele effectiviteit 2026",
+						"description": "Procesdoorlooptijden binnen norm brengen als uitvoering van de groeidoelstelling.",
+						"horizon": "annual",
+						"body": "managementteam-acme-bv",
+						"owner": "00000000-0000-0000-0000-000000000000",
+						"startDate": "2026-01-01",
+						"deadline": "2026-12-31",
+						"status": "active",
+						"targetValue": 90,
+						"currentValue": 78,
+						"unit": "% doorlooptijd binnen norm",
+						"parentGoal": "goal-acme-groeidoelstelling-2028"
+					}
+				],
+				"governance-body": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "development-team-conduction",
+						"name": "Development team",
+						"bodyType": "operational",
+						"domain": "operations",
+						"votingDefault": "for-against-abstain",
+						"active": true,
+						"termStart": "2026-01-01T00:00:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000002",
+						"uuid": "c7d10000-0000-4000-a000-000000000002"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "gemeenteraad-amsterdam",
+						"name": "Gemeenteraad Amsterdam",
+						"bodyType": "legislative",
+						"domain": "municipality",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2022-03-16T00:00:00Z",
+						"termEnd": "2026-03-15T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "management-team-conduction",
+						"name": "Management team",
+						"bodyType": "operational",
+						"domain": "operations",
+						"votingDefault": "for-against-abstain",
+						"active": true,
+						"termStart": "2026-01-01T00:00:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000001",
+						"uuid": "c7d10000-0000-4000-a000-000000000001"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "managementteam-acme-bv",
+						"name": "Managementteam ACME B.V.",
+						"bodyType": "operational",
+						"domain": "corporate",
+						"votingDefault": "show-of-hands"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "pub-quiz-conduction",
+						"name": "Pub quiz",
+						"bodyType": "operational",
+						"domain": "operations",
+						"votingDefault": "for-against-abstain",
+						"active": true,
+						"termStart": "2026-01-01T00:00:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000003",
+						"uuid": "c7d10000-0000-4000-a000-000000000003"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "raad-van-bestuur-acme-bv",
+						"name": "Raad van Bestuur ACME B.V.",
+						"bodyType": "executive-board",
+						"domain": "corporate",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2024-01-01T00:00:00Z",
+						"termEnd": "2028-12-31T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "raad-van-commissarissen-acme-bv",
+						"name": "Raad van Commissarissen ACME B.V.",
+						"bodyType": "supervisory-board",
+						"domain": "corporate",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2024-01-01T00:00:00Z",
+						"termEnd": "2027-12-31T00:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "rvc-waterschap-amstel",
+						"name": "Raad van Commissarissen Waterschap Amstel, Gooi en Vecht",
+						"bodyType": "corporate-board",
+						"domain": "water-authority",
+						"votingDefault": "for-against-abstain",
+						"termStart": "2023-01-01T00:00:00Z",
+						"termEnd": "2026-12-31T00:00:00Z"
+					}
+				],
+				"governance-body-composition": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body-composition"
+						},
+						"slug": "composition-pub-quiz-development-team",
+						"composite": "c7d10000-0000-4000-a000-000000000003",
+						"component": "c7d10000-0000-4000-a000-000000000002",
+						"compositionType": "direct",
+						"accessionDate": "2026-01-01",
+						"label": "Development team plays"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body-composition"
+						},
+						"slug": "composition-pub-quiz-management-team",
+						"composite": "c7d10000-0000-4000-a000-000000000003",
+						"component": "c7d10000-0000-4000-a000-000000000001",
+						"compositionType": "direct",
+						"accessionDate": "2026-01-01",
+						"label": "Management team plays"
+					}
+				],
+				"governing-document": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governing-document"
+						},
+						"slug": "huishoudelijk-reglement-acme-bv",
+						"type": "internal-regulations",
+						"citationTitle": "Huishoudelijk reglement ACME B.V.",
+						"description": "Huishoudelijk reglement van de raad van bestuur, aanvullend op de statuten.",
+						"governingBody": "raad-van-bestuur-acme-bv",
+						"isPublic": false,
+						"status": "in-force",
+						"currentEffectiveDate": "2025-09-01"
+					}
+				],
+				"meeting": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "directieoverleg-2025-04-14",
+						"title": "Directieoverleg week 16. Gemeente Utrecht",
+						"meetingType": "regular",
+						"scheduledDate": "2025-04-14T09:00:00Z",
+						"endDate": "2025-04-14T11:00:00Z",
+						"location": "Stadskantoor Utrecht, Kamer 3.12",
+						"meetingMode": "hybrid",
+						"lifecycle": "draft"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "pub-quiz-night-2026-09",
+						"title": "Pub quiz. September 2026",
+						"type": "c7d10000-0000-4000-a000-000000000031",
+						"governanceBody": "c7d10000-0000-4000-a000-000000000003",
+						"meetingType": "regular",
+						"scheduledDate": "2026-09-18T19:30:00Z",
+						"endDate": "2026-09-18T21:00:00Z",
+						"location": "Conduction HQ, kantine",
+						"meetingMode": "in-person",
+						"lifecycle": "scheduled",
+						"quorumRequired": 4,
+						"isPublic": false,
+						"id": "c7d10000-0000-4000-a000-000000000041",
+						"uuid": "c7d10000-0000-4000-a000-000000000041"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "rvc-vergadering-2025-q2",
+						"title": "RvC-vergadering Q2 2025",
+						"meetingType": "regular",
+						"scheduledDate": "2025-04-17T14:00:00Z",
+						"endDate": "2025-04-17T16:30:00Z",
+						"location": "ACME B.V. hoofdkantoor, bestuurskamer",
+						"meetingMode": "hybrid",
+						"lifecycle": "closed"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "rvc-vergadering-q1-2025",
+						"title": "RvC Vergadering Q1 2025. Waterschap",
+						"meetingType": "regular",
+						"scheduledDate": "2025-02-05T10:00:00Z",
+						"endDate": "2025-02-05T13:00:00Z",
+						"location": "Waternet Kantoor, Amstel 1",
+						"meetingMode": "in-person",
+						"lifecycle": "closed"
+					}
+				],
+				"meeting-type": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting-type"
+						},
+						"slug": "meeting-type-pub-quiz-night",
+						"name": "Pub quiz night",
+						"governanceBody": "c7d10000-0000-4000-a000-000000000003",
+						"allowedAgendaItemTypes": [
+							"c7d10000-0000-4000-a000-000000000022",
+							"c7d10000-0000-4000-a000-000000000021"
+						],
+						"defaultQuorum": 4,
+						"defaultQuorumRule": "majority",
+						"defaultVotingRule": "for-against-abstain",
+						"defaultVoteThreshold": "simple-majority",
+						"defaultDurationMinutes": 90,
+						"initialLifecycle": "scheduled",
+						"isPublic": false,
+						"isDraft": false,
+						"validFrom": "2026-01-01",
+						"active": true,
+						"description": "The Pub quiz body's own meeting kind. It exists in no enum anywhere in decidiq: that is the point: a gremium defined its own meeting type at runtime, with zero code changed.",
+						"id": "c7d10000-0000-4000-a000-000000000031",
+						"uuid": "c7d10000-0000-4000-a000-000000000031"
+					}
+				],
+				"membership": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-jan-amstel",
+						"role": "secretary",
+						"label": "Raadsgriffier",
+						"votingWeight": 0,
+						"startDate": "2021-01-15T00:00:00Z",
+						"person": "jan-de-vries",
+						"governanceBody": "rvc-waterschap-amstel",
+						"post": "post-griffier-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-janneke-rvc",
+						"role": "chair",
+						"label": "Voorzitter RvC",
+						"votingWeight": 1,
+						"startDate": "2022-04-01T00:00:00Z",
+						"endDate": "2026-04-01T00:00:00Z",
+						"independenceStatus": "independent",
+						"otherPositions": [
+							"RvC Stedin (vice-voorzitter)",
+							"Bestuur Stichting Concertgebouw"
+						],
+						"person": "janneke-de-bruin",
+						"governanceBody": "rvc-waterschap-amstel",
+						"post": "post-voorzitter-rvc"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "m-mark-rvb",
+						"role": "member",
+						"label": "Lid RvB",
+						"votingWeight": 1,
+						"startDate": "2020-01-01T00:00:00Z",
+						"endDate": "2025-12-31T00:00:00Z",
+						"independenceStatus": "non-independent",
+						"otherPositions": [
+							"Bestuur Branchevereniging Tech NL"
+						],
+						"person": "mark-van-den-berg",
+						"governanceBody": "rvc-waterschap-amstel"
+					}
+				],
+				"minutes": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-directieoverleg-2025-04-14",
+						"title": "Verslag Directieoverleg Gemeente Utrecht 14 april 2025",
+						"lifecycle": "draft",
+						"version": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-rvc-2025-q2",
+						"title": "Notulen RvC-vergadering Q2 2025",
+						"lifecycle": "approved",
+						"content": "De voorzitter van de Raad van Commissarissen opent de vergadering om 14:00 uur...",
+						"approvedAt": "2025-05-15T10:00:00Z",
+						"signedBy": [
+							"Voorzitter RvC",
+							"Secretaris"
+						],
+						"version": 1
+					}
+				],
+				"participant": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "femke-halsema",
+						"displayName": "Femke Halsema",
+						"role": "chair",
+						"email": "f.halsema@amsterdam.nl",
+						"joinedAt": "2018-05-30T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "jan-de-vries",
+						"displayName": "Jan de Vries",
+						"role": "secretary",
+						"email": "j.devries@waterschap.nl",
+						"joinedAt": "2021-01-15T00:00:00Z",
+						"votingWeight": 1
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "marie-janssen",
+						"displayName": "Marie Janssen",
+						"role": "member",
+						"party": "D66",
+						"email": "m.janssen@amsterdam.nl",
+						"joinedAt": "2022-03-16T00:00:00Z",
+						"votingWeight": 1
+					}
+				],
+				"person": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "femke-halsema",
+						"name": "Femke Halsema",
+						"givenName": "Femke",
+						"familyName": "Halsema",
+						"gender": "female",
+						"email": "f.halsema@amsterdam.nl",
+						"biography": "Burgemeester van Amsterdam, voorzitter van de gemeenteraad."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "jan-de-vries",
+						"name": "Jan de Vries",
+						"givenName": "Jan",
+						"familyName": "de Vries",
+						"gender": "male",
+						"email": "j.devries@waterschap.nl",
+						"biography": "Secretaris / griffier."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "janneke-de-bruin",
+						"name": "Janneke de Bruin",
+						"givenName": "Janneke",
+						"familyName": "de Bruin",
+						"gender": "female",
+						"email": "j.debruin@acme.example",
+						"biography": "Voorzitter Raad van Commissarissen.",
+						"nationality": "NL"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "marie-janssen",
+						"name": "Marie Janssen",
+						"givenName": "Marie",
+						"familyName": "Janssen",
+						"gender": "female",
+						"email": "m.janssen@amsterdam.nl",
+						"biography": "Raadslid en lid van de VNG-ledenraad."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "mark-van-den-berg",
+						"name": "Mark van den Berg",
+						"givenName": "Mark",
+						"familyName": "van den Berg",
+						"gender": "male",
+						"email": "m.vandenberg@acme.example",
+						"biography": "Lid Raad van Bestuur.",
+						"nationality": "NL"
+					}
+				],
+				"position-type": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "position-type"
+						},
+						"slug": "position-management-team-chair",
+						"name": "Chair",
+						"governanceBody": "c7d10000-0000-4000-a000-000000000001",
+						"key": "chair",
+						"seats": 1,
+						"order": 1,
+						"allowedHoldTypes": [
+							"regular",
+							"interim",
+							"acting"
+						],
+						"termDurationMonths": 24,
+						"maxConsecutiveTerms": 2,
+						"reappointable": true,
+						"active": true,
+						"description": "Chairs the management team. Its allowedHoldTypes admit an interim; the quizmaster's do not admit 'acting': hold types are configured per position, not globally.",
+						"id": "c7d10000-0000-4000-a000-000000000012",
+						"uuid": "c7d10000-0000-4000-a000-000000000012"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "position-type"
+						},
+						"slug": "position-pub-quiz-quizmaster",
+						"name": "Quizmaster",
+						"governanceBody": "c7d10000-0000-4000-a000-000000000003",
+						"key": "quizmaster",
+						"seats": 1,
+						"order": 1,
+						"allowedHoldTypes": [
+							"regular",
+							"interim"
+						],
+						"termDurationMonths": 12,
+						"maxConsecutiveTerms": 3,
+						"reappointable": true,
+						"active": true,
+						"description": "Runs the quiz and rules on disputed answers. Demonstrates a position declared by its own gremium: the Management team has no quizmaster unless it declares one.",
+						"id": "c7d10000-0000-4000-a000-000000000011",
+						"uuid": "c7d10000-0000-4000-a000-000000000011"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "position-type"
+						},
+						"slug": "termijn-regeling-rvc-acme",
+						"name": "Member",
+						"governanceBody": "raad-van-commissarissen-acme-bv",
+						"termDurationMonths": 48,
+						"maxConsecutiveTerms": 2,
+						"notes": "Statutair: eenmaal herbenoembaar (art. 12 statuten)."
+					}
+				],
+				"post": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-griffier-amsterdam",
+						"label": "Raadsgriffier",
+						"role": "secretary",
+						"startDate": "2021-01-15T00:00:00Z",
+						"governanceBody": "gemeenteraad-amsterdam"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-voorzitter-rvc",
+						"label": "Voorzitter RvC",
+						"role": "chair",
+						"startDate": "2022-04-01T00:00:00Z",
+						"governanceBody": "rvc-waterschap-amstel"
+					}
+				],
+				"voting-round": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "pub-quiz-2026-09-q1-vote",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "exclude",
+						"tieBreakRule": "chair-decides",
+						"openedAt": "2026-09-18T19:40:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000061",
+						"uuid": "c7d10000-0000-4000-a000-000000000061"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "pub-quiz-2026-09-q2-vote",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "exclude",
+						"tieBreakRule": "chair-decides",
+						"openedAt": "2026-09-18T19:50:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000062",
+						"uuid": "c7d10000-0000-4000-a000-000000000062"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "pub-quiz-2026-09-q3-vote",
+						"votingMethod": "show-of-hands",
+						"isSecret": false,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "count",
+						"tieBreakRule": "chair-decides",
+						"openedAt": "2026-09-18T20:00:00Z",
+						"id": "c7d10000-0000-4000-a000-000000000063",
+						"uuid": "c7d10000-0000-4000-a000-000000000063"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-investering-acme-rvb-geheim",
+						"votingMethod": "for-against-abstain",
+						"isSecret": true,
+						"openedAt": "2026-04-18T15:00:00Z",
+						"closedAt": "2026-04-18T15:20:00Z",
+						"quorumWith": true,
+						"result": "adopted",
+						"votesFor": 3,
+						"votesAgainst": 0,
+						"votesAbstain": 0,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "exclude",
+						"decisionStage": "stage-investering-acme-2-dec"
+					}
+				]
+			}
+		}
+	},
+	"paths": {},
+	"components": {}
+}

@@ -7,14 +7,14 @@
  *
  * @spec openspec/specs/admin-settings/spec.md
  */
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+	DEFAULT_ROLE,
+	markGroupDuplicates,
+	MAX_IMPORT_ROWS,
 	parseCsv,
 	parseMemberCsv,
 	validateMemberRows,
-	markGroupDuplicates,
-	MAX_IMPORT_ROWS,
-	DEFAULT_ROLE,
 } from '../../src/utils/memberImport.js'
 
 describe('parseCsv', () => {

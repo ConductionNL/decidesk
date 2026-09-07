@@ -1,0 +1,32 @@
+{
+	"_note": "questions-as-agenda-items — retires the three schemas that made an oral question and an interpellation request into their own top-level entities. Both are agenda items: a member puts something to the body at a meeting, it is admitted or refused, it is handled, and it may leave a commitment behind. That is what AgendaItem already models. What made them separate schemas was never the shape, it was the vocabulary: a council calls one a mondelinge vraag, a works council calls it an agendapunt van de OR, a VvE calls it a vraag aan het bestuur. Vocabulary is configuration, so it moves to AgendaItemType rows in the example sets, and the app stops shipping a Dutch council's committee procedure as code.",
+	"_spec": "openspec/changes/questions-as-agenda-items/specs/questions-as-agenda-items/spec.md",
+	"components": {
+		"schemas": {
+			"MondelingeVraag": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (questions-as-agenda-items): an oral question is an AgendaItem whose type is an AgendaItemType named by the organisation. Its distinctive fields live in AgendaItem.typeFields, which is exactly what that property was added for. Definition and slug are kept (hardDelete:false, existing rows), so a rollback still finds its data and anything still reading mondelinge-vraag keeps working.",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"Interpellatieverzoek": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (questions-as-agenda-items): an interpellation request is an AgendaItem carrying an AgendaItemType that requires support before it is admitted. The support threshold is declared on the type (supportThresholdType, supportThresholdValue), so an organisation that needs no threshold simply leaves it unset instead of the app knowing what an interpellation is. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"VragenuurConfiguratie": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (questions-as-agenda-items): its three facts were already declared on AgendaItemType by configurable-types-domain-model, whose property notes name this schema as the source (submissionWindowHours, supportThresholdType, supportThresholdValue). Per-body configuration of one kind of item belongs on that kind, not in a second schema keyed on the body. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

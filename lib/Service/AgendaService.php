@@ -264,14 +264,14 @@ class AgendaService {
 			);
 		}
 
-		$this->objectService->saveObject(
-			object: [
-				'id' => $agendaItemId,
-				'status' => $nextStatus,
-			],
+		// Uses patchObject, not saveObject: a uuid-bearing save is a FULL REPLACE
+		// that OpenRegister validates whole, so a status-only payload 400s on
+		// the required title, itemType and orderNumber it omits.
+		$this->objectService->patchObject(
+			objectId: $agendaItemId,
+			data: ['status' => $nextStatus],
 			register: 'decidiq',
 			schema: 'agenda-item',
-			uuid: $agendaItemId,
 		);
 
 		$this->logger->info(
@@ -318,14 +318,13 @@ class AgendaService {
 				continue;
 			}
 
-			$this->objectService->saveObject(
-				object: [
-					'id' => $itemId,
-					'status' => 'completed',
-				],
+			// Uses patchObject, not saveObject: see advanceBobPhase() — a partial
+			// payload under save's full-replace validation 400s per item.
+			$this->objectService->patchObject(
+				objectId: (string)$itemId,
+				data: ['status' => 'completed'],
 				register: 'decidiq',
 				schema: 'agenda-item',
-				uuid: (string)$itemId,
 			);
 
 			$processedCount++;
@@ -414,14 +413,13 @@ class AgendaService {
 				continue;
 			}
 
-			$this->objectService->saveObject(
-				object: [
-					'id' => $itemId,
-					'orderNumber' => $orderNumber,
-				],
+			// Uses patchObject, not saveObject: see advanceBobPhase() — a partial
+			// payload under save's full-replace validation 400s per item.
+			$this->objectService->patchObject(
+				objectId: (string)$itemId,
+				data: ['orderNumber' => $orderNumber],
 				register: 'decidiq',
 				schema: 'agenda-item',
-				uuid: (string)$itemId,
 			);
 
 			$orderNumber++;

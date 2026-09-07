@@ -72,6 +72,13 @@ export const MODE_LABELS = {
 	 */
 	assoc: {
 		Organisation: 'Bodies',
+		// An audit statement is the generic record; a VvE or vereniging calls
+		// the committee that files it the kascommissie. THIS is where that word
+		// belongs — in the per-mode label map — rather than in the schema name,
+		// which is why generic-audit-statement could rename the schema without
+		// taking the Dutch term away from the people who use it.
+		'Audit statements': 'Kascommissie verklaringen',
+		'Audit statement': 'Kascommissie verklaring',
 		// Scaffold:
 		// Meetings    → 'Meetings'
 		// Decisions   → 'Decisions'

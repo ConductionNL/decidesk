@@ -34,6 +34,8 @@ declare(strict_types=1);
 namespace OCA\Decidiq\AppInfo\Registrar;
 
 use OCA\Decidiq\AppInfo\Application;
+use OCA\Decidiq\AppInfo\OpenRegisterAutoloader;
+use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Event\DeepLinkRegistrationEvent;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -125,5 +127,82 @@ class AppHostRegistrar {
 		// @phpstan-ignore-next-line
 		$context->registerEventListener(event: DeepLinkRegistrationEvent::class, listener: $listenerClass);
 
+		$this->bindStoreController(context: $context);
+
 	}//end register()
+
+	/**
+	 * Bind the store controller the adopted route table already declares.
+	 *
+	 * 🔴 THIS ROUTE ARRIVES WHETHER THE APP WANTS IT OR NOT.
+	 *
+	 * `Routes::standard()`, which appinfo/routes.php adopts, declares
+	 * `/api/store/items`. The binding normally comes from
+	 * `Bootstrap::register()`, and decidiq deliberately does not call that: it
+	 * keeps its own Settings, Preferences, AdminSettings and repair classes.
+	 * So the route matched a controller class that does not exist, and every
+	 * request to it returned HTTP 500 rather than 404. Measured on a running
+	 * instance 2026-09-03, alongside filinq and planninq.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OCA\OpenRegister\AppHost\Bootstrap
+	 * is a cross-app static entry point in a SIBLING app that may be absent or
+	 * unloadable here — the call is guarded by class_exists() and wrapped in a
+	 * catch(\Throwable) for exactly that reason. It cannot be injected: this
+	 * runs at the composition root, so there is no container to resolve an
+	 * adapter from. OpenRegisterAutoloader::register() is static for the same
+	 * reason.
+	 *
+	 * @spec openspec/specs/apphost-adoption/spec.md
+	 *
+	 * 🔴 `$context` IS USED. psalm used to say otherwise, and the error it
+	 * printed named the wrong thing.
+	 *
+	 * It is passed to `Bootstrap::aliasStoreController(context: $context, …)`
+	 * below. `OCA\OpenRegister\AppHost\Bootstrap` lives in a SIBLING app that
+	 * may be absent, so psalm could not resolve it, pruned the guarded block as
+	 * dead code, and then reported
+	 * `UnusedParam: Param context is never referenced in this method`. Read
+	 * literally that invites you to delete a parameter the store-route binding
+	 * needs at runtime.
+	 *
+	 * There is no `@psalm-suppress UnusedParam` here any more. psalm now reads
+	 * the class from a shared analysis stub,
+	 * `vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php`,
+	 * named in psalm.xml. The suppression worked, but it would also have hidden
+	 * the next genuinely unused parameter in this method; the stub answers the
+	 * question psalm is asking and leaves the call type-checked.
+	 *
+	 * Shared rather than vendored here, because filinq and planninq adopted the
+	 * same route table and write the same call.
+	 */
+	private function bindStoreController(IRegistrationContext $context): void {
+		// ⚠️ THE PRELUDE IS NOT OPTIONAL HERE. `decidiq` sorts before
+		// `openregister`, and Nextcloud registers apps one at a time in sorted
+		// order, so OCA\OpenRegister\ is NOT on the autoloader yet. Without
+		// this the class_exists() below answers false on a perfectly healthy
+		// instance and the binding is skipped in silence.
+		OpenRegisterAutoloader::register();
+
+		// The class_exists() guard MUST stay in this method: it is also the
+		// assertion psalm relies on to accept the Bootstrap call below, and
+		// psalm does not carry that narrowing across a call.
+		if (class_exists(Bootstrap::class) === true) {
+			try {
+				Bootstrap::aliasStoreController(
+					context: $context,
+					appId: Application::APP_ID,
+					controllerNs: 'OCA\\Decidiq\\Controller'
+				);
+			} catch (\Throwable) {
+				// An OpenRegister older than the helper, or present but
+				// unloadable. The store route is then no worse off than it is
+				// today, and every registration around this one still runs.
+			}
+		}
+
+	}//end bindStoreController()
 }//end class

@@ -1,0 +1,83 @@
+{
+	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "The settings surface for the UNIFIED DecisionTemplate schema (slug decision-template), appended onto src/manifest.json by main.js::mergeManifestFragments (ADR-037). This fragment exists because the model refactor landed without one: unified-decision-templates (archived 2026-08-19) folded ProcessTemplate and VveDecisionTemplate into DecisionTemplate and marked both active:false, but shipped no page, so the schema that actually carries the templates had NO surface at all while the gear still listed the two retired copies. Measured on a live instance 2026-08-31: decision-template 28 objects and no page; vve-decision-template 6 and modelreglement-preset 3, both superseded, both on the gear. Schema ref BY SLUG (decision-template), never PascalCase.",
+	"_spec": "openspec/changes/retire-vve-template-surfaces/specs/retire-vve-template-surfaces/spec.md",
+	"menu": [
+		{
+			"id": "DecisionTemplates",
+			"label": "Decision templates",
+			"icon": "FileReplaceOutline",
+			"route": "DecisionTemplates",
+			"order": 71
+		}
+	],
+	"pages": [
+		{
+			"id": "DecisionTemplates",
+			"route": "/decision-templates",
+			"type": "index",
+			"title": "Decision templates",
+			"_note": "Every decision template, whichever kind of organisation it belongs to. `context` is the discriminator the VvE-only page used to stand in for: association, corporate, legislative, operations, citizen. Built-ins are read-only-but-duplicable (server-side guard).",
+			"config": {
+				"register": "decidiq",
+				"schema": "decision-template",
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"_note": "Sorted by name, not @self.created: an operator picking a template reads a list of names, and creation order is meaningless to them.",
+				"columns": [
+					{ "key": "name", "label": "Name", "widget": "link" },
+					{ "key": "context", "label": "Context", "widget": "badge" },
+					{ "key": "decisionType", "label": "Decision type", "widget": "badge" },
+					{ "key": "templateCategory", "label": "Category" },
+					{ "key": "quorumRequired", "label": "Quorum required", "widget": "badge" },
+					{ "key": "builtIn", "label": "Built-in", "widget": "badge" }
+				],
+				"actions": [
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "DecisionTemplateDetail",
+						"primary": true
+					}
+				],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "DecisionTemplateDetail",
+			"route": "/decision-templates/:id",
+			"type": "detail",
+			"title": "Decision template",
+			"_note": "Template content leads: name, context, category, proposed text, the voting and quorum rules a decision instantiated from it inherits, and the regulation it cites. Audit trail in a sidebar tab.",
+			"config": {
+				"register": "decidiq",
+				"schema": "decision-template",
+				"widgets": [
+					{
+						"id": "template-data",
+						"type": "data",
+						"title": "Decision template",
+						"icon": "Gavel",
+						"content": { "columns": 2 }
+					},
+					{ "id": "template-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "template-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "template-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 8 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [{ "type": "audit" }] }
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		}
+	]
+}

@@ -1,153 +1,190 @@
 {
 	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "Toezeggingen (commitments) + Ingekomen stukken (incoming documents) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail pages for both registers; schema refs BY SLUG (toezegging / ingekomen-stuk), never PascalCase. The Dashboard 'Open toezeggingen over deadline' stat widget lives in the base src/manifest.json (design D6: mergePages replaces a same-id page wholesale, so a fragment cannot add one widget to Dashboard without duplicating it).",
+	"_note": "Commitments (formerly toezeggingen) — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail; schema ref BY SLUG (governance-commitment), never the PascalCase key. The ingekomen-stukken surfaces this fragment used to carry were removed by documents-as-agenda-items: incoming correspondence is an agenda item carrying a configurable kind, so it appears in the agenda rather than in a register of its own. The Dashboard overdue-commitments stat widget lives in the base src/manifest.json, because mergePages replaces a same-id page wholesale and a fragment cannot add one widget to Dashboard without redefining it.",
 	"_spec": "openspec/changes/toezeggingen-ingekomen-stukken/specs/toezeggingen-register/spec.md",
 	"menu": [
 		{
-			"id": "Toezeggingen",
+			"id": "Commitments",
 			"label": "Commitments",
 			"icon": "Check",
-			"route": "Toezeggingen",
+			"route": "Commitments",
 			"order": 45
-		},
-		{
-			"id": "IngekomenStukken",
-			"label": "Incoming documents",
-			"icon": "FileDocumentMultipleOutline",
-			"route": "IngekomenStukken",
-			"order": 50
 		}
 	],
 	"pages": [
 		{
-			"id": "Toezeggingen",
-			"route": "/toezeggingen",
+			"id": "Commitments",
+			"route": "/commitments",
 			"type": "index",
 			"title": "Commitments",
 			"_note": "spec: openspec/changes/toezeggingen-ingekomen-stukken/specs/toezeggingen-register/spec.md",
 			"config": {
 				"register": "decidiq",
-				"schema": "toezegging",
+				"schema": "governance-commitment",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"_note": "Toezeggingenlijst (REQ-006). Columns text/madeBy/directedTo/deadline/lifecycle; quick filters on lifecycle and governance body. CSV export via the shared ExportService + CnMassExportDialog (mass-export exposed by the index chrome). The overdue-KPI deep-link (Dashboard) targets this page pre-filtered to non-terminal lifecycle (design D6).",
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Open", "filter": { "lifecycle": "open" } },
-					{ "label": "In progress", "filter": { "lifecycle": "in-execution" } },
-					{ "label": "Settled", "filter": { "lifecycle": "disposed" } },
-					{ "label": "Lapsed", "filter": { "lifecycle": "lapsed" } }
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Open",
+						"filter": {
+							"lifecycle": "open"
+						}
+					},
+					{
+						"label": "In progress",
+						"filter": {
+							"lifecycle": "in-execution"
+						}
+					},
+					{
+						"label": "Settled",
+						"filter": {
+							"lifecycle": "disposed"
+						}
+					},
+					{
+						"label": "Lapsed",
+						"filter": {
+							"lifecycle": "lapsed"
+						}
+					}
 				],
 				"columns": [
-					{ "key": "text", "label": "Commitment", "widget": "link" },
-					{ "key": "madeBy", "label": "Made by", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "person", "labelField": "name" } },
-					{ "key": "directedTo", "label": "Directed to", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
-					{ "key": "deadline", "label": "Deadline" },
-					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
+					{
+						"key": "text",
+						"label": "Commitment",
+						"widget": "link"
+					},
+					{
+						"key": "madeBy",
+						"label": "Made by",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "decidiq",
+							"schema": "person",
+							"labelField": "name"
+						}
+					},
+					{
+						"key": "directedTo",
+						"label": "Directed to",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "decidiq",
+							"schema": "governance-body",
+							"labelField": "name"
+						}
+					},
+					{
+						"key": "deadline",
+						"label": "Deadline"
+					},
+					{
+						"key": "lifecycle",
+						"label": "Status",
+						"widget": "badge"
+					}
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ToezeggingDetail", "primary": true }
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "CommitmentDetail",
+						"primary": true
+					}
 				],
 				"showMassExport": true,
-				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "ToezeggingDetail",
-			"route": "/toezeggingen/:id",
-			"type": "detail",
-			"title": "Commitment",
-			"_note": "spec: openspec/changes/toezeggingen-ingekomen-stukken/specs/toezeggingen-register/spec.md",
-			"config": {
-				"register": "decidiq",
-				"schema": "toezegging",
-				"_note": "ToezeggingDetail (REQ-006). Commitment data leads 8-wide, publication + evidence stacked right; the linked meeting/agendaItem/madeBy/directedTo/relatedMotion render as resolved references in the data widget and the Related widget. Files leaf for the raadsbrief/evidence. Audit trail is a sidebar tab (REQ-006). No comms leaf: the toezegging schema declares no email/calendar linkedType.",
-				"widgets": [
-					{ "id": "toezegging-data", "type": "data", "title": "Commitment", "icon": "HandshakeOutline", "content": { "columns": 2 } },
-					{ "id": "toezegging-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
-					{ "id": "toezegging-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "toezegging-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "toezegging-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "3", "widgetId": "toezegging-related", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
-				],
 				"sidebar": {
 					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
+					"showMetadata": true
 				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
 		{
-			"id": "IngekomenStukken",
-			"route": "/ingekomen-stukken",
-			"type": "index",
-			"title": "Incoming documents",
-			"_note": "spec: openspec/changes/toezeggingen-ingekomen-stukken/specs/ingekomen-stukken-register/spec.md",
-			"config": {
-				"register": "decidiq",
-				"schema": "ingekomen-stuk",
-				"sortKey": "@self.created",
-				"sortOrder": "desc",
-				"_note": "Lijst ingekomen stukken (REQ-006). Columns title/sender/category/receivedAt/routingAdvice/lifecycle; quick filters on lifecycle, category and governance body. CSV export via ExportService + CnMassExportDialog.",
-				"quickFilterMode": "dropdown",
-				"quickFilterMultiple": true,
-				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Registered", "filter": { "lifecycle": "registered" } },
-					{ "label": "On agenda", "filter": { "lifecycle": "agendised" } },
-					{ "label": "Routing confirmed", "filter": { "lifecycle": "routing-determined" } },
-					{ "label": "Held over", "filter": { "lifecycle": "deferred" } },
-					{ "label": "Settled", "filter": { "lifecycle": "disposed" } }
-				],
-				"columns": [
-					{ "key": "title", "label": "Title", "widget": "link" },
-					{ "key": "sender", "label": "Sender" },
-					{ "key": "category", "label": "Category", "widget": "badge" },
-					{ "key": "receivedAt", "label": "Received" },
-					{ "key": "routingAdvice", "label": "Routing advice", "widget": "badge" },
-					{ "key": "lifecycle", "label": "Status", "widget": "badge" }
-				],
-				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "IngekomenStukDetail", "primary": true }
-				],
-				"showMassExport": true,
-				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "IngekomenStukDetail",
-			"route": "/ingekomen-stukken/:id",
+			"id": "CommitmentDetail",
+			"route": "/commitments/:id",
 			"type": "detail",
-			"title": "Incoming document",
-			"_note": "spec: openspec/changes/toezeggingen-ingekomen-stukken/specs/ingekomen-stukken-register/spec.md",
+			"title": "Commitment",
+			"_note": "spec: openspec/changes/toezeggingen-ingekomen-stukken/specs/toezeggingen-register/spec.md",
 			"config": {
 				"register": "decidiq",
-				"schema": "ingekomen-stuk",
-				"_note": "IngekomenStukDetail (REQ-006). Document data leads 8-wide; the routing advice/decision, the linked listAgendaItem/targetAgendaItem and their meeting, and directedTo render as resolved references in the data + Related widgets. Files leaf for the scanned letter/petition PDF. Audit trail is a sidebar tab (REQ-006).",
+				"schema": "governance-commitment",
+				"_note": "ToezeggingDetail (REQ-006). Commitment data leads 8-wide, publication + evidence stacked right; the linked meeting/agendaItem/madeBy/directedTo/relatedMotion render as resolved references in the data widget and the Related widget. Files leaf for the raadsbrief/evidence. Audit trail is a sidebar tab (REQ-006). No comms leaf: the toezegging schema declares no email/calendar linkedType.",
 				"widgets": [
-					{ "id": "stuk-data", "type": "data", "title": "Incoming document", "icon": "Email", "content": { "columns": 2 } },
-					{ "id": "stuk-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
-					{ "id": "stuk-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+					{
+						"id": "toezegging-data",
+						"type": "data",
+						"title": "Commitment",
+						"icon": "HandshakeOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "toezegging-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Documents",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "toezegging-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "stuk-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "stuk-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "3", "widgetId": "stuk-related", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
+					{
+						"id": "1",
+						"widgetId": "toezegging-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "toezegging-files",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "toezegging-related",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 3
+					}
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
 					]
 				},
 				"documentationUrl": "https://decidiq.conduction.nl"

@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\AppInfo;
 
 use OCA\Decidiq\AppInfo\Registrar\AppHostRegistrar;
+use OCA\Decidiq\AppInfo\Registrar\CrossAppEventRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\DomainServiceRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\IntegrationLeafRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\ObjectListenerRegistrar;
@@ -46,7 +47,8 @@ use OCP\Util;
  * than accumulating here:
  *
  *   - {@see AppHostRegistrar}            AppHost boilerplate adoption (ADR-040 / ADR-022).
- *   - {@see DomainServiceRegistrar}      decision events, MCP tools, eIDAS, translation.
+ *   - {@see CrossAppEventRegistrar}      inbound cross-app command listeners (ADR-041).
+ *   - {@see DomainServiceRegistrar}      MCP tools, eIDAS, translation.
  *   - {@see PlatformIntegrationRegistrar} search, object-write guards, dashboard widget.
  *   - {@see IntegrationLeafRegistrar}    server-side half of the OR integration leaves (ADR-066).
  *   - {@see ObjectListenerRegistrar}     boot()-time filtered object-lifecycle subscriptions.
@@ -140,6 +142,7 @@ class Application extends App implements IBootstrap {
 		// them.
 		// @spec openspec/changes/migrate-comments-to-talk-leaf/tasks.md#task-2.1.
 		// @spec openspec/specs/user-settings/spec.md
+		(new CrossAppEventRegistrar())->register(context: $context);
 		(new DomainServiceRegistrar())->register(context: $context);
 
 		// Board portal Phase 2 services (audit log, conflict of interest,

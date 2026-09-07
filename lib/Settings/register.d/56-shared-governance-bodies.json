@@ -1,165 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the shared-governance-bodies capability (gemeenschappelijke regeling per Wgr), modelled on the SED-organisatie pattern: three fictional municipalities (Noorderbrug, Oostwoud, Zuidermeer) share one uitvoeringsorganisatie ('NOZ organisatie'). Objects grouped by schema slug (governance-body [shared-body + three legislative raden, additively appended to the existing governance-body seed set], body-participation, person, membership [two board members demonstrating the new namens provenance], zienswijzeronde, zienswijze). References resolve by slug against same-fragment and existing decidesk seed objects; the nil UUID 00000000-0000-0000-0000-000000000000 is an obvious placeholder where no matching seed object exists (the pc-cyclus begroting CyclusStap and a participant raadsbesluit Decision, both cross-seed and resolved at import). Ronde 2's zienswijze (zienswijze-noorderbrug-wijziging-gr) is left uitstaand so the 'Openstaande zienswijzen' KPI is non-zero on a fresh install (ADR-016); ronde 1 exercises the full flow including verwerking and a niet-ingediend participant; participation weights 2/2/1 make the weighted-roster scenario demonstrable. NOTE (app-wide limitation, consistent with sibling fragments 45/54/55): relation refs stored as slugs may not resolve to UUIDs on detail pages until the register import maps them.",
-      "objects": {
-        "governance-body": [
-          {
-            "slug": "bestuur-noz-organisatie",
-            "name": "Bestuur NOZ organisatie",
-            "bodyType": "shared-body",
-            "domain": "municipal",
-            "workflowTemplate": "legislative"
-          },
-          {
-            "slug": "gemeenteraad-noorderbrug",
-            "name": "Gemeenteraad Noorderbrug",
-            "bodyType": "legislative",
-            "domain": "municipal",
-            "workflowTemplate": "legislative"
-          },
-          {
-            "slug": "gemeenteraad-oostwoud",
-            "name": "Gemeenteraad Oostwoud",
-            "bodyType": "legislative",
-            "domain": "municipal",
-            "workflowTemplate": "legislative"
-          },
-          {
-            "slug": "gemeenteraad-zuidermeer",
-            "name": "Gemeenteraad Zuidermeer",
-            "bodyType": "legislative",
-            "domain": "municipal",
-            "workflowTemplate": "legislative"
-          }
-        ],
-        "body-participation": [
-          {
-            "slug": "deelname-noorderbrug-noz",
-            "sharedBody": "bestuur-noz-organisatie",
-            "participant": "gemeenteraad-noorderbrug",
-            "seats": 2,
-            "votingWeight": 2,
-            "accessionDate": "2015-01-01T00:00:00Z",
-            "label": "Deelnemer per oprichting"
-          },
-          {
-            "slug": "deelname-oostwoud-noz",
-            "sharedBody": "bestuur-noz-organisatie",
-            "participant": "gemeenteraad-oostwoud",
-            "seats": 2,
-            "votingWeight": 2,
-            "accessionDate": "2015-01-01T00:00:00Z",
-            "label": "Deelnemer per oprichting"
-          },
-          {
-            "slug": "deelname-zuidermeer-noz",
-            "sharedBody": "bestuur-noz-organisatie",
-            "participant": "gemeenteraad-zuidermeer",
-            "seats": 1,
-            "votingWeight": 1,
-            "accessionDate": "2015-01-01T00:00:00Z",
-            "label": "Deelnemer per oprichting"
-          }
-        ],
-        "person": [
-          {
-            "slug": "persoon-w-van-dam",
-            "name": "W. van Dam",
-            "familyName": "van Dam",
-            "givenName": "W."
-          },
-          {
-            "slug": "persoon-a-terpstra",
-            "name": "A. Terpstra",
-            "familyName": "Terpstra",
-            "givenName": "A."
-          }
-        ],
-        "membership": [
-          {
-            "slug": "lidmaatschap-van-dam-noz",
-            "role": "chair",
-            "person": "persoon-w-van-dam",
-            "governanceBody": "bestuur-noz-organisatie",
-            "onBehalfOf": "gemeenteraad-noorderbrug",
-            "votingWeight": 2,
-            "startDate": "2018-04-01"
-          },
-          {
-            "slug": "lidmaatschap-terpstra-noz",
-            "role": "member",
-            "person": "persoon-a-terpstra",
-            "governanceBody": "bestuur-noz-organisatie",
-            "onBehalfOf": "gemeenteraad-zuidermeer",
-            "votingWeight": 1,
-            "startDate": "2018-04-01"
-          }
-        ],
-        "zienswijzeronde": [
-          {
-            "slug": "zienswijzeronde-begroting-2027",
-            "title": "Zienswijzeronde ontwerpbegroting 2027 NOZ organisatie",
-            "sharedBody": "bestuur-noz-organisatie",
-            "subjectType": "draft-budget",
-            "subjectDescription": "Ontwerpbegroting 2027, aangeboden aan de raden conform art. 35 Wgr.",
-            "deadline": "2026-06-15",
-            "cyclusStep": "00000000-0000-0000-0000-000000000000",
-            "status": "processing"
-          },
-          {
-            "slug": "zienswijzeronde-wijziging-gr-2026",
-            "title": "Zienswijzeronde wijziging gemeenschappelijke regeling",
-            "sharedBody": "bestuur-noz-organisatie",
-            "subjectType": "amendment-of-arrangement",
-            "subjectDescription": "Voorstel tot wijziging van de regeling i.v.m. taakuitbreiding vergunningverlening.",
-            "deadline": "2026-09-30",
-            "status": "opened"
-          }
-        ],
-        "zienswijze": [
-          {
-            "slug": "zienswijze-noorderbrug-begroting-2027",
-            "ronde": "zienswijzeronde-begroting-2027",
-            "participant": "gemeenteraad-noorderbrug",
-            "deadline": "2026-06-15",
-            "position": "positive-with-reservations",
-            "text": "De raad stemt in met de ontwerpbegroting, met de kanttekening dat de indexatie van de gemeentelijke bijdrage maximaal 3% mag bedragen.",
-            "submittedDate": "2026-06-10T00:00:00Z",
-            "decision": "00000000-0000-0000-0000-000000000000",
-            "processing": "partly-adopted",
-            "processingNotes": "Indexatie verlaagd naar 3,2%; volledige inwilliging niet mogelijk binnen de CAO-ontwikkeling.",
-            "status": "processed"
-          },
-          {
-            "slug": "zienswijze-oostwoud-begroting-2027",
-            "ronde": "zienswijzeronde-begroting-2027",
-            "participant": "gemeenteraad-oostwoud",
-            "deadline": "2026-06-15",
-            "position": "positive",
-            "text": "De raad stemt zonder opmerkingen in met de ontwerpbegroting 2027.",
-            "submittedDate": "2026-06-02T00:00:00Z",
-            "processing": "adopted",
-            "processingNotes": "Voor kennisgeving aangenomen.",
-            "status": "processed"
-          },
-          {
-            "slug": "zienswijze-zuidermeer-begroting-2027",
-            "ronde": "zienswijzeronde-begroting-2027",
-            "participant": "gemeenteraad-zuidermeer",
-            "deadline": "2026-06-15",
-            "status": "not-submitted"
-          },
-          {
-            "slug": "zienswijze-noorderbrug-wijziging-gr",
-            "ronde": "zienswijzeronde-wijziging-gr-2026",
-            "participant": "gemeenteraad-noorderbrug",
-            "deadline": "2026-09-30",
-            "status": "outstanding"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -168,7 +9,7 @@
         "icon": "AccountGroupOutline",
         "version": "0.1.0",
         "title": "BodyParticipation",
-        "description": "A participation edge (W3C org ontology / Popolo org:Membership with an organisation as member) recording that a participating GovernanceBody (a municipal council/organisation) participates in a shared GovernanceBody (a gemeenschappelijke regeling / joint body per Wgr). Carries per-edge master data — seats, org-level votingWeight agreed in the regeling, and toetreding/uittreding dates — and history (a withdrawn participant stays visible as a record). A participation is ACTIVE when uittredingsDatum is null or lies in the future (the Membership active-window semantics, REQ-SGB-001); this active-window predicate is a read-side evaluation, not a lifecycle state, so this schema declares no x-openregister-lifecycle. votingWeight is org-level master data surfaced as the suggested default when creating a Membership in the shared body (REQ-SGB-008) and is NEVER read by any vote-computation path — weighted voting reuses the existing Membership votingWeight machinery per meeting-attendees REQ-MAT-006.",
+        "description": "A participation edge (W3C org ontology / Popolo org:Membership with an organisation as member) recording that a participating GovernanceBody (a municipal council/organisation) participates in a shared GovernanceBody (a gemeenschappelijke regeling / joint body per Wgr). Carries per-edge master data: seats, org-level votingWeight agreed in the regeling, and toetreding/uittreding dates, and history (a withdrawn participant stays visible as a record). A participation is ACTIVE when uittredingsDatum is null or lies in the future (the Membership active-window semantics); this active-window predicate is a read-side evaluation, not a lifecycle state, so this schema declares no x-openregister-lifecycle. votingWeight is org-level master data surfaced as the suggested default when creating a Membership in the shared body and is NEVER read by any vote-computation path: weighted voting reuses the existing Membership votingWeight machinery per meeting-attendees.",
         "type": "object",
         "x-schema-org": "org:Membership",
         "x-openregister": {
@@ -210,7 +51,7 @@
             "title": "Voting weight",
             "type": "number",
             "default": 1,
-            "description": "Org-level vote weight agreed in the regeling (master data, REQ-SGB-008). Surfaced as the suggested default when creating a Membership in the shared body; NEVER read by any vote-computation path.",
+            "description": "Org-level vote weight agreed in the regeling (master data). Surfaced as the suggested default when creating a Membership in the shared body; NEVER read by any vote-computation path.",
             "example": 2
           },
           "accessionDate": {
@@ -227,7 +68,7 @@
             "format": "date-time",
             "nullable": true,
             "facetable": true,
-            "description": "Date-time of withdrawal (uittreding). Null while participating; a participation is active when this is null or in the future (REQ-SGB-001 active-window)."
+            "description": "Date-time of withdrawal (uittreding). Null while participating; a participation is active when this is null or in the future (active-window)."
           },
           "label": {
             "title": "Label",
@@ -241,7 +82,7 @@
         "icon": "CommentQuoteOutline",
         "version": "0.1.0",
         "title": "Zienswijzeronde",
-        "description": "A zienswijzeprocedure round (schema:Action) opened by a shared GovernanceBody on a document or decision (e.g. de ontwerpbegroting, Wgr art. 35): what the body asks, on what subject, by when. Opening the ronde fans out to one Zienswijze per active BodyParticipation (imperative ZienswijzerondeService::openRonde, D6 — no dialect creates objects). The subject document(s) attach via OpenRegister's Files leaf (no app-local file storage). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'); Decidiq implements no imperative state machine for it. cyclusStap is a nullable soft reference to the pc-cyclus sibling's cyclus-stap (the GR ontwerpbegroting is a P&C artifact) — the ronde works standalone and either change lands first. decision links the shared body's vaststellingsbesluit after processing (universal Decision model; this capability creates no meetings, agenda items, or decisions).",
+        "description": "A zienswijzeprocedure round (schema:Action) opened by a shared GovernanceBody on a document or decision (e.g. de ontwerpbegroting, Wgr art. 35): what the body asks, on what subject, by when. Opening the ronde fans out to one Zienswijze per active BodyParticipation (imperative ZienswijzerondeService:openRonde, D6, no dialect creates objects). The subject document(s) attach via OpenRegister's Files leaf (no app-local file storage). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031, keyword 'initial'); Decidiq implements no imperative state machine for it. cyclusStap is a nullable soft reference to the pc-cyclus sibling's cyclus-stap (the GR ontwerpbegroting is a P&C artifact): the ronde works standalone and either change lands first. decision links the shared body's vaststellingsbesluit after processing (universal Decision model; this capability creates no meetings, agenda items, or decisions).",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -375,7 +216,7 @@
         "icon": "CommentTextOutline",
         "version": "0.1.0",
         "title": "Zienswijze",
-        "description": "A single participating organisation's zienswijze (schema:Action) within a Zienswijzeronde: its deadline tracking, standpunt, response document (Files leaf), and how the shared body processed it (verwerking). One Zienswijze is generated per active BodyParticipation when the ronde transitions concept -> geopend (ZienswijzerondeService::openRonde, idempotent per ronde+participant, D6). deadline is denormalised from the ronde at generation so the declarative rappels (x-openregister-notifications, filtering non-terminal status + deadline window) fire per zienswijze to reach the right organisation (D5). decision links the participant council's raadsbesluit adopting the zienswijze; the zienswijze itself creates no meetings, agenda items, or decisions (pc-cyclus REQ-PCC-007 linkage discipline). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031); rappels EXCLUSIVELY via x-openregister-notifications (ADR-031, toezeggingen-register pattern) — no imperative dispatch, no bespoke reminder BackgroundJob.",
+        "description": "A single participating organisation's zienswijze (schema:Action) within a Zienswijzeronde: its deadline tracking, standpunt, response document (Files leaf), and how the shared body processed it (verwerking). One Zienswijze is generated per active BodyParticipation when the ronde transitions concept -> geopend (ZienswijzerondeService:openRonde, idempotent per ronde+participant, D6). deadline is denormalised from the ronde at generation so the declarative rappels (x-openregister-notifications, filtering non-terminal status + deadline window) fire per zienswijze to reach the right organisation (D5). decision links the participant council's raadsbesluit adopting the zienswijze; the zienswijze itself creates no meetings, agenda items, or decisions (pc-cyclus linkage discipline). The status workflow is declared EXCLUSIVELY via the canonical x-openregister-lifecycle dialect (ADR-031); rappels EXCLUSIVELY via x-openregister-notifications (ADR-031, toezeggingen-register pattern): no imperative dispatch, no bespoke reminder BackgroundJob.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -616,7 +457,7 @@
       "Membership": {
         "slug": "membership",
         "version": "0.2.0",
-        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring fragment 55's Decision delta): this fragment merges ONLY the optional namens property onto the existing membership schema (deep-merge unions it with the base Membership's existing properties). No required field is added and no existing property, enum value, or required-field set is modified, so memberships created before this change stay valid (REQ-SGB-002/003).",
+        "description": "Additive delta (ADR-037 fragment-located additive pattern, mirroring fragment 55's Decision delta): this fragment merges ONLY the optional namens property onto the existing membership schema (deep-merge unions it with the base Membership's existing properties). No required field is added and no existing property, enum value, or required-field set is modified, so memberships created before this change stay valid.",
         "properties": {
           "onBehalfOf": {
             "title": "Namens",

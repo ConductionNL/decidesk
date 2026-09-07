@@ -53,24 +53,6 @@ class DecisionIntegrationService {
 	private const APPROVED_LIFECYCLES = ['decided', 'enacted'];
 
 	/**
-	 * Decision types the integration hub accepts on create-decision.
-	 *
-	 * @var list<string>
-	 */
-	private const ALLOWED_TYPES = [
-		'motion',
-		'amendment',
-		'resolution',
-		'contract',
-		'contract-renewal',
-		'report-adoption',
-		'appointment',
-		'management-point',
-		'policy',
-		'meeting-outcome',
-	];
-
-	/**
 	 * Additive provenance fields copied onto a created Decision (REQ-DCDH-001).
 	 *
 	 * @var list<string>
@@ -119,11 +101,17 @@ class DecisionIntegrationService {
 	 * @param ContainerInterface $container DI container (lazy ObjectService lookup)
 	 * @param LoggerInterface $logger PSR-3 logger
 	 * @param AuditLogService $auditLog Audit log dependency
+	 * @param DelegatedDecisionDefaults $decisionDefaults Derivation of the schema-required title/text
+	 * @param DecisionTypeRegistry $typeRegistry The configured decisionType vocabulary
+	 *
+	 * @spec openspec/changes/decision-types-as-configuration/specs/decidesk-contract-decision-hub/spec.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly AuditLogService $auditLog,
+		private readonly DelegatedDecisionDefaults $decisionDefaults,
+		private readonly DecisionTypeRegistry $typeRegistry,
 	) {
 	}//end __construct()
 
@@ -141,6 +129,7 @@ class DecisionIntegrationService {
 	 * @return array{success: bool, decisionId?: string, created?: bool, message?: string}
 	 *
 	 * @spec openspec/changes/decidesk-contract-decision-hub/tasks.md#phase-2
+	 * @spec openspec/changes/decision-types-as-configuration/specs/decidesk-contract-decision-hub/spec.md
 	 */
 	public function createDecision(array $decisionData, string $actorId): array {
 		try {
@@ -150,10 +139,18 @@ class DecisionIntegrationService {
 			return ['success' => false, 'message' => 'OpenRegister is not available.'];
 		}
 
-		// Validate decisionType against the integration-hub supported types.
+		// Referential validation against the CONFIGURED vocabulary (fail closed
+		// on an unknown type). The vocabulary is data, not code: an
+		// administrator extends it through the decision_types app setting and
+		// the next create accepts the new type, with no release involved.
 		$decisionType = (string)($decisionData['decisionType'] ?? '');
-		if (in_array($decisionType, self::ALLOWED_TYPES, true) === false) {
-			return ['success' => false, 'message' => "Unrecognised decisionType: '{$decisionType}'."];
+		if ($this->typeRegistry->isAllowed(decisionType: $decisionType) === false) {
+			return [
+				'success' => false,
+				'message' => "Unrecognised decisionType: '{$decisionType}'. "
+					. "An administrator can add it to the 'decision_types' app setting "
+					. '(occ config:app:set decidiq decision_types). No release is needed.',
+			];
 		}
 
 		// Additive provenance fields (REQ-DCDH-001) — empty/absent values are omitted.
@@ -180,15 +177,28 @@ class DecisionIntegrationService {
 			}
 		}
 
-		// Build the Decision object with provenance fields.
+		// Build the Decision object with provenance fields. `title` and `text`
+		// are schema-required, and a flow-raised decision arrives without a
+		// body (the delegation event carries the ask in its context payload),
+		// so both are DERIVED rather than written empty: a decision must be
+		// schema-valid from birth, or every later PUT is rejected on exactly
+		// the required-property validation the create path skipped (observed
+		// live: decision 7f2dc8f4 was created without `text` and could never
+		// be updated again).
 		$object = [
 			'decisionType' => $decisionType,
-			'title' => (string)($decisionData['title'] ?? ''),
-			'text' => (string)($decisionData['text'] ?? ''),
-			'decisionDate' => (string)($decisionData['decisionDate'] ?? ''),
+			'title' => $this->decisionDefaults->title(decisionData: $decisionData, provenance: $provenance),
+			'text' => $this->decisionDefaults->text(decisionData: $decisionData, provenance: $provenance),
 			'outcome' => (string)($decisionData['outcome'] ?? 'adopted'),
 			'lifecycle' => 'draft',
 		];
+
+		// `decisionDate` is `format: date-time`; an empty string is not a valid
+		// value for it, so it is only written when the caller supplied one.
+		$decisionDate = trim((string)($decisionData['decisionDate'] ?? ''));
+		if ($decisionDate !== '') {
+			$object['decisionDate'] = $decisionDate;
+		}
 
 		return $this->persistDecision(
 			objectService: $objectService,

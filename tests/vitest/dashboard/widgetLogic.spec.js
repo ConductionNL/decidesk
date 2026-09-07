@@ -13,31 +13,31 @@
  * REQ-009 / REQ-010 / REQ-011 / REQ-012 / REQ-013.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	DAY_MS,
-	RUNNING_MOTION_LIFECYCLES,
-	toTime,
-	resolveParticipantId,
-	pendingVotingRounds,
-	withinDeadlineRange,
-	pendingInRange,
-	isUrgent,
-	countdownBucket,
-	isUpcoming,
-	upcomingMeetings,
-	isOverdue,
-	overdueActions,
-	sortByDueDate,
-	groupMotionsByLifecycle,
-	isActiveDecision,
 	activeDecisionCount,
-	recentDecisions,
-	outcomeBadge,
-	publicationBadge,
-	healthDataPoints,
+	countdownBucket,
+	DAY_MS,
+	groupMotionsByLifecycle,
 	hasEnoughHealthData,
+	healthDataPoints,
 	healthSeries,
+	isActiveDecision,
+	isOverdue,
+	isUpcoming,
+	isUrgent,
+	outcomeBadge,
+	overdueActions,
+	pendingInRange,
+	pendingVotingRounds,
+	publicationBadge,
+	recentDecisions,
+	resolveParticipantId,
+	RUNNING_MOTION_LIFECYCLES,
+	sortByDueDate,
+	toTime,
+	upcomingMeetings,
+	withinDeadlineRange,
 } from '../../../src/views/dashboard/widgets/widgetLogic.js'
 
 // A fixed clock so every relative-date assertion is reproducible.

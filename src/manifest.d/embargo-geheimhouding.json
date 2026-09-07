@@ -4,30 +4,30 @@
 	"_spec": "openspec/changes/embargo-geheimhouding/specs/embargo-geheimhouding/spec.md",
 	"menu": [
 		{
-			"id": "Geheimhoudingen",
+			"id": "ConfidentialityRestrictions",
 			"label": "Confidentiality register",
 			"icon": "DatabaseOutline",
-			"route": "Geheimhoudingen",
+			"route": "ConfidentialityRestrictions",
 			"order": 78
 		},
 		{
-			"id": "GeheimhoudingGronden",
+			"id": "ConfidentialityGrounds",
 			"label": "Confidentiality grounds",
 			"icon": "FileLockOutline",
-			"route": "GeheimhoudingGronden",
+			"route": "ConfidentialityGrounds",
 			"order": 79
 		}
 	],
 	"pages": [
 		{
-			"id": "Geheimhoudingen",
-			"route": "/geheimhoudingen",
+			"id": "ConfidentialityRestrictions",
+			"route": "/confidentiality-restrictions",
 			"type": "index",
 			"title": "Confidentiality register",
 			"_note": "spec: openspec/changes/embargo-geheimhouding/specs/embargo-geheimhouding/spec.md (REQ-EMB-006). Geheimhoudingenregister index — the per-body overview. Columns scope/ground/imposedBy/imposedByBody/imposedAt/lifecycle/bekrachtigingDeadline; quick filters on lifecycle. The awaiting-bekrachtiging workload is this index filtered to lifecycle=opgelegd; overdue (bekrachtigingDeadline in the past) is read off the deadline column (the declarative awaitingBekrachtigingCount aggregation counts opgelegd per body; the overdue narrowing needs a time predicate the aggregation filter cannot express). Geheimhouding records are authenticated-only (never public / ORI), so no public predicate applies.",
 			"config": {
 				"register": "decidiq",
-				"schema": "geheimhouding",
+				"schema": "confidentiality-restriction",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"quickFilterMode": "dropdown",
@@ -40,7 +40,7 @@
 				],
 				"columns": [
 					{ "key": "scope", "label": "Scope", "widget": "badge" },
-					{ "key": "ground", "label": "Ground", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "geheimhouding-grond", "labelField": "name" } },
+					{ "key": "ground", "label": "Ground", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "confidentiality-ground", "labelField": "name" } },
 					{ "key": "imposedBy", "label": "Imposed by" },
 					{ "key": "imposedByBody", "label": "Body", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
 					{ "key": "imposedAt", "label": "Imposed at" },
@@ -57,7 +57,7 @@
 						"label": "View",
 						"icon": "EyeOutline",
 						"handler": "navigate",
-						"route": "GeheimhoudingDetail",
+						"route": "ConfidentialityRestrictionDetail",
 						"primary": true
 					}
 				],
@@ -67,14 +67,14 @@
 			}
 		},
 		{
-			"id": "GeheimhoudingDetail",
-			"route": "/geheimhoudingen/:id",
+			"id": "ConfidentialityRestrictionDetail",
+			"route": "/confidentiality-restrictions/:id",
 			"type": "detail",
 			"title": "Confidentiality",
 			"_note": "spec: openspec/changes/embargo-geheimhouding/specs/embargo-geheimhouding/spec.md (REQ-EMB-006 / REQ-EMB-007). GeheimhoudingDetail. Record data leads 8-wide (scope + target reference, imposedBy/imposedByBody/imposedAt, bekrachtiging + opheffing fields when set); the resolved ground (citation incl. legacyCitation), imposedByBody, target, bekrachtigingsbesluit and opheffingsbesluit render as resolved references in the data + Related widgets. Audit trail is a sidebar tab (REQ-EMB-007: the per-geheimhouding view-audit list of stukken under geheimhouding is queryable here for griffie/staff — the audit logging itself is imperative and out of this declarative fragment). The impose/bekrachtig/opheffen action buttons (wired to GeheimhoudingController) are the imperative tail and are NOT declared here.",
 			"config": {
 				"register": "decidiq",
-				"schema": "geheimhouding",
+				"schema": "confidentiality-restriction",
 				"widgets": [
 					{
 						"id": "geheimhouding-data",
@@ -145,14 +145,14 @@
 			}
 		},
 		{
-			"id": "GeheimhoudingGronden",
-			"route": "/geheimhoudingsgronden",
+			"id": "ConfidentialityGrounds",
+			"route": "/confidentiality-grounds",
 			"type": "index",
 			"title": "Confidentiality grounds",
 			"_note": "spec: openspec/changes/embargo-geheimhouding/specs/embargo-geheimhouding/spec.md (REQ-EMB-002). Configurable grounds list — grounds are admin-editable DATA (add/edit/deactivate). Columns name/citation/legacyCitation/category/requiresBekrachtiging/active; quick filters on category and active. Deactivated grounds stay listed (and resolvable on old records) but the app-side ground picker excludes them for new geheimhoudingen (not expressible as a schema constraint).",
 			"config": {
 				"register": "decidiq",
-				"schema": "geheimhouding-grond",
+				"schema": "confidentiality-ground",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
 				"quickFilterMode": "dropdown",
@@ -192,7 +192,7 @@
 						"label": "View",
 						"icon": "EyeOutline",
 						"handler": "navigate",
-						"route": "GeheimhoudingGrondDetail",
+						"route": "ConfidentialityGroundDetail",
 						"primary": true
 					}
 				],
@@ -202,14 +202,14 @@
 			}
 		},
 		{
-			"id": "GeheimhoudingGrondDetail",
-			"route": "/geheimhoudingsgronden/:id",
+			"id": "ConfidentialityGroundDetail",
+			"route": "/confidentiality-grounds/:id",
 			"type": "detail",
 			"title": "Confidentiality ground",
 			"_note": "spec: openspec/changes/embargo-geheimhouding/specs/embargo-geheimhouding/spec.md (REQ-EMB-002). GeheimhoudingGrondDetail. Ground data (name, citation, legacyCitation, category, requiresBekrachtiging, description, builtIn, active). Editable by administrators; deactivating a ground keeps it resolvable on existing geheimhoudingen.",
 			"config": {
 				"register": "decidiq",
-				"schema": "geheimhouding-grond",
+				"schema": "confidentiality-ground",
 				"widgets": [
 					{
 						"id": "geheimhouding-grond-data",

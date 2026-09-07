@@ -1,82 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the advisory-opinion-workflow capability (adviesaanvraag / advies). Two new schemas: Adviesaanvraag (slug adviesaanvraag) and Advies (slug advies). References resolve by slug against existing decidesk seed objects (governance-body gemeenteraad-amsterdam) or against same-fragment slugs (jongerenraad / adviesraad-sociaal-domein / the aanvraag slugs); the nil UUID 00000000-0000-0000-0000-000000000000 is an obvious placeholder where no matching seed object exists (College body, related Decision, advisory DecisionStage, recorder Person). Two advisory bodies are appended to the governance-body seed array (deepMergeConfig concatenates list arrays, ADR-037) with bodyType advisory-body. DEFERRED DEPENDENCY (design D2, out of this DECLARATIVE-CORE scope): the value 'advisory-body' must be added additively to the GovernanceBody bodyType enum in lib/Settings/decidesk_register.json (a fragment cannot extend an existing schema's enum). Until that base edit lands these two seeded bodies will fail bodyType enum validation on import; the enum edit + the Decision verantwoording fields + the AdviceAccountabilityGuard are the imperative/base-edit tail of this change and are intentionally NOT in this fragment. Aanvraag 1 is non-terminal (in-behandeling) past its requestedByDate so the overdue rappel + open-KPI are non-zero on a fresh install; aanvraag 2 sits in advies-uitgebracht (KPI 'Adviezen wachtend op afdoening' non-zero) and wraps an in-route advisory stage; aanvraag 3 exercises the full flow incl. a deviating besluit, verantwoording recorded on the aanvraag, and live publication (ADR-016 testability).",
-      "objects": {
-        "governance-body": [
-          {
-            "slug": "jongerenraad",
-            "name": "Jongerenraad",
-            "bodyType": "advisory-body",
-            "workflowTemplate": "citizen"
-          },
-          {
-            "slug": "adviesraad-sociaal-domein",
-            "name": "Adviesraad Sociaal Domein",
-            "bodyType": "advisory-body",
-            "workflowTemplate": "legislative"
-          }
-        ],
-        "advice-request": [
-          {
-            "slug": "adviesaanvraag-jongerenhuisvesting",
-            "subject": "Beleidsnota jongerenhuisvesting 2027–2031",
-            "question": "Sluit de nota aan bij de woonbehoeften van jongeren van 18–27 jaar?",
-            "requestingBody": "gemeenteraad-amsterdam",
-            "advisoryBody": "jongerenraad",
-            "sentDate": "2026-05-04",
-            "requestedByDate": "2026-06-15",
-            "lifecycle": "in-progress"
-          },
-          {
-            "slug": "adviesaanvraag-inkoopbeleid-wmo",
-            "subject": "Herziening inkoopbeleid Wmo-ondersteuning",
-            "question": "Welke gevolgen heeft het voorgenomen inkoopbeleid voor cliënten en mantelzorgers?",
-            "requestingBody": "00000000-0000-0000-0000-000000000000",
-            "advisoryBody": "adviesraad-sociaal-domein",
-            "sentDate": "2026-03-02",
-            "requestedByDate": "2026-04-13",
-            "lifecycle": "advice-issued",
-            "relatedDecision": "00000000-0000-0000-0000-000000000000",
-            "advisoryStage": "00000000-0000-0000-0000-000000000000"
-          },
-          {
-            "slug": "adviesaanvraag-skatepark-locatie",
-            "subject": "Locatiekeuze skatepark centrum",
-            "question": "Welke van de drie kandidaat-locaties heeft de voorkeur van jongeren?",
-            "requestingBody": "gemeenteraad-amsterdam",
-            "advisoryBody": "jongerenraad",
-            "sentDate": "2026-01-12",
-            "requestedByDate": "2026-02-16",
-            "lifecycle": "completed",
-            "relatedDecision": "00000000-0000-0000-0000-000000000000",
-            "accountabilityText": "De raad kiest locatie B in afwijking van het advies (locatie A) vanwege geluidsnormen; met de jongerenraad is een evaluatie na één jaar afgesproken.",
-            "accountabilityDate": "2026-03-24",
-            "publicationDate": "2026-03-25T09:00:00Z"
-          }
-        ],
-        "advies": [
-          {
-            "slug": "advies-inkoopbeleid-wmo",
-            "adviceRequest": "adviesaanvraag-inkoopbeleid-wmo",
-            "tenor": "positive-with-reservations",
-            "summary": "De adviesraad adviseert positief, mits de continuïteit van lopende ondersteuning wordt geborgd en cliënten actief worden geïnformeerd.",
-            "adviceDate": "2026-04-10",
-            "recordedBy": "00000000-0000-0000-0000-000000000000",
-            "publicationDate": "2026-04-12T09:00:00Z"
-          },
-          {
-            "slug": "advies-skatepark-locatie",
-            "adviceRequest": "adviesaanvraag-skatepark-locatie",
-            "tenor": "negative",
-            "summary": "De jongerenraad adviseert negatief over locatie B en positief over locatie A vanwege bereikbaarheid.",
-            "adviceDate": "2026-02-14",
-            "recordedBy": "00000000-0000-0000-0000-000000000000",
-            "publicationDate": "2026-03-25T09:00:00Z"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -85,7 +9,7 @@
         "icon": "AccountQuestionOutline",
         "version": "0.1.0",
         "title": "Adviesaanvraag",
-        "description": "A formal advisory-opinion request (adviesaanvraag) from a deciding body to an external advisory body — jongerenraad, adviesraad sociaal domein, cliëntenraad — modelled as universal GovernanceBody objects (ADR-006, never a parallel schema). It registers who asks whom, the question posed, the linked decision/agenda item/advisory stage, the requested-by date, and the accountability tail (verantwoording) when the final besluit deviates from the advies strekking. It is NOT a Decision subtype and NOT a WOR ConsultationRequest (works-council-consultation, statutory employee participation); its vocabulary is deliberately mirrored where sensible but the objects are separate (design D1). In-route advice stages keep using decision-methods method=advice (actor sets advised/deferred directly); this schema is the request/response/accountability wrapper around such a stage (via advisoryStage) or the out-of-route stand-alone case. The Advies response is a separate first-class artifact (schema advies) authored by the advisory body's secretary, not response fields on this object (design D1). CONSTRAINT (REQ-AOW-005, DEFERRED): mandatory-verantwoording-on-deviation is a cross-object conditional requirement (Decision outcome × Advies.strekking × presence of motivering) that the lifecycle dialect cannot express; it is enforced by the imperative fail-closed AdviceAccountabilityGuard in the decision status-transition path — that guard, the additive Decision verantwoording fields, and the bodyType enum extension are the imperative/base-edit tail of this change and are NOT part of this declarative fragment.",
+        "description": "A formal advisory-opinion request (adviesaanvraag) from a deciding body to an external advisory body: jongerenraad, adviesraad sociaal domein, cliëntenraad, modelled as universal GovernanceBody objects (ADR-006, never a parallel schema). It registers who asks whom, the question posed, the linked decision/agenda item/advisory stage, the requested-by date, and the accountability tail (verantwoording) when the final besluit deviates from the advies strekking. It is NOT a Decision subtype and NOT a WOR ConsultationRequest (works-council-consultation, statutory employee participation); its vocabulary is deliberately mirrored where sensible but the objects are separate (design D1). In-route advice stages keep using decision-methods method=advice (actor sets advised/deferred directly); this schema is the request/response/accountability wrapper around such a stage (via advisoryStage) or the out-of-route stand-alone case. The Advies response is a separate first-class artifact (schema advies) authored by the advisory body's secretary, not response fields on this object (design D1). CONSTRAINT (DEFERRED): mandatory-verantwoording-on-deviation is a cross-object conditional requirement (Decision outcome × Advies.strekking × presence of motivering) that the lifecycle dialect cannot express; it is enforced by the imperative fail-closed AdviceAccountabilityGuard in the decision status-transition path, that guard, the additive Decision verantwoording fields, and the bodyType enum extension are the imperative/base-edit tail of this change and are NOT part of this declarative fragment.",
         "type": "object",
         "x-schema-org": "schema:AskAction",
         "x-openregister": {
@@ -304,7 +228,7 @@
             "format": "date",
             "facetable": true,
             "nullable": true,
-            "description": "Date by which the advice is requested (not a statutory term). Optional; drives the declarative deadline rappels and the overdue workload view. A lapsed date is a reason for the griffie to set niet-uitgebracht — a human decision, never automation (design D5).",
+            "description": "Date by which the advice is requested (not a statutory term). Optional; drives the declarative deadline rappels and the overdue workload view. A lapsed date is a reason for the griffie to set niet-uitgebracht: a human decision, never automation (design D5).",
             "example": "2026-06-15"
           },
           "lifecycle": {
@@ -328,7 +252,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Optional reference to the Decision this advice prepares. When set and a linked Advies deviates from the decision outcome, the DEFERRED AdviceAccountabilityGuard (REQ-AOW-005, imperative, not in this fragment) blocks the completing transition until a verantwoording is recorded. Empty for the out-of-route case."
+            "description": "Optional reference to the Decision this advice prepares. When set and a linked Advies deviates from the decision outcome, the DEFERRED AdviceAccountabilityGuard (imperative, not in this fragment) blocks the completing transition until a verantwoording is recorded. Empty for the out-of-route case."
           },
           "advisoryStage": {
             "title": "Advisory stage",
@@ -336,7 +260,7 @@
             "format": "uuid",
             "$ref": "decision-stage",
             "nullable": true,
-            "description": "Optional reference to an in-route advisory DecisionStage (method=advice). When set, the stage actor sets the advised/deferred outcome directly via existing decision-methods semantics (no new derivation mechanism, REQ-AOW-004); this aanvraag only adds the request metadata, the Advies artifact and the verantwoording the stage does not model. Empty for the out-of-route stand-alone case."
+            "description": "Optional reference to an in-route advisory DecisionStage (method=advice). When set, the stage actor sets the advised/deferred outcome directly via existing decision-methods semantics (no new derivation mechanism); this aanvraag only adds the request metadata, the Advies artifact and the verantwoording the stage does not model. Empty for the out-of-route stand-alone case."
           },
           "agendaItem": {
             "title": "Agenda item",
@@ -344,13 +268,13 @@
             "format": "uuid",
             "$ref": "agenda-item",
             "nullable": true,
-            "description": "Optional reference to the AgendaItem the advice relates to. Raadscommissie advies on plenary agenda items remains owned by commissievergaderingen and is NOT registered through this capability (REQ-AOW-004)."
+            "description": "Optional reference to the AgendaItem the advice relates to. Raadscommissie advies on plenary agenda items remains owned by commissievergaderingen and is NOT registered through this capability."
           },
           "accountabilityText": {
             "title": "Verantwoording",
             "type": "string",
             "nullable": true,
-            "description": "Motivering recorded when the final besluit deviates from the advies strekking (REQ-AOW-005). Written alongside the transition to verantwoord. The same motivering also lands on the Decision's own verantwoording fields (the DEFERRED additive base-register edit) so the besluit record is self-contained for archiving (design D4). Optional; required only when a deviating decision is completed, enforced by the DEFERRED guard, not by this schema.",
+            "description": "Motivering recorded when the final besluit deviates from the advies strekking. Written alongside the transition to verantwoord. The same motivering also lands on the Decision's own verantwoording fields (the DEFERRED additive base-register edit) so the besluit record is self-contained for archiving (design D4). Optional; required only when a deviating decision is completed, enforced by the DEFERRED guard, not by this schema.",
             "example": "De raad kiest locatie B in afwijking van het advies (locatie A) vanwege geluidsnormen."
           },
           "accountabilityDate": {
@@ -368,7 +292,7 @@
             "format": "date-time",
             "facetable": true,
             "nullable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live adviesaanvraag is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now, REQ-AOW-007). Because the predicate sits on the live object, a verantwoording recorded after publication is publicly visible without republication (design D3). Publish is an explicit staff action; this schema carries no internal-only fields by construction, so the whole object is publishable."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live adviesaanvraag is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Because the predicate sits on the live object, a verantwoording recorded after publication is publicly visible without republication (design D3). Publish is an explicit staff action; this schema carries no internal-only fields by construction, so the whole object is publishable."
           },
           "depublicationDate": {
             "title": "Depublication date",
@@ -385,7 +309,7 @@
         "icon": "FileDocumentCheckOutline",
         "version": "0.1.0",
         "title": "Advies",
-        "description": "The advisory body's formal response artifact (schema:Recommendation) to an Adviesaanvraag: the strekking (positief / positief-met-kanttekeningen / negatief / geen-advies), a summary, the advies date, the recording secretary, and the optional response document (attached via the Files leaf). It is a SEPARATE first-class object, not response fields on the Adviesaanvraag, because it has its own recording authority (the advisory body's secretary, not the requesting griffie), its own publication moment, and its own strekking that the DEFERRED AdviceAccountabilityGuard evaluates (design D1; mirrors the commissievergaderingen CommissieAdvies precedent). Recording an Advies accompanies the Adviesaanvraag transition to advies-uitgebracht. CONSTRAINT (design D4/REQ-AOW-007): this schema carries ONLY publishable fields by construction (no internal-only/confidential-remarks property) — the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now, so adding any non-public property requires revisiting the public-predicate design.",
+        "description": "The advisory body's formal response artifact (schema:Recommendation) to an Adviesaanvraag: the strekking (positief / positief-met-kanttekeningen / negatief / geen-advies), a summary, the advies date, the recording secretary, and the optional response document (attached via the Files leaf). It is a SEPARATE first-class object, not response fields on the Adviesaanvraag, because it has its own recording authority (the advisory body's secretary, not the requesting griffie), its own publication moment, and its own strekking that the DEFERRED AdviceAccountabilityGuard evaluates (design D1; mirrors the commissievergaderingen CommissieAdvies precedent). Recording an Advies accompanies the Adviesaanvraag transition to advies-uitgebracht. CONSTRAINT (design D4): this schema carries ONLY publishable fields by construction (no internal-only/confidential-remarks property), the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now, so adding any non-public property requires revisiting the public-predicate design.",
         "type": "object",
         "x-schema-org": "schema:Recommendation",
         "x-openregister": {
@@ -499,7 +423,7 @@
             "format": "date-time",
             "facetable": true,
             "nullable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live advies is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now, REQ-AOW-007). The advies publishes independently of its aanvraag. Publish is an explicit staff action."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live advies is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). The advies publishes independently of its aanvraag. Publish is an explicit staff action."
           },
           "depublicationDate": {
             "title": "Depublication date",

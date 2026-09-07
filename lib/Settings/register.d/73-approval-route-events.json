@@ -1,0 +1,26 @@
+{
+    "x-openregister": {
+        "description": "Additive fragment (ADR-037; OpenSpec change approval-route-events). Adds the provenance pair an approval route held on BEHALF of another app needs: sourceApp + externalReference. Together they are the idempotency key ApprovalRouteCommandService resolves on before writing, which is what makes a re-run of a consuming migration update one route instead of minting a second. GovernanceBody carries the same pair for the same reason. Both are optional and ApprovalRoute.required is unchanged, so the seeded collegeadvies route and every hand-made one stay valid with both empty."
+    },
+    "components": {
+        "schemas": {
+            "ApprovalRoute": {
+                "version": "0.1.0",
+                "properties": {
+                    "sourceApp": {
+                        "title": "Source app",
+                        "type": "string",
+                        "maxLength": 64,
+                        "description": "App id of the fleet app this route was held on behalf of (e.g. dossiq). Empty for routes authored in decidiq itself. Half of the idempotency key; never an authorization input."
+                    },
+                    "externalReference": {
+                        "title": "External reference",
+                        "type": "string",
+                        "maxLength": 255,
+                        "description": "The producing app's own id for the route this one was migrated from. Paired with sourceApp it identifies the origin, so a repeated command updates this route rather than creating another."
+                    }
+                }
+            }
+        }
+    }
+}

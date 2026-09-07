@@ -270,6 +270,116 @@ class MigrateLegacyTemplatesToDecisionTemplateTest extends TestCase {
 	}//end testRunSkipsAlreadyMigratedObject()
 
 	/**
+	 * A SEEDED template of the same name is already the migrated equivalent, so
+	 * the legacy row must not be migrated on top of it.
+	 *
+	 * 🔴 THIS IS WHAT DUPLICATED EVERY BUILT-IN TEMPLATE.
+	 *
+	 * `68-unified-decision-templates.json` seeds the thirteen built-ins,
+	 * describing them as ports of these very rows, and supersession
+	 * deliberately KEPT the legacy rows. A seed carries no `migratedFrom`, so
+	 * the uuid-keyed idempotency index never matched it and the migration
+	 * created a second copy of each.
+	 *
+	 * Measured on a live instance once the unified schema finally had a page to
+	 * be seen through: 28 decision-templates, 13 of them duplicates — each
+	 * built-in once with its seeded slug and once with none.
+	 *
+	 * @return void
+	 */
+	public function testRunSkipsALegacyRowAlreadySeededUnderTheSameName(): void {
+		$this->settingsService->expects($this->any())
+			->method(constraint: 'isOpenRegisterAvailable')
+			->willReturn(true);
+
+		$objectService = $this->makeRecordingObjectService(
+			// The SEEDED built-in: no `migratedFrom`, so the uuid index cannot
+			// see it. Only the name can.
+			decisionTemplates: [
+				['id' => 'dt-seeded', 'name' => 'Association ALV', 'context' => 'association'],
+			],
+			processTemplates: [
+				['id' => 'pt-1', 'name' => 'Association ALV', 'context' => 'association'],
+			],
+			vveDecisionTemplates: [],
+		);
+
+		$this->container->expects($this->any())
+			->method(constraint: 'get')
+			->willReturn($objectService);
+
+		$this->migration->run(output: $this->output);
+
+		self::assertCount(expectedCount: 0, haystack: $objectService->saved);
+
+	}//end testRunSkipsALegacyRowAlreadySeededUnderTheSameName()
+
+	/**
+	 * Two legacy rows sharing one name produce ONE template, not two.
+	 *
+	 * A process-template and a vve-decision-template can carry the same name;
+	 * without recording each newly created row the second would still
+	 * duplicate the first inside a single pass.
+	 *
+	 * @return void
+	 */
+	public function testRunCreatesOneTemplateWhenTwoLegacyRowsShareAName(): void {
+		$this->settingsService->expects($this->any())
+			->method(constraint: 'isOpenRegisterAvailable')
+			->willReturn(true);
+
+		$objectService = $this->makeRecordingObjectService(
+			decisionTemplates: [],
+			processTemplates: [
+				['id' => 'pt-1', 'name' => 'Decharge bestuur', 'context' => 'association'],
+			],
+			vveDecisionTemplates: [
+				['id' => 'vve-1', 'name' => 'Decharge bestuur', 'decisionCategory' => 'decharge'],
+			],
+		);
+
+		$this->container->expects($this->any())
+			->method(constraint: 'get')
+			->willReturn($objectService);
+
+		$this->migration->run(output: $this->output);
+
+		self::assertCount(expectedCount: 1, haystack: $objectService->saved);
+
+	}//end testRunCreatesOneTemplateWhenTwoLegacyRowsShareAName()
+
+	/**
+	 * A legacy row whose name is NOT already present is still migrated: the
+	 * name check must not become a blanket stand-down.
+	 *
+	 * @return void
+	 */
+	public function testRunStillMigratesALegacyRowNothingHasSeeded(): void {
+		$this->settingsService->expects($this->any())
+			->method(constraint: 'isOpenRegisterAvailable')
+			->willReturn(true);
+
+		$objectService = $this->makeRecordingObjectService(
+			decisionTemplates: [
+				['id' => 'dt-seeded', 'name' => 'Association ALV', 'context' => 'association'],
+			],
+			processTemplates: [
+				['id' => 'pt-9', 'name' => 'A template nobody seeded', 'context' => 'operations'],
+			],
+			vveDecisionTemplates: [],
+		);
+
+		$this->container->expects($this->any())
+			->method(constraint: 'get')
+			->willReturn($objectService);
+
+		$this->migration->run(output: $this->output);
+
+		self::assertCount(expectedCount: 1, haystack: $objectService->saved);
+
+	}//end testRunStillMigratesALegacyRowNothingHasSeeded()
+
+	/**
 	 * The migration never deletes or edits a source process-template or
 	 * vve-decision-template object — it is purely additive.
 	 *

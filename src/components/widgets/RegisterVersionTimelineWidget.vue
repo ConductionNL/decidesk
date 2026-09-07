@@ -4,8 +4,11 @@
 <!--
  RegisterVersionTimelineWidget — content-driven `version-timeline` catalog
  widget (register-detail-optimisation, design D1). One reusable component
- serving both RegelingDetail (regeling-versie) and GoverningDocumentDetail
- (governing-document-versie): resolves every version object whose
+ serving GoverningDocumentDetail (governing-document-versie). It used to serve
+ RegelingDetail too, and that it could serve both unchanged is part of how the
+ duplication was found: fold-regulations-into-governing-documents retired
+ `regeling`, which modelled the same thing in a council's words. Resolves every
+ version object whose
  `content.parentRefField` points at the current record, sorts ascending by
  `content.effectiveDateField`, and renders version number / effective+lapse
  dates / status badge / a resolved link to the enacting Decision
@@ -234,9 +237,9 @@ export default {
 		 * OpenRegister's seed importer stores `$ref` values as raw SLUG
 		 * strings rather than resolved UUIDs, so a version row seeded against
 		 * this record carries the parent's slug in `parentRefField`, not its
-		 * id. Live-verified 2026-08-19: regeling-versie rows hold
-		 * `regulation: "afvalstoffenverordening-amsterdam"` while the parent's
-		 * id is a UUID — filtering on the id alone returned nothing and the
+		 * id. Live-verified 2026-08-19 on regeling-versie, and again 2026-09-05 on
+		 * agenda-item: rows hold `meeting: "raadsvergadering-2025-01-15"` while
+		 * the parent's id is a UUID — filtering on the id alone returned nothing and the
 		 * widget rendered an empty shell.
 		 *
 		 * @spec exclude defensive object-slug accessor, no behavioural requirement of its own

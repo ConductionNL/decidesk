@@ -1,0 +1,51 @@
+{
+	"_note": "retire-the-unbuilt-rooster — the rooster van aftreden was designed as a projection and the projector was never written. RoosterVanAftreden calls itself 'a regeneratable projection, never hand-maintained truth' and RoosterRegel 'materialized on generation', both by RoosterService, which does not exist: appointments-and-terms shipped its declarative core and none of its sixteen implementation tasks. So an operator's rooster showed whatever an example set seeded and never changed. Meanwhile PositionType and PositionHold model the same facts as SOURCE data, they already declare termDurationMonths, maxConsecutiveTerms, reappointable, termNumber, startDate and endDate, and configuration-surface just gave them pages. TermijnRegeling is real configuration and moves; the two projection schemas are retired WITHOUT copying, because a projection is not source data and inventing source rows from it would be a worse lie than the empty page.",
+	"_spec": "openspec/changes/retire-the-unbuilt-rooster/specs/retire-the-unbuilt-rooster/spec.md",
+	"components": {
+		"schemas": {
+			"PositionType": {
+				"version": "0.2.0",
+				"description": "A position that EXISTS on a gremium: the gremium's configuration declaring, for example, that a board has a president. Absorbed TermijnRegeling (retire-the-unbuilt-rooster), which declared the same term rules keyed on a fixed role enum rather than on a named position.",
+				"properties": {
+					"notes": {
+						"title": "Notes",
+						"type": "string",
+						"description": "Anything worth recording about how this position is filled that the fields do not capture.",
+						"x-notes": "Carried from the retired TermijnRegeling, which had a free-text `notes`. Without it the fold would drop what an organisation wrote about its own term rule."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created."
+					}
+				}
+			},
+			"TermijnRegeling": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (retire-the-unbuilt-rooster): a term rule is a property of a position, and PositionType already declared termDurationMonths, maxConsecutiveTerms and reappointable. `body` became `governanceBody`, the `role` enum became the position's `name`, `maxConsecutivePeriods` became `maxConsecutiveTerms`, and `notes` kept its name. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"RoosterVanAftreden": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (retire-the-unbuilt-rooster): a regeneratable projection whose generator, RoosterService, was never written, so it only ever held what an example set seeded. The facts it projected live on PositionHold, which is source data and now has a page. NOT copied forward: a projection is not source data, and fabricating source rows from a stale snapshot would be worse than the empty page it replaces. Definition and slug are kept (hardDelete:false), so every seeded row is still readable.",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"RoosterRegel": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (retire-the-unbuilt-rooster): one derived term entry, materialized by a generator that does not exist. PositionHold carries the same facts as source data: membership, position, termNumber, reappointable, startDate and endDate. NOT copied forward, for the same reason as its parent, and because PositionHold requires a startDate that a rooster regel never recorded: it held only the END of the term, so any start date this migration wrote would be invented. Definition and slug are kept (hardDelete:false).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

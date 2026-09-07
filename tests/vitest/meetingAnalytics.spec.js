@@ -13,12 +13,12 @@
 
 import { describe, expect, it } from 'vitest'
 import {
+	agendaCompletionRate,
+	agendaItemCostBreakdown,
+	costTrend,
 	isItemCompleted,
 	meetingDurationStats,
-	agendaCompletionRate,
 	speakingDistribution,
-	costTrend,
-	agendaItemCostBreakdown,
 	timeAllocationAccuracy,
 } from '../../src/utils/meetingAnalytics.js'
 

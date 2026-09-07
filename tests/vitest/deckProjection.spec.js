@@ -11,7 +11,7 @@
  * exactly which Deck-leaf endpoints are hit and with what payload.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
 const post = vi.fn()
@@ -20,11 +20,11 @@ vi.mock('@nextcloud/axios', () => ({
 }))
 
 import {
-	statusToLane,
-	LANES,
-	resolveTarget,
-	projectActionItems,
 	itemUid,
+	LANES,
+	projectActionItems,
+	resolveTarget,
+	statusToLane,
 } from '../../src/services/deckProjection.js'
 
 beforeEach(() => {

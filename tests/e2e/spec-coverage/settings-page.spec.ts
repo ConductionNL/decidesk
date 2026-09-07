@@ -27,9 +27,10 @@
  * @e2e openspec/specs/admin-settings/spec.md#configure-organization-defaults
  * @e2e openspec/specs/openregister-integration/spec.md#configure-register-mapping
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 
 async function openAdminSettings(page: Page): Promise<void> {
 	await page.goto(`${BASE}/settings/admin/decidiq`)

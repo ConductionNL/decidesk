@@ -1,0 +1,83 @@
+{
+  "x-openregister": {
+    "_note": "Generic audit statement (ADR-037 additive pattern; OpenSpec change generic-audit-statement). Declares AuditStatement and supersedes KascommissieVerklaring NON-DESTRUCTIVELY (active:false, definition and rows kept), the same supersession unified-decision-templates and generic-body-configuration used. MigrateKascommissieToAuditStatement copies the rows. The record was ALREADY generic in shape — a financial year, a verdict, a body — so only the name changes; the assoc-mode visibility gate stays, because organisatie_modus is the app's own mechanism for adapting vocabulary per organisation type and the Dutch label now lives in MODE_LABELS rather than in the schema name."
+  },
+  "components": {
+    "schemas": {
+      "AuditStatement": {
+        "slug": "audit-statement",
+        "icon": "ClipboardCheckOutline",
+        "version": "0.1.0",
+        "title": "AuditStatement",
+        "description": "An audit committee's statement on a body's accounts for one financial year. Generalises KascommissieVerklaring, which named the same record in VvE terms only. A kascommissie is one kind of audit committee; a provincial auditcommissie and a company's audit committee produce the same record, and the seeded bodies already include an Auditcommissie Provincie Noord-Holland that had no way to file one.",
+        "type": "object",
+        "x-openregister": {
+          "schemaType": "schema:AssessAction",
+          "active": true,
+          "hardDelete": false,
+          "searchable": true,
+          "mailEnabled": false
+        },
+        "required": [
+          "financialYear",
+          "verdict",
+          "governanceBody"
+        ],
+        "properties": {
+          "financialYear": {
+            "title": "Financial year",
+            "type": "integer",
+            "description": "The financial year this statement covers.",
+            "example": 2025
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string",
+            "facetable": true,
+            "description": "The committee’s conclusion on the accounts for that year.",
+            "enum": [
+              "approving",
+              "qualified",
+              "adverse"
+            ],
+            "example": "goedkeurend"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string",
+            "description": "Any qualification or remark the committee recorded."
+          },
+          "agendaItem": {
+            "title": "Agenda item",
+            "type": "string",
+            "format": "uuid",
+            "$ref": "agenda-item",
+            "description": "The agenda item where the accounts were adopted."
+          },
+          "governanceBody": {
+            "title": "Governance body",
+            "type": "string",
+            "format": "uuid",
+            "$ref": "governance-body",
+            "description": "The body whose accounts were examined."
+          }
+        },
+        "_designNote": {
+          "financialYear": "The financial year (boekjaar) the verklaring covers. Required.",
+          "verdict": "The kascommissie's verdict on the administration. Required.",
+          "notes": "Free-text explanation of the verdict (e.g. the voorbehoud). Optional.",
+          "agendaItem": "Reference to the jaarrekening AgendaItem of the ALV this verklaring is linked to. Optional (a verklaring may be recorded before the agenda exists).",
+          "governanceBody": "Reference to the GovernanceBody (the VvE) this verklaring belongs to. Required."
+        }
+      },
+      "KascommissieVerklaring": {
+        "version": "0.2.0",
+        "description": "SUPERSEDED (generic-audit-statement): the same record is declared on AuditStatement (slug audit-statement) in terms that fit any audit committee. Definition and slug are kept, not deleted (hardDelete:false, existing rows), so a rollback still finds its data.",
+        "x-openregister": {
+          "active": false,
+          "hardDelete": false
+        }
+      }
+    }
+  }
+}

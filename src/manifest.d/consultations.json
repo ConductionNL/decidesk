@@ -1,0 +1,298 @@
+{
+	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "One consultation surface, replacing four. Adviesaanvragen, Zienswijzerondes, Zienswijzen and Raadplegingen were four menu entries and seven pages over three fragments, all listing the same thing: someone was asked for a view by a deadline, and answered. one-consultation-schema folded the six schemas behind them into consultation and consultation-response, so the surfaces fold with them. The words those four surfaces used are not gone, they moved: subjectType is a free string an organisation fills in, and `binding` records whether an answer binds rather than which schema it was stored in. The page and menu IDS are GovernanceConsultation*, not Consultation*: citizen-participation.json already declares a `Consultations` page for public-consultation, and mergePages replaces a same-id page WHOLESALE. Declaring the same id silently deleted the citizen one, because this fragment sorts later. The ids differ; the labels a person reads do not need to.",
+	"_spec": "openspec/changes/one-consultation-schema/specs/one-consultation-schema/spec.md",
+	"menu": [
+		{
+			"id": "GovernanceConsultations",
+			"label": "Consultations",
+			"icon": "CommentQuestionOutline",
+			"route": "GovernanceConsultations",
+			"order": 48
+		}
+	],
+	"pages": [
+		{
+			"id": "GovernanceConsultations",
+			"route": "/governance-consultations",
+			"type": "index",
+			"title": "Consultations",
+			"_note": "Every ask, whatever it is called locally. Quick filters follow the two axes that actually differ between the folded schemas: where the consultation is in its course, and whether the answers bind.",
+			"config": {
+				"register": "decidiq",
+				"schema": "governance-consultation",
+				"sortKey": "deadline",
+				"sortOrder": "desc",
+				"quickFilterMode": "dropdown",
+				"quickFilterMultiple": true,
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"lifecycle": "draft"
+						}
+					},
+					{
+						"label": "Open",
+						"filter": {
+							"lifecycle": "open"
+						}
+					},
+					{
+						"label": "Processing",
+						"filter": {
+							"lifecycle": "processing"
+						}
+					},
+					{
+						"label": "Closed",
+						"filter": {
+							"lifecycle": "closed"
+						}
+					},
+					{
+						"label": "Processed",
+						"filter": {
+							"lifecycle": "processed"
+						}
+					},
+					{
+						"label": "Binding",
+						"filter": {
+							"binding": true
+						}
+					},
+					{
+						"label": "Advisory",
+						"filter": {
+							"binding": false
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "subject",
+						"label": "Subject",
+						"widget": "link"
+					},
+					{
+						"key": "subjectType",
+						"label": "Kind",
+						"widget": "badge"
+					},
+					{
+						"key": "askingBody",
+						"label": "Asking body"
+					},
+					{
+						"key": "deadline",
+						"label": "Deadline",
+						"widget": "date"
+					},
+					{
+						"key": "lifecycle",
+						"label": "Status",
+						"widget": "badge"
+					}
+				],
+				"rowRoute": "GovernanceConsultationDetail",
+				"emptyText": "No consultations yet."
+			}
+		},
+		{
+			"id": "GovernanceConsultationDetail",
+			"route": "/governance-consultations/:id",
+			"type": "detail",
+			"title": "Consultation",
+			"_note": "The ask 8-wide, the answers to it below full-width. The responses widget is the reason this page is worth having over a bare data view: an ask with no answers reads as an empty list rather than as a page that failed to load.",
+			"config": {
+				"register": "decidiq",
+				"schema": "governance-consultation",
+				"widgets": [
+					{
+						"id": "consultation-data",
+						"type": "data",
+						"title": "Consultation",
+						"icon": "CommentQuestionOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "consultation-responses",
+						"type": "object-list",
+						"title": "Responses",
+						"icon": "CommentCheckOutline",
+						"content": {
+							"register": "decidiq",
+							"schema": "governance-consultation-response",
+							"filter": {
+								"consultation": "@objectId"
+							},
+							"sort": {
+								"field": "submittedAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "respondentBody",
+									"label": "Respondent"
+								},
+								{
+									"key": "position",
+									"label": "Position",
+									"widget": "badge"
+								},
+								{
+									"key": "submittedAt",
+									"label": "Submitted",
+									"widget": "date"
+								},
+								{
+									"key": "processing",
+									"label": "Processing",
+									"widget": "badge"
+								},
+								{
+									"key": "status",
+									"label": "Status",
+									"widget": "badge"
+								}
+							],
+							"limit": 50,
+							"allowCreate": true,
+							"emptyText": "No responses recorded yet."
+						}
+					},
+					{
+						"id": "consultation-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "consultation-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "2",
+						"widgetId": "consultation-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
+					},
+					{
+						"id": "3",
+						"widgetId": "consultation-responses",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "GovernanceConsultationResponses",
+			"route": "/governance-consultation-responses",
+			"type": "index",
+			"title": "Consultation responses",
+			"_note": "Every answer across every consultation. The retired Zienswijzen index did exactly this for one kind of answer, and a clerk chasing outstanding responses needs it across all of them.",
+			"config": {
+				"register": "decidiq",
+				"schema": "governance-consultation-response",
+				"sortKey": "submittedAt",
+				"sortOrder": "desc",
+				"quickFilterMode": "dropdown",
+				"quickFilterMultiple": true,
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Outstanding",
+						"filter": {
+							"status": "outstanding"
+						}
+					},
+					{
+						"label": "Submitted",
+						"filter": {
+							"status": "submitted"
+						}
+					},
+					{
+						"label": "Processed",
+						"filter": {
+							"status": "processed"
+						}
+					},
+					{
+						"label": "Not submitted",
+						"filter": {
+							"status": "not-submitted"
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "consultation",
+						"label": "Consultation",
+						"widget": "link"
+					},
+					{
+						"key": "respondentBody",
+						"label": "Respondent"
+					},
+					{
+						"key": "position",
+						"label": "Position",
+						"widget": "badge"
+					},
+					{
+						"key": "submittedAt",
+						"label": "Submitted",
+						"widget": "date"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge"
+					}
+				],
+				"emptyText": "No consultation responses yet."
+			}
+		}
+	]
+}

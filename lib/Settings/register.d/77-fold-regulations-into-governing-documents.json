@@ -1,0 +1,135 @@
+{
+	"_note": "fold-regulations-into-governing-documents — two schemas modelled the same thing. A Regeling and a GoverningDocument are both a document a body adopts, that supersedes itself in numbered versions, each version enacted by a decision. GoverningDocumentVersie's own description says so: it mirrors 'the verordeningenregister RegelingVersie conventions'. Someone wrote the second one by copying the first, and the app has carried both ever since. What differed was the vocabulary, and neither vocabulary is exclusive to anyone: a company has by-laws, an association has articles of association, a council has both. So the two enums become one list, the Dutch-register field gets a generic name, and the duplicate schemas retire.",
+	"_spec": "openspec/changes/fold-regulations-into-governing-documents/specs/fold-regulations-into-governing-documents/spec.md",
+	"components": {
+		"schemas": {
+			"GoverningDocument": {
+				"version": "0.2.0",
+				"description": "A governing document: an organisation's own constitutive or internal governing document, and any rule it adopts. Statuten, huishoudelijk reglement, reglement van orde, directiestatuut, splitsingsakte, verordening, beleidsregel. Schema.org DigitalDocument, Akoma Ntoso doc work level: the stable identity that a chain of immutable versions hangs off. Absorbed the verordeningenregister's Regeling (fold-regulations-into-governing-documents), which modelled the same thing in a council's words.",
+				"properties": {
+					"type": {
+						"title": "Type",
+						"type": "string",
+						"facetable": true,
+						"description": "What kind of governing document this is.",
+						"enum": [
+							"articles-of-association",
+							"internal-regulations",
+							"rules-of-procedure",
+							"management-charter",
+							"deed-of-division",
+							"by-law",
+							"policy-rule",
+							"detailed-rule",
+							"regulations",
+							"external-charter",
+							"other"
+						],
+						"default": "other",
+						"example": "by-law",
+						"x-notes": "One list, unioned from the two this fold replaced. A closed enum of document kinds is still a vocabulary the app ships; it becomes a configurable type when the Configuration surface lands. Until then a value removed here orphans stored rows, so entries are only ever ADDED."
+					},
+					"status": {
+						"title": "Status",
+						"type": "string",
+						"facetable": true,
+						"description": "Where this document is in its lifecycle.",
+						"enum": [
+							"in-preparation",
+							"adopted",
+							"in-force",
+							"in-effect",
+							"lapsed"
+						],
+						"default": "in-preparation",
+						"example": "in-force",
+						"x-notes": "Unioned. `in-force` and `in-effect` both survive because both are already STORED: GoverningDocument rows carry the first and Regeling rows the second, and collapsing them would rewrite data this fold promises not to touch. New rows should use `in-force`."
+					},
+					"officialTitle": {
+						"title": "Official title",
+						"type": "string",
+						"description": "The full official title, where it differs from the short one it is cited by. Optional.",
+						"example": "Verordening op de inzameling en verwerking van huishoudelijke afvalstoffen Amsterdam"
+					},
+					"statutoryBasis": {
+						"title": "Legal basis",
+						"type": "array",
+						"description": "What this document derives its authority from. A statute for a public body, the articles of association for a company rule, the deed of division for a VvE regulation.",
+						"items": {
+							"type": "string"
+						},
+						"example": [
+							"Gemeentewet art. 149",
+							"Statuten art. 12"
+						]
+					},
+					"externalRegisterIdentifier": {
+						"title": "External register identifier",
+						"type": "string",
+						"facetable": true,
+						"description": "The identifier an external register assigned this document after publication. Stored, never minted here. Optional, and absent until first publication.",
+						"example": "CVDR641871",
+						"x-notes": "Generic name for what the retired Regeling called `cvdrIdentifier`, after the CVDR: one national register, in one country. The field is the same in every organisation that publishes to a register outside itself."
+					},
+					"currentVersionNumber": {
+						"title": "Current version number",
+						"type": "integer",
+						"nullable": true,
+						"description": "The number of the version currently in force, so a list renders without resolving every row's versions. Null until a version is in force."
+					},
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created.",
+						"x-notes": "This is the migration IDEMPOTENCY KEY, so it has to be a declared property: an undeclared one is not guaranteed to survive a save, and a marker that does not persist makes a second run copy every row again. DecisionTemplate.migratedFrom exists for the same reason."
+					}
+				}
+			},
+			"GoverningDocumentVersie": {
+				"version": "0.2.0",
+				"description": "An immutable version (Akoma Ntoso expression level) of a GoverningDocument. Absorbed RegelingVersie, which it already mirrored by its own admission.",
+				"properties": {
+					"migratedFromObject": {
+						"title": "Migrated from",
+						"type": "string",
+						"facetable": true,
+						"nullable": true,
+						"description": "The identifier of the retired record this one was copied from. Set only by the fold migration; absent on seeds and on anything a person created.",
+						"x-notes": "This is the migration IDEMPOTENCY KEY, so it has to be a declared property: an undeclared one is not guaranteed to survive a save, and a marker that does not persist makes a second run copy every row again. DecisionTemplate.migratedFrom exists for the same reason."
+					}
+				}
+			},
+			"RegelingExportPackage": {
+				"version": "0.2.0",
+				"description": "Repointed by fold-regulations-into-governing-documents: `regulation` now references governing-document, because Regeling is retired. The package itself is a DROP/STOP-TPOD delivery, a Dutch publication standard, and belongs in integriq with the other Woo/DiWoo mapping. It is repointed rather than moved here so it does not reference a retired schema in the meantime.",
+				"properties": {
+					"regulation": {
+						"title": "Governing document",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governing-document",
+						"description": "The governing document this package publishes."
+					}
+				}
+			},
+			"Regeling": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (fold-regulations-into-governing-documents): the same thing as GoverningDocument, in a council's words. Its distinctive fields moved there under generic names: `cvdrIdentifier` became `externalRegisterIdentifier`, `determiningBody` became `governingBody`, and `officialTitle`, `statutoryBasis` and `currentVersionNumber` kept their names. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"RegelingVersie": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (fold-regulations-into-governing-documents): identical in shape to GoverningDocumentVersie, which was written by copying it. `regulation` became `document`. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

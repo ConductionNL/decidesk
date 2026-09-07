@@ -10,11 +10,11 @@
  * real SFC (the vitest environment is `node`, no DOM).
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+	bumpDashboardRefresh,
 	dashboardRefreshMixin,
 	getDashboardRefreshSignal,
-	bumpDashboardRefresh,
 } from '../../../src/views/dashboard/widgets/dashboardRefreshMixin.js'
 
 describe('refresh signal (REQ-006)', () => {

@@ -758,9 +758,9 @@ The Decision Detail page MUST render three declarative `object-list` widgets, ea
 - GIVEN a `ConsultationRequest` object whose `relatedDecision` field is set to Decision D
 - WHEN a user opens Decision D's detail page
 - THEN the "Works council (WOR)" widget lists that request
-- AND clicking the row navigates to `WorTrajectDetail` for that request
+- AND clicking the row navigates to `WorksCouncilConsultationDetail` for that request
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No works-council consultation requests reference this decision yet."); this scenario's populated-list assertion (a real ConsultationRequest linked and its row navigating to WorTrajectDetail) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No works-council consultation requests reference this decision yet."); this scenario's populated-list assertion (a real ConsultationRequest linked and its row navigating to WorksCouncilConsultationDetail) is untested — genuine coverage gap tracked as e2e debt.
 
 ### Requirement: Decision detail surfaces advisory-opinion requests (REQ-DFC-002)
 

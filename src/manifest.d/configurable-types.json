@@ -1,0 +1,730 @@
+{
+	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "The configurable types, given a place to be configured. configurable-types-domain-model declared MeetingType, AgendaItemType, PositionType and GovernanceBodyComposition, and questions-as-agenda-items made AgendaItemType load-bearing: an oral question is now an agenda item whose TYPE says what kind it is. None of the four had a page. So the configuration this programme keeps creating could only arrive from a seeded example set, and an operator could never add a kind, rename one, or change a submission window. Configuration nobody can edit is not much better than the code it replaced. These live in the settings foldout, not the primary menu: ADR-004 caps the primary at six, and DecisionTemplates is already there for the same reason.",
+	"_spec": "openspec/changes/configuration-surface/specs/configuration-surface/spec.md",
+	"menu": [
+		{
+			"id": "MeetingTypes",
+			"label": "Meeting types",
+			"icon": "CalendarTextOutline",
+			"route": "MeetingTypes",
+			"order": 71
+		},
+		{
+			"id": "AgendaItemTypes",
+			"label": "Agenda item types",
+			"icon": "FormatListNumbered",
+			"route": "AgendaItemTypes",
+			"order": 72
+		},
+		{
+			"id": "PositionTypes",
+			"label": "Position types",
+			"icon": "AccountBoxOutline",
+			"route": "PositionTypes",
+			"order": 74
+		},
+		{
+			"id": "BodyCompositions",
+			"label": "Body compositions",
+			"icon": "AccountGroupOutline",
+			"route": "BodyCompositions",
+			"order": 75
+		},
+		{
+			"id": "PositionHolds",
+			"label": "Position holders",
+			"icon": "AccountGroup",
+			"route": "PositionHolds",
+			"order": 76
+		}
+	],
+	"pages": [
+		{
+			"id": "MeetingTypes",
+			"route": "/meeting-types",
+			"type": "index",
+			"title": "Meeting types",
+			"_note": "Every kind of meeting a body holds. Draft is a real state here: a type that is still a draft cannot back a new meeting, so an operator can prepare one without it appearing in every picker.",
+			"config": {
+				"register": "decidiq",
+				"schema": "meeting-type",
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"quickFilterMode": "dropdown",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "In use",
+						"filter": {
+							"active": true
+						}
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"isDraft": true
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "name",
+						"label": "Name",
+						"widget": "link"
+					},
+					{
+						"key": "governanceBody",
+						"label": "Body"
+					},
+					{
+						"key": "defaultDurationMinutes",
+						"label": "Duration (min)"
+					},
+					{
+						"key": "isPublic",
+						"label": "Public",
+						"widget": "boolean"
+					},
+					{
+						"key": "active",
+						"label": "In use",
+						"widget": "boolean"
+					}
+				],
+				"rowRoute": "MeetingTypeDetail",
+				"allowCreate": true,
+				"emptyText": "No meeting types configured yet. An example set seeds some, or add your own."
+			}
+		},
+		{
+			"id": "MeetingTypeDetail",
+			"route": "/meeting-types/:id",
+			"type": "detail",
+			"title": "Meeting type",
+			"config": {
+				"register": "decidiq",
+				"schema": "meeting-type",
+				"widgets": [
+					{
+						"id": "meeting-type-data",
+						"type": "data",
+						"title": "Meeting type",
+						"icon": "CalendarTextOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "meeting-type-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "meeting-type-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "2",
+						"widgetId": "meeting-type-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "AgendaItemTypes",
+			"route": "/agenda-item-types",
+			"type": "index",
+			"title": "Agenda item types",
+			"_note": "The kinds an agenda item can be. Since questions-as-agenda-items this is where an organisation says what it calls an oral question, what fields one carries, how long before the meeting it may be submitted, and whether it needs support before it is admitted.",
+			"config": {
+				"register": "decidiq",
+				"schema": "agenda-item-type",
+				"sortKey": "order",
+				"sortOrder": "asc",
+				"quickFilterMode": "dropdown",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "In use",
+						"filter": {
+							"active": true
+						}
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"isDraft": true
+						}
+					},
+					{
+						"label": "Votable",
+						"filter": {
+							"votable": true
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "name",
+						"label": "Name",
+						"widget": "link"
+					},
+					{
+						"key": "owningBody",
+						"label": "Owning body"
+					},
+					{
+						"key": "votable",
+						"label": "Votable",
+						"widget": "boolean"
+					},
+					{
+						"key": "submissionWindowHours",
+						"label": "Submission window (hours)"
+					},
+					{
+						"key": "active",
+						"label": "In use",
+						"widget": "boolean"
+					}
+				],
+				"rowRoute": "AgendaItemTypeDetail",
+				"allowCreate": true,
+				"emptyText": "No agenda item types configured yet. An example set seeds some, or add your own."
+			}
+		},
+		{
+			"id": "AgendaItemTypeDetail",
+			"route": "/agenda-item-types/:id",
+			"type": "detail",
+			"title": "Agenda item type",
+			"config": {
+				"register": "decidiq",
+				"schema": "agenda-item-type",
+				"widgets": [
+					{
+						"id": "agenda-item-type-data",
+						"type": "data",
+						"title": "Agenda item type",
+						"icon": "FormatListNumbered",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "agenda-item-type-items",
+						"type": "object-list",
+						"title": "Items of this kind",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "decidiq",
+							"schema": "agenda-item",
+							"filter": {
+								"type": "@objectId"
+							},
+							"sort": {
+								"field": "orderNumber",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title",
+									"widget": "link"
+								},
+								{
+									"key": "meeting",
+									"label": "Meeting"
+								},
+								{
+									"key": "orderNumber",
+									"label": "#"
+								}
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "No agenda items use this kind yet."
+						}
+					},
+					{
+						"id": "agenda-item-type-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "agenda-item-type-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "2",
+						"widgetId": "agenda-item-type-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
+					},
+					{
+						"id": "3",
+						"widgetId": "agenda-item-type-items",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "PositionTypes",
+			"route": "/position-types",
+			"type": "index",
+			"title": "Position types",
+			"_note": "The positions that exist on a body: that a board has a president, how many seats it has, how long a term runs and whether the holder may be reappointed.",
+			"config": {
+				"register": "decidiq",
+				"schema": "position-type",
+				"sortKey": "order",
+				"sortOrder": "asc",
+				"quickFilterMode": "dropdown",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "In use",
+						"filter": {
+							"active": true
+						}
+					},
+					{
+						"label": "Representation seats",
+						"filter": {
+							"isRepresentationSeat": true
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "name",
+						"label": "Name",
+						"widget": "link"
+					},
+					{
+						"key": "governanceBody",
+						"label": "Body"
+					},
+					{
+						"key": "seats",
+						"label": "Seats"
+					},
+					{
+						"key": "termDurationMonths",
+						"label": "Term (months)"
+					},
+					{
+						"key": "active",
+						"label": "In use",
+						"widget": "boolean"
+					}
+				],
+				"rowRoute": "PositionTypeDetail",
+				"allowCreate": true,
+				"emptyText": "No position types configured yet. An example set seeds some, or add your own."
+			}
+		},
+		{
+			"id": "PositionTypeDetail",
+			"route": "/position-types/:id",
+			"type": "detail",
+			"title": "Position type",
+			"config": {
+				"register": "decidiq",
+				"schema": "position-type",
+				"widgets": [
+					{
+						"id": "position-type-data",
+						"type": "data",
+						"title": "Position type",
+						"icon": "AccountBoxOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "position-type-holds",
+						"type": "object-list",
+						"title": "Who holds it",
+						"icon": "AccountGroupOutline",
+						"content": {
+							"register": "decidiq",
+							"schema": "position-hold",
+							"filter": {
+								"position": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "membership",
+									"label": "Member"
+								},
+								{
+									"key": "holdType",
+									"label": "Hold",
+									"widget": "badge"
+								},
+								{
+									"key": "startDate",
+									"label": "From",
+									"widget": "date"
+								},
+								{
+									"key": "endDate",
+									"label": "Until",
+									"widget": "date"
+								}
+							],
+							"limit": 25,
+							"allowCreate": true,
+							"emptyText": "Nobody holds this position yet."
+						}
+					},
+					{
+						"id": "position-type-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "position-type-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "2",
+						"widgetId": "position-type-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 7
+					},
+					{
+						"id": "3",
+						"widgetId": "position-type-holds",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "BodyCompositions",
+			"route": "/body-compositions",
+			"type": "index",
+			"title": "Body compositions",
+			"_note": "Which bodies are made of which others, and how. The distinction is load-bearing: direct means the component's members ARE the composite's members, representation means the component sends delegates to seats.",
+			"config": {
+				"register": "decidiq",
+				"schema": "governance-body-composition",
+				"sortKey": "@self.created",
+				"sortOrder": "desc",
+				"columns": [
+					{
+						"key": "composite",
+						"label": "Composite body",
+						"widget": "link"
+					},
+					{
+						"key": "component",
+						"label": "Component body"
+					},
+					{
+						"key": "compositionType",
+						"label": "How",
+						"widget": "badge"
+					},
+					{
+						"key": "seats",
+						"label": "Seats"
+					}
+				],
+				"rowRoute": "BodyCompositionDetail",
+				"allowCreate": true,
+				"emptyText": "No body compositions configured yet."
+			}
+		},
+		{
+			"id": "BodyCompositionDetail",
+			"route": "/body-compositions/:id",
+			"type": "detail",
+			"title": "Body composition",
+			"config": {
+				"register": "decidiq",
+				"schema": "governance-body-composition",
+				"widgets": [
+					{
+						"id": "body-composition-data",
+						"type": "data",
+						"title": "Body composition",
+						"icon": "AccountGroupOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "body-composition-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "body-composition-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "body-composition-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "PositionHolds",
+			"route": "/position-holds",
+			"type": "index",
+			"title": "Position holders",
+			"_note": "Who holds which position, and until when. This replaces the retired Roosterregels index, which asked the same question of a projection nothing regenerated. Sorted by end date because the reason anyone opens it is to see whose term runs out next.",
+			"config": {
+				"register": "decidiq",
+				"schema": "position-hold",
+				"sortKey": "endDate",
+				"sortOrder": "asc",
+				"quickFilterMode": "dropdown",
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Reappointable",
+						"filter": {
+							"reappointable": true
+						}
+					}
+				],
+				"columns": [
+					{
+						"key": "membership",
+						"label": "Member",
+						"widget": "link"
+					},
+					{
+						"key": "position",
+						"label": "Position"
+					},
+					{
+						"key": "holdType",
+						"label": "Hold",
+						"widget": "badge"
+					},
+					{
+						"key": "termNumber",
+						"label": "Term"
+					},
+					{
+						"key": "startDate",
+						"label": "From",
+						"widget": "date"
+					},
+					{
+						"key": "endDate",
+						"label": "Until",
+						"widget": "date"
+					}
+				],
+				"rowRoute": "PositionHoldDetail",
+				"allowCreate": true,
+				"emptyText": "Nobody holds a position yet."
+			}
+		},
+		{
+			"id": "PositionHoldDetail",
+			"route": "/position-holds/:id",
+			"type": "detail",
+			"title": "Position holder",
+			"config": {
+				"register": "decidiq",
+				"schema": "position-hold",
+				"widgets": [
+					{
+						"id": "position-hold-data",
+						"type": "data",
+						"title": "Position holder",
+						"icon": "AccountGroup",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "position-hold-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "position-hold-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "position-hold-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		}
+	]
+}

@@ -110,6 +110,14 @@ BASE="${BASE%/}"
 USER_NAME="${ADMIN_USER:-${NC_ADMIN_USER:-admin}}"
 USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
 
+# A deliberately UNPRIVILEGED account. The suite otherwise has exactly one
+# account, `admin`, and against a single admin "this endpoint denies a
+# non-admin" and "this endpoint denies nobody" produce identical evidence — so
+# decidiq's four RequiresOrAdmin controllers had no live proof they gate
+# anything. Consumed by tests/e2e/workflows/rbac-authorization-workflow.spec.ts.
+E2E_MEMBER_USER="${E2E_MEMBER_USER:-decidiq-e2e-member}"
+E2E_MEMBER_PASS="${E2E_MEMBER_PASS:-decidiq-e2e-member-pw}"
+
 # The calendar collection action-item VTODOs are written into. Its own URI, not
 # `personal`: Nextcloud's auto-provisioned "Personal" calendar is VEVENT-only,
 # and a calendar's component set is fixed at creation — so this must be a
@@ -210,9 +218,43 @@ if [ -f ./occ ]; then
 		echo "::error::PROPFIND returned: ${CAL_PROPS}"
 		exit 1
 	fi
+
+	# ── 0a-ter. AN UNPRIVILEGED ACCOUNT, so admin-gating is testable ─────────
+	#
+	# Created with NO --group, so it lands outside `admin` — which is exactly
+	# what IGroupManager::isAdmin() reads, and what RequiresOrAdmin consumes.
+	#
+	# Idempotent in the same shape as the calendar above: the create may fail
+	# ("user already exists") and the VERIFY is what gates.
+	OC_PASS="${E2E_MEMBER_PASS}" php ./occ user:add --password-from-env \
+		"${E2E_MEMBER_USER}" >/dev/null 2>&1 || true
+
+	# VERIFY over occ, and gate. An absent member account turns the spec's 403
+	# assertions into 401s, which reads as a broken guard rather than a missing
+	# fixture — the failure would name the wrong thing.
+	MEMBER_INFO="$(php ./occ user:info "${E2E_MEMBER_USER}" --output=json 2>/dev/null || true)"
+	if [ -z "${MEMBER_INFO}" ]; then
+		echo "::error::could not provision the non-admin account '${E2E_MEMBER_USER}'."
+		echo "::error::rbac-authorization-workflow.spec.ts asserts 403 for it on four"
+		echo "::error::RequiresOrAdmin surfaces; without the account those become 401s."
+		exit 1
+	fi
+
+	# It must NOT be an admin. If it were, every 403 assertion would invert and
+	# the spec would pass while proving the opposite of its own name — the worst
+	# available outcome, because it is green.
+	if printf '%s' "${MEMBER_INFO}" | python3 -c \
+		'import json,sys; sys.exit(0 if "admin" in json.load(sys.stdin).get("groups",[]) else 1)' \
+		2>/dev/null; then
+		echo "::error::'${E2E_MEMBER_USER}' is in the admin group; it must not be."
+		exit 1
+	fi
+	echo "[ci-seed] non-admin account '${E2E_MEMBER_USER}' present and unprivileged."
 else
 	echo "[ci-seed] no ./occ in $(pwd) — skipping the front-controller config (not a server root?)."
 	echo "[ci-seed] WARNING: the VTODO calendar gate is also skipped; action-item specs may 500."
+	echo "[ci-seed] WARNING: the non-admin account is also skipped; the admin-gating spec will"
+	echo "[ci-seed]          see 401 where it asserts 403."
 fi
 
 # ── 0b. GATE: the SERVED page must actually advertise pretty URLs ────────────
@@ -400,11 +442,42 @@ REG_CODE="$(curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" || echo 000)"
 verify "$REG_BODY" registers "$REG_CODE"
 
+# 🔴 THE PAGE SIZE IS PART OF THE ASSERTION, SO IT MUST OUTRUN THE INSTANCE.
+#
+# This asked for `_limit=1000` and then reported every required slug it could
+# not find as a MISSING SCHEMA. On a dev instance with 35 apps installed the
+# schema table holds 1111 rows, so ten decidiq schemas fell off the end of the
+# page and the script failed with:
+#
+#   ::error::Decidiq schemas missing after import:
+#     ['meeting', 'action-item', 'minutes', 'vote', 'transcript', ...]
+#
+# Every one of them was present in the database. The import had worked; the
+# QUESTION was too small. That is the worst shape a check can take: it names a
+# real-sounding cause and sends you to look at the import.
+#
+# So the limit outruns any plausible instance, AND truncation is detected rather
+# than assumed away: if the response comes back exactly full, the page is the
+# suspect and the script says so instead of blaming the import.
+SCH_LIMIT=20000
 SCH_BODY="$(mktemp)"
 SCH_CODE="$(curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	-o "$SCH_BODY" -w '%{http_code}' \
-	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" || echo 000)"
+	"${BASE}/index.php/apps/openregister/api/schemas?_limit=${SCH_LIMIT}" || echo 000)"
 verify "$SCH_BODY" schemas "$SCH_CODE"
+
+SCH_COUNT="$(python3 -c "
+import json
+d=json.load(open('${SCH_BODY}'))
+r=d.get('results', d if isinstance(d, list) else [])
+print(len(r))
+" 2>/dev/null || echo 0)"
+if [ "${SCH_COUNT}" -ge "${SCH_LIMIT}" ] 2>/dev/null; then
+	echo "::error::The schema listing came back exactly full (${SCH_COUNT} of _limit=${SCH_LIMIT})."
+	echo "::error::It is TRUNCATED, so a 'missing schema' below would be a paging artefact, not a failed import. Raise SCH_LIMIT."
+	exit 1
+fi
+echo "[ci-seed] schema listing: ${SCH_COUNT} row(s), under the ${SCH_LIMIT} page limit"
 
 # The register existing is still not the same as it being READABLE by the admin
 # session the specs use. Several specs assert `expect(resp.ok()).toBe(true)` on
@@ -619,6 +692,150 @@ else
 	# lib/Migration/MigrateActionItemsToDeckLeaf.php is an explicit no-op.)
 	# Action items are seeded per-spec through decidiq's own endpoint,
 	# POST /apps/decidiq/api/action-items → ActionItemWriter → TaskService.
+	# ── The five Goals `goals-pages.spec.ts` asserts on ────────────────────────
+	#
+	# 🔴 THESE TITLES ARE THE ASSERTION, SO THEY CARRY NO ${SEED_TAG} PREFIX.
+	# `SEEDED_GOAL_TITLES` matches with `{ exact: true }`; prefixing them the way
+	# the objects above are prefixed would break the very test this seeds for.
+	#
+	# WHY THEY HAVE TO BE SEEDED HERE AT ALL. The spec's docblock points at
+	# lib/Settings/register.d/66-organisation-goals.json, but that file declares
+	# only the `Goal` SCHEMA. The five objects live in three different profile
+	# files — association.json (1), corporate.json (2), municipality.json (2) —
+	# so NO single `example_profile` produces all five, and CI picks `none`
+	# (see the setup/config call below) precisely to keep a whole demo dataset
+	# out of the lists other specs assert on. The spec was written against the
+	# older behaviour where installing planted everything.
+	#
+	# Measured on development 2026-08-31: E2E 4 failed / 139 passed, one of them
+	# `Goals: index lists all five seeded goals` failing on
+	# `getByText('Duurzame omzetgroei 2028')` → element(s) not found.
+	#
+	# Titles, descriptions, horizons, deadlines and statuses are copied verbatim
+	# from those profiles so the fixture and the shipped example sets cannot
+	# drift into disagreeing about what a Goal looks like.
+	#
+	# `body` is repointed at THIS run's governance body. The profiles reference
+	# their own bodies by slug (`gemeenteraad-amsterdam`, `ledenraad-vng`,
+	# `raad-van-bestuur-acme-bv`), none of which exist here — a dangling
+	# reference would seed an object the Goals index cannot resolve or render.
+	# `owner` is dropped for the same reason: `femke-halsema` is not a user on
+	# this instance, and it is not a required field.
+	seed_goal() {
+		# $1 = title, $2 = description, $3 = horizon, $4 = startDate,
+		# $5 = deadline, $6 = status, $7 = extra JSON fields (may be empty)
+		local id
+		id="$(seed_object goal \
+			"{\"title\":\"$1\",\"description\":\"$2\",\"horizon\":\"$3\",\"body\":\"${BODY_ID}\",\"startDate\":\"$4\",\"deadline\":\"$5\",\"status\":\"$6\"$7}" \
+			"the Goal \"$1\"")"
+		echo "[ci-seed]   goal ${id}  $1"
+	}
+
+	seed_goal 'Duurzame omzetgroei 2028' \
+		'Structurele omzetgroei realiseren binnen de duurzaamheidsdoelstellingen van de organisatie.' \
+		'multi-year' '2026-01-01' '2028-12-31' 'active' \
+		',"targetValue":20,"currentValue":6,"unit":"% omzetgroei"'
+
+	seed_goal 'Operationele effectiviteit 2026' \
+		'Procesdoorlooptijden binnen norm brengen als uitvoering van de groeidoelstelling.' \
+		'annual' '2026-01-01' '2026-12-31' 'active' \
+		',"targetValue":90,"currentValue":78,"unit":"% doorlooptijd binnen norm"'
+
+	seed_goal 'Amsterdam klimaatneutraal' \
+		'Netto CO2-uitstoot van de gemeentelijke organisatie naar nul in 2050.' \
+		'multi-year' '2026-01-01' '2050-01-01' 'active' \
+		',"targetValue":100,"currentValue":42,"unit":"% CO2-reductie behaald"'
+
+	seed_goal 'Herzien parkeerbeleid vastgesteld' \
+		'Vaststellen van het herziene parkeerbeleid binnenstad.' \
+		'quarterly' '2026-04-01' '2026-09-30' 'at-risk' ''
+
+	seed_goal 'Digitale dienstverlening leden' \
+		'Alle leden kunnen digitaal diensten afnemen bij de vereniging.' \
+		'annual' '2026-01-01' '2026-12-31' 'draft' ''
+
+	# ── One built-in ProcessTemplate ───────────────────────────────────────────
+	#
+	# `process-configuration.spec.ts:41` failed at
+	# `expect(page.locator('[data-testid="process-template-list"]')).toBeVisible()`
+	# with `Received: hidden` — NOT because the list is missing, but because it is
+	# EMPTY. ProcessTemplates.vue renders `<ul v-if="!store.loading">` regardless
+	# of how many rows it has, and an empty `<ul>` is a zero-height box, which
+	# Playwright reports as hidden. ProcessTemplateService::list() already carries
+	# a comment describing exactly this shape from the last time it returned zero
+	# rows.
+	#
+	# The built-in templates are NOT shipped with the schema: like the Goals
+	# above, they live in the profile files (association.json, corporate.json and
+	# municipality.json declare three each), so `example_profile=none` leaves the
+	# catalogue empty. Same root cause, same fix.
+	#
+	# ONE is enough and one is deliberate. The spec asserts the list renders, then
+	# takes the FIRST item carrying `process-template-builtin` and checks it is
+	# read-only (duplicate offered, delete withheld). Seeding all nine would push
+	# a full catalogue into every other list that reads this schema, which is the
+	# thing the `none` profile exists to avoid.
+	#
+	# `Municipal Council` is the one that matches the rest of this fixture — the
+	# governance body seeded above is a Gemeenteraad — and it is copied verbatim
+	# from municipality.json (states, transitions, guards, voting rule and quorum
+	# rule included) so the fixture cannot drift from the shipped template. The
+	# profile's `@self` and `slug` are dropped: `@self` is import metadata the
+	# object API sets itself, and the slug is assigned server-side.
+	#
+	# Single-quoted deliberately — the payload contains double quotes throughout
+	# and no apostrophes, so this embeds it byte-for-byte with no escaping.
+	PROCESS_TEMPLATE_ID="$(seed_object process-template \
+		'{"name":"Municipal Council","description":"Legislative decision process for a municipal council (gemeenteraad), Gemeentewet.","context":"legislative","builtIn":true,"initialState":"draft","stateMachine":{"states":[{"name":"draft"},{"name":"proposed"},{"name":"deliberating"},{"name":"voting"},{"name":"decided"},{"name":"enacted"},{"name":"archived"}],"transitions":[{"name":"propose","from":"draft","to":"proposed"},{"name":"deliberate","from":"proposed","to":"deliberating"},{"name":"openVoting","from":"deliberating","to":"voting","chairOnly":true,"guards":["quorum_met","all_amendments_resolved"]},{"name":"decide","from":"voting","to":"decided","chairOnly":true},{"name":"enact","from":"decided","to":"enacted"},{"name":"archive","from":"enacted","to":"archived"}]},"votingRule":{"voteThreshold":"simple-majority","abstentionHandling":"exclude","tieBreakRule":"rejected"},"quorumRequired":true,"quorumRule":"More than half of the seats occupied (Gemeentewet art. 20)","allowDecideWithoutVote":false}' \
+		'the built-in Municipal Council process template')"
+	echo "[ci-seed]   process-template ${PROCESS_TEMPLATE_ID}  Municipal Council (built-in)"
+
+	# ── One governing document with two versions ───────────────────────────────
+	#
+	# 🔴 THIS SPEC HAS NEVER RUN. `register-detail-widgets.spec.ts` asserts the
+	# version-timeline widget renders both versions of "Afvalstoffenverordening
+	# Amsterdam", and skips when it cannot find that record. It lives only in
+	# municipality.json, and CI picks `example_profile=none` (see the setup/config
+	# call below), so the record has never existed here and the test has skipped
+	# on every run since it was written. A skip reads exactly like a pass in the
+	# summary line, which is how it went unnoticed.
+	#
+	# Seeded here rather than by loading the profile, for the same reason as the
+	# Goals and the ProcessTemplate above: a whole demo dataset would land in
+	# every other list the specs assert on.
+	#
+	# The title carries no ${SEED_TAG} prefix because the spec matches it
+	# exactly, and the fields are copied from municipality.json so the fixture
+	# and the shipped example set cannot drift apart. `governingBody` is
+	# repointed at THIS run's body: the profile names `gemeenteraad-amsterdam`,
+	# which does not exist here, and a dangling reference would seed a document
+	# the detail page cannot resolve.
+	GOVERNING_DOC_ID="$(seed_object governing-document \
+		"{\"type\":\"by-law\",\"citationTitle\":\"Afvalstoffenverordening Amsterdam\",\"officialTitle\":\"Verordening op de inzameling en verwerking van huishoudelijke afvalstoffen Amsterdam\",\"statutoryBasis\":[\"Gemeentewet art. 149\"],\"governingBody\":\"${BODY_ID}\",\"externalRegisterIdentifier\":\"CVDR641871\",\"currentVersionNumber\":2,\"currentEffectiveDate\":\"2025-06-01\",\"status\":\"in-effect\"}" \
+		'the governing document "Afvalstoffenverordening Amsterdam"')"
+	echo "[ci-seed]   governing-document ${GOVERNING_DOC_ID}  Afvalstoffenverordening Amsterdam"
+
+	# BOTH versions, because the spec asserts both render and that the earlier
+	# one reads as replaced. One version would satisfy "the widget rendered" and
+	# prove nothing about the timeline.
+	#
+	# 🔴 `in-effect`, NOT `in-force`. The two schemas do NOT share a status
+	# vocabulary: GoverningDocument accepts both (register.d/77), and
+	# GoverningDocumentVersie accepts only
+	# ['draft','adopted','in-effect','replaced','lapsed'] (register.d/55). This
+	# line wrote the document's word onto a versie and the API answered 400,
+	# which exits the seed and takes the WHOLE suite with it.
+	for versie in \
+		'1|2024-01-01|replaced|Eerste vaststelling van de Afvalstoffenverordening Amsterdam.' \
+		'2|2025-06-01|in-effect|Geactualiseerde verordening na evaluatie 2025.'
+	do
+		IFS='|' read -r v_num v_date v_status v_notes <<<"${versie}"
+		v_id="$(seed_object governing-document-versie \
+			"{\"document\":\"${GOVERNING_DOC_ID}\",\"versionNumber\":${v_num},\"effectiveDate\":\"${v_date}\",\"status\":\"${v_status}\",\"notes\":\"${v_notes}\"}" \
+			"governing-document version ${v_num}")"
+		echo "[ci-seed]   governing-document-versie ${v_id}  v${v_num} (${v_status})"
+	done
+
 	echo "[ci-seed] governance fixture seeded."
 fi
 
@@ -637,6 +854,24 @@ required = {
     'agenda-item': 3,
     'decision': 3,
     'minutes': 1,
+    # goals-pages.spec.ts asserts all FIVE by exact title, so five is the floor.
+    # Listed here for the reason this whole block exists: a create that answered
+    # 2xx but is not listable would leave the spec failing on "element(s) not
+    # found", which reads as a missing feature rather than a seed that did not
+    # land.
+    'goal': 5,
+    # process-configuration.spec.ts needs the list to be non-EMPTY, since an
+    # empty <ul> is a zero-height box that Playwright reports as hidden. One
+    # built-in template is the floor; see the seeding note above for why it is
+    # not the full catalogue.
+    'process-template': 1,
+    # register-detail-widgets.spec.ts asserts BOTH versions of the seeded
+    # governing document render in the version timeline. The document is the
+    # floor; the versions are counted separately below because a document with
+    # no versions renders an empty timeline, which is the shape that made this
+    # spec skip silently for its whole life.
+    'governing-document': 1,
+    'governing-document-versie': 2,
     # NOT action-item: CalDAV-backed and read-only through this API (see above).
 }
 
@@ -800,11 +1035,65 @@ echo "[ci-seed] done."
 # Uses the workflow's own exported credentials rather than this script's, so it
 # does not depend on where in the file it sits.
 #
-# Tolerant on purpose: an app whose wizard has no demo-data step answers 400
-# here, and that is not a seeding failure.
-DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
+# 🔴 THE ACTION ID IS `skip-example-set`, AND THIS CALLED `skip-demo-data`.
+#
+# ADR-111's step was renamed demo-data -> example-set, and SetupController
+# implements exactly two ids (`load-example-set`, `skip-example-set`),
+# returning 404 "Unknown setup action" for anything else. So this POST had
+# been answering 404 on every run, the decision was never recorded, and the
+# wizard this block exists to close stayed open. Measured on development
+# 2026-08-31: E2E 45 failed / 123 passed, with 228 `intercepts pointer
+# events` lines naming the cn-wizard-dialog modal mask and 76 clicks timing
+# out at 20s. The failures were one seeding bug wearing 45 costumes.
+#
+# The old "tolerant on purpose" note is what hid it: a 404 read as the
+# benign 400 it described, so the log line printed the failure and nothing
+# treated it as one. Tolerance that cannot distinguish "this app has no such
+# step" from "this app renamed it" is not tolerance, it is blindness.
+#
+# `example_profile=none` rather than the skip action, because it closes BOTH
+# steps: status() reports `example-set.done` from `$picked !== ''` and
+# `load-example-set.done` from `$picked === NONE_PROFILE`. The skip action
+# writes only DEMO_DECIDED_KEY and would leave `example-set` open — still
+# enough wizard to mask every click.
+# 🔴 `${BASE}`, NOT ITS OWN RESOLUTION. This line used to read
+# `${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}`, which ignores
+# PLAYWRIGHT_BASE_URL and falls back to the SHARED dev container — the exact
+# default the top of this script refuses, in the block whose whole job is to
+# WRITE app config. On CI it worked because the workflow exports BASE_URL; on a
+# throwaway rig driven by PLAYWRIGHT_BASE_URL it aimed a POST at :8080 and the
+# run then failed on a status document it had never written, from an instance
+# it had never touched. `${BASE}` is already resolved and already guarded.
+DEMO_BASE="${BASE}"
 DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
 	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
-	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' --data '{}' \
-	"${DEMO_BASE}/index.php/apps/decidiq/api/setup/action/skip-demo-data" || echo 000)"
-echo "[ci-seed] POST setup/action/skip-demo-data -> HTTP ${DEMO_CODE}"
+	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' \
+	--data '{"example_profile":"none"}' \
+	"${DEMO_BASE}/index.php/apps/decidiq/api/setup/config" || echo 000)"
+echo "[ci-seed] POST setup/config example_profile=none -> HTTP ${DEMO_CODE}"
+
+# ASSERT THE STATE, NOT THE STATUS CODE. A 200 says the endpoint answered; it
+# does not say the wizard will stay shut. Reading the steps back is the only
+# check that would still fail if the contract moved again — which is exactly
+# what happened last time.
+SETUP_STATUS="$(curl -sS --max-time 60 \
+	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" \
+	-H 'OCS-APIRequest: true' \
+	"${DEMO_BASE}/index.php/apps/decidiq/api/setup/status" || echo '{}')"
+if printf '%s' "${SETUP_STATUS}" \
+	| python3 -c 'import json,sys
+try:
+    s = json.load(sys.stdin).get("steps", {})
+except Exception:
+    sys.exit(1)
+sys.exit(0 if all(s.get(k, {}).get("done") for k in ("example-set", "load-example-set")) else 1)'; then
+	echo "[ci-seed] setup steps report done — the wizard will not mask the suite."
+else
+	echo "[ci-seed] ERROR: setup steps are NOT done after seeding." >&2
+	echo "[ci-seed]        status was: ${SETUP_STATUS}" >&2
+	echo "[ci-seed]        The setup wizard will open as a modal mask and every" >&2
+	echo "[ci-seed]        click in every spec will time out. Failing here, where" >&2
+	echo "[ci-seed]        the cause is one line, instead of in 45 specs where it" >&2
+	echo "[ci-seed]        is not." >&2
+	exit 1
+fi

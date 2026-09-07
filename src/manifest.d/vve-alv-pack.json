@@ -1,249 +1,290 @@
 {
 	"$schema": "https://github.com/ConductionNL/nextcloud-vue/raw/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "VvE ALV statutory pack — appended onto the bundled src/manifest.json by main.js::mergeManifestFragments (ADR-037). Index + detail pages for the four VvE schemas; schema refs BY SLUG (vve-decision-template / modelreglement-preset / vve-configuration / kascommissie-verklaring), never PascalCase. Menu orders 71-74 (unique, above the sibling fragments' 45-70 band). Templates and presets are read-only-but-duplicable built-ins (server-side guard, out of this declarative-core fragment); the index/detail pages list and inspect them. Breukdelen presentation, the kascommissie dialog, and the majority resolver are imperative/frontend and are not part of this fragment.",
+	"_note": "VvE ALV statutory pack, now nearly empty by design. The decision-template and modelreglement-preset surfaces went to src/manifest.d/decision-templates.json (unified-decision-templates had superseded both schemas); VveConfiguration became BodyGovernanceConfiguration (generic-body-configuration); KascommissieVerklaring became AuditStatement (generic-audit-statement). What is left is two generic surfaces that happen to have been introduced by this pack. Schema refs BY SLUG, never PascalCase.",
 	"_spec": "openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md",
 	"menu": [
 		{
-			"id": "VveDecisionTemplates",
-			"label": "VvE decision templates",
-			"icon": "FileReplaceOutline",
-			"route": "VveDecisionTemplates",
-			"order": 71
-		},
-		{
-			"id": "ModelreglementPresets",
-			"label": "Modelreglement presets",
-			"icon": "BriefcaseOutline",
-			"route": "ModelreglementPresets",
-			"order": 72
-		},
-		{
-			"id": "VveConfigurations",
-			"label": "VvE configuration",
+			"id": "BodyConfigurations",
+			"label": "Body configuration",
 			"icon": "CogOutline",
-			"route": "VveConfigurations",
+			"route": "BodyConfigurations",
 			"order": 73
 		},
 		{
-			"id": "KascommissieVerklaringen",
-			"label": "Kascommissie verklaringen",
+			"id": "AuditStatements",
+			"label": "Audit statements",
 			"icon": "Check",
-			"route": "KascommissieVerklaringen",
+			"route": "AuditStatements",
 			"order": 74
 		}
 	],
 	"pages": [
 		{
-			"id": "VveDecisionTemplates",
-			"route": "/vve-decision-templates",
+			"id": "BodyConfigurations",
+			"route": "/body-configurations",
 			"type": "index",
-			"title": "VvE decision templates",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-002. Lists the six built-in VvE statutory decision templates with their default majority, quorum fraction, and reglement source. Built-ins are read-only-but-duplicable (server-side guard); instantiation pre-fills an ordinary Decision.",
+			"title": "Body configuration",
+			"_note": "Per-body governance configuration for ANY organisation: the document that constitutes the body, the regulation version it follows, the denominator its weighted votes are expressed over, and any majority overrides. Replaces the VvE-only surface; generic-body-configuration supersedes VveConfiguration non-destructively.",
 			"config": {
 				"register": "decidiq",
-				"schema": "vve-decision-template",
+				"schema": "body-governance-configuration",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
-				"_note": "Schema ref by slug (vve-decision-template), never PascalCase.",
+				"_note": "Schema ref by slug (body-governance-configuration), never PascalCase.",
 				"columns": [
-					{ "key": "name", "label": "Name", "widget": "link" },
-					{ "key": "decisionCategory", "label": "Category", "widget": "badge" },
-					{ "key": "defaultVoteThreshold", "label": "Default majority", "widget": "badge" },
-					{ "key": "defaultQuorumFraction", "label": "Quorum" },
-					{ "key": "reglementSource", "label": "Reglement source" },
-					{ "key": "builtIn", "label": "Built-in", "widget": "badge" }
+					{
+						"key": "governanceBody",
+						"label": "Governance body",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "decidiq",
+							"schema": "governance-body",
+							"labelField": "name"
+						}
+					},
+					{
+						"key": "regulationVersion",
+						"label": "Regulation version"
+					},
+					{
+						"key": "voteWeightDenominator",
+						"label": "Vote weight denominator"
+					}
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "VveDecisionTemplateDetail", "primary": true }
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "BodyConfigurationDetail",
+						"primary": true
+					}
 				],
-				"sidebar": { "enabled": true, "showMetadata": true },
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
 		{
-			"id": "VveDecisionTemplateDetail",
-			"route": "/vve-decision-templates/:id",
+			"id": "BodyConfigurationDetail",
+			"route": "/body-configurations/:id",
 			"type": "detail",
-			"title": "VvE decision template",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-002. Template content (name, category, proposed besluittekst, default majority/quorum, reglement source). Audit trail in a sidebar tab.",
+			"title": "Body configuration",
+			"_note": "Configuration data leads; the referenced body and constitutive document render as resolved references. Audit trail in a sidebar tab.",
 			"config": {
 				"register": "decidiq",
-				"schema": "vve-decision-template",
-				"_note": "Schema ref by slug (vve-decision-template), never PascalCase.",
+				"schema": "body-governance-configuration",
+				"_note": "Schema ref by slug (body-governance-configuration), never PascalCase.",
 				"widgets": [
-					{ "id": "template-data", "type": "data", "title": "Decision template", "icon": "Gavel", "content": { "columns": 2 } }
+					{
+						"id": "config-data",
+						"type": "data",
+						"title": "Body configuration",
+						"icon": "OfficeBuilding",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "config-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "template-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 8 }
+					{
+						"id": "1",
+						"widgetId": "config-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "config-related",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					}
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
 					]
 				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
 		{
-			"id": "ModelreglementPresets",
-			"route": "/modelreglement-presets",
+			"id": "AuditStatements",
+			"route": "/audit-statements",
 			"type": "index",
-			"title": "Modelreglement presets",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-003. Lists the three built-in modelreglement presets (1992/2006/2017) mapping decision categories to their required majority/quorum. Read-only-but-duplicable.",
+			"title": "Audit statements",
+			"_note": "Audit statements per financial year, with the verdict and the agenda item where the accounts were adopted. Generic: a kascommissie is one kind of audit committee, and the Dutch label is supplied per organisatie_modus rather than baked into the schema.",
 			"config": {
 				"register": "decidiq",
-				"schema": "modelreglement-preset",
+				"schema": "audit-statement",
 				"sortKey": "@self.created",
 				"sortOrder": "desc",
-				"_note": "Schema ref by slug (modelreglement-preset), never PascalCase.",
-				"columns": [
-					{ "key": "name", "label": "Name", "widget": "link" },
-					{ "key": "builtIn", "label": "Built-in", "widget": "badge" }
-				],
-				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ModelreglementPresetDetail", "primary": true }
-				],
-				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "ModelreglementPresetDetail",
-			"route": "/modelreglement-presets/:id",
-			"type": "detail",
-			"title": "Modelreglement preset",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-003. Preset detail with the categoryRules mapping (category → majority/quorum + article). Audit trail in a sidebar tab.",
-			"config": {
-				"register": "decidiq",
-				"schema": "modelreglement-preset",
-				"_note": "Schema ref by slug (modelreglement-preset), never PascalCase.",
-				"widgets": [
-					{ "id": "preset-data", "type": "data", "title": "Modelreglement preset", "icon": "BookOpenVariant", "content": { "columns": 2 } }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "preset-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 8 }
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
-				},
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "VveConfigurations",
-			"route": "/vve-configurations",
-			"type": "index",
-			"title": "VvE configuration",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-001/003. Lists per-body VvE configurations (one per governance body): preset, breukdelen denominator, splitsingsakte reference, majority overrides.",
-			"config": {
-				"register": "decidiq",
-				"schema": "vve-configuration",
-				"sortKey": "@self.created",
-				"sortOrder": "desc",
-				"_note": "Schema ref by slug (vve-configuration), never PascalCase.",
-				"columns": [
-					{ "key": "governanceBody", "label": "Governance body", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
-					{ "key": "modelRegulation", "label": "Modelreglement", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "modelreglement-preset", "labelField": "name" } },
-					{ "key": "fractionDenominator", "label": "Denominator" }
-				],
-				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "VveConfigurationDetail", "primary": true }
-				],
-				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "VveConfigurationDetail",
-			"route": "/vve-configurations/:id",
-			"type": "detail",
-			"title": "VvE configuration",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-001/003. Configuration data leads; the referenced body/preset/splitsingsakte and the majority overrides render as resolved references. Audit trail in a sidebar tab.",
-			"config": {
-				"register": "decidiq",
-				"schema": "vve-configuration",
-				"_note": "Schema ref by slug (vve-configuration), never PascalCase.",
-				"widgets": [
-					{ "id": "config-data", "type": "data", "title": "VvE configuration", "icon": "OfficeBuilding", "content": { "columns": 2 } },
-					{ "id": "config-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "config-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "config-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
-				},
-				"documentationUrl": "https://decidiq.conduction.nl"
-			}
-		},
-		{
-			"id": "KascommissieVerklaringen",
-			"route": "/kascommissie-verklaringen",
-			"type": "index",
-			"title": "Kascommissie verklaringen",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-006. Lists kascommissie verklaringen per boekjaar with verdict and linked jaarrekening agenda item; verslag attached via FileService on the detail page.",
-			"config": {
-				"register": "decidiq",
-				"schema": "kascommissie-verklaring",
-				"sortKey": "@self.created",
-				"sortOrder": "desc",
-				"_note": "Schema ref by slug (kascommissie-verklaring), never PascalCase.",
+				"_note": "Schema ref by slug (audit-statement), never PascalCase.",
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Approving", "filter": { "verdict": "approving" } },
-					{ "label": "With reservation", "filter": { "verdict": "qualified" } },
-					{ "label": "Rejecting", "filter": { "verdict": "adverse" } }
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Approving",
+						"filter": {
+							"verdict": "approving"
+						}
+					},
+					{
+						"label": "With reservation",
+						"filter": {
+							"verdict": "qualified"
+						}
+					},
+					{
+						"label": "Rejecting",
+						"filter": {
+							"verdict": "adverse"
+						}
+					}
 				],
 				"columns": [
-					{ "key": "financialYear", "label": "Boekjaar", "widget": "link", "formatter": "plainYear" },
-					{ "key": "verdict", "label": "Verdict", "widget": "badge" },
-					{ "key": "governanceBody", "label": "Governance body", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } }
+					{
+						"key": "financialYear",
+						"label": "Boekjaar",
+						"widget": "link",
+						"formatter": "plainYear"
+					},
+					{
+						"key": "verdict",
+						"label": "Verdict",
+						"widget": "badge"
+					},
+					{
+						"key": "governanceBody",
+						"label": "Governance body",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "decidiq",
+							"schema": "governance-body",
+							"labelField": "name"
+						}
+					}
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "KascommissieVerklaringDetail", "primary": true }
+					{
+						"id": "view",
+						"label": "View",
+						"icon": "EyeOutline",
+						"handler": "navigate",
+						"route": "AuditStatementDetail",
+						"primary": true
+					}
 				],
-				"sidebar": { "enabled": true, "showMetadata": true },
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
 		{
-			"id": "KascommissieVerklaringDetail",
-			"route": "/kascommissie-verklaringen/:id",
+			"id": "AuditStatementDetail",
+			"route": "/audit-statements/:id",
 			"type": "detail",
-			"title": "Kascommissie verklaring",
-			"_note": "spec: openspec/changes/vve-alv-pack/specs/vve-alv-pack/spec.md — REQ-VVE-006. Verklaring data leads 8-wide; the verslag PDF attaches via the Files leaf; the linked jaarrekening agenda item and governance body render as resolved references. Audit trail in a sidebar tab.",
+			"title": "Audit statement",
+			"_note": "One audit committee statement. Verslag attached via FileService. Audit trail in a sidebar tab.",
 			"config": {
 				"register": "decidiq",
-				"schema": "kascommissie-verklaring",
-				"_note": "Schema ref by slug (kascommissie-verklaring), never PascalCase.",
+				"schema": "audit-statement",
+				"_note": "Schema ref by slug (audit-statement), never PascalCase.",
 				"widgets": [
-					{ "id": "verklaring-data", "type": "data", "title": "Kascommissie verklaring", "icon": "ClipboardCheckOutline", "content": { "columns": 2 } },
-					{ "id": "verklaring-files", "type": "integration", "integrationId": "files", "title": "Verslag", "icon": "FolderOutline" },
-					{ "id": "verklaring-related", "type": "related", "title": "Related", "icon": "LinkVariant" }
+					{
+						"id": "verklaring-data",
+						"type": "data",
+						"title": "Audit statement",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "verklaring-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Verslag",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "verklaring-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "verklaring-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "2", "widgetId": "verklaring-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "3", "widgetId": "verklaring-related", "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
+					{
+						"id": "1",
+						"widgetId": "verklaring-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "verklaring-files",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "verklaring-related",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 3
+					}
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
 					]
 				},
 				"documentationUrl": "https://decidiq.conduction.nl"

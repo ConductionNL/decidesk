@@ -21,17 +21,12 @@
  * @e2e openspec/specs/voting-system/spec.md#configure-voting-rules-when-opening-a-round
  * @e2e openspec/specs/voting-system/spec.md#display-active-rules-and-computed-base
  */
-import {
-	test,
-	expect,
-	request as pwRequest,
-	type APIRequestContext,
-	type Page,
-} from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 
-import { BASE_URL as BASE } from '../base-url'
+import { expect, request as pwRequest, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'
-import { MOTION_SCHEMA } from '../workflows/governance-fixture'
+import { MOTION_SCHEMA } from '../workflows/governance-fixture.ts'
 const ADMIN_USER = process.env.NC_ADMIN_USER || 'admin'
 const ADMIN_PASS = process.env.NC_ADMIN_PASS || 'admin'
 

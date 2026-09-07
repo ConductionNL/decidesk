@@ -62,6 +62,7 @@ import CloudUploadOutline from 'vue-material-design-icons/CloudUploadOutline.vue
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CogOutline from 'vue-material-design-icons/CogOutline.vue'
 import CommentAccountOutline from 'vue-material-design-icons/CommentAccountOutline.vue'
+import CommentCheckOutline from 'vue-material-design-icons/CommentCheckOutline.vue'
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue'
 import CommentQuestionOutline from 'vue-material-design-icons/CommentQuestionOutline.vue'
 import CommentQuoteOutline from 'vue-material-design-icons/CommentQuoteOutline.vue'
@@ -84,6 +85,7 @@ import FileLockOutline from 'vue-material-design-icons/FileLockOutline.vue'
 import FileReplaceOutline from 'vue-material-design-icons/FileReplaceOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import FormatListNumbered from 'vue-material-design-icons/FormatListNumbered.vue'
 import ForumOutline from 'vue-material-design-icons/ForumOutline.vue'
@@ -114,6 +116,7 @@ import ShieldKeyOutline from 'vue-material-design-icons/ShieldKeyOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
 import TableColumn from 'vue-material-design-icons/TableColumn.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
@@ -178,6 +181,7 @@ export default {
 	CogOutline,
 	CommentAccountOutline,
 	CommentOutline,
+	CommentCheckOutline,
 	CommentQuestionOutline,
 	CommentQuoteOutline,
 	CommentTextOutline,
@@ -200,6 +204,7 @@ export default {
 	FileSign,
 	FolderOutline,
 	FormatListChecks,
+	FormatListBulleted,
 	FormatListNumbered,
 	ForumOutline,
 	Gauge,
@@ -229,6 +234,7 @@ export default {
 	ShieldLockOutline,
 	Sitemap,
 	Star,
+	StoreOutline,
 	SwapHorizontal,
 	TableColumn,
 	TagOutline,

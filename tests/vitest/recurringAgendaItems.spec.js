@@ -13,9 +13,8 @@
 //
 // @spec openspec/specs/agenda-management/spec.md
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchRecurringAgendaItems } from '../../src/services/recurringAgendaItems.js'
 import { useSettingsStore } from '../../src/store/modules/settings.js'
 

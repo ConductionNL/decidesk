@@ -48,16 +48,17 @@
  * @e2e openspec/specs/resolution-minutes/spec.md#discard-a-generated-section
  * @e2e openspec/specs/resolution-minutes/spec.md#approval-workflow-unchanged-for-ai-initialized-minutes
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import type { SeedLedger } from './governance-fixture.ts'
 
+import { expect, test } from '@playwright/test'
 import {
 	BASE,
-	newLedger,
-	createObject,
 	cleanupAll,
+	createObject,
+	newLedger,
 	objId,
-	type SeedLedger,
-} from './governance-fixture'
+} from './governance-fixture.ts'
 
 let ledger: SeedLedger
 

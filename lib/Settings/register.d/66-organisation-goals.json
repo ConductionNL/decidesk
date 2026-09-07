@@ -1,77 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the organisation-goals register (change: organisation-goals). Five Goal objects spanning all three horizon values, three status values, one parent/child pair (goal-acme-groeidoelstelling-2028 -> goal-acme-mt-operationele-effectiviteit-2026, and goal-amsterdam-klimaatneutraal-2050 -> goal-amsterdam-parkeerbeleid-kwartaal), one owned goal and one body-only (collectively owned) goal. References resolve by slug against existing decidesk seed objects (governanceBody raad-van-bestuur-acme-bv/managementteam-acme-bv/gemeenteraad-amsterdam/ledenraad-vng, Person femke-halsema); the nil UUID 00000000-0000-0000-0000-000000000000 is the established placeholder (ADR-001 precedent, used identically in the termijnagenda/toezeggingen fragments) where no matching seed Person exists for a body with no seeded membership. Cross-links onto EXISTING seed objects (toezegging-schouw-marktplein gets goal: goal-amsterdam-klimaatneutraal-2050; lta-herziening-parkeerbeleid gets goal: goal-amsterdam-parkeerbeleid-kwartaal) are patched directly onto those objects in 45-toezeggingen-ingekomen-stukken.json / 50-termijnagenda.json (see design.md Seed Data), not duplicated here. Objects grouped by schema slug 'goal' (the OR seedData import path resolves the schema from the object key).",
-      "objects": {
-        "goal": [
-          {
-            "slug": "goal-acme-groeidoelstelling-2028",
-            "title": "Duurzame omzetgroei 2028",
-            "description": "Structurele omzetgroei realiseren binnen de duurzaamheidsdoelstellingen van de raad van bestuur.",
-            "horizon": "multi-year",
-            "body": "raad-van-bestuur-acme-bv",
-            "owner": "00000000-0000-0000-0000-000000000000",
-            "startDate": "2026-01-01",
-            "deadline": "2028-12-31",
-            "status": "active",
-            "targetValue": 20,
-            "currentValue": 6,
-            "unit": "% omzetgroei"
-          },
-          {
-            "slug": "goal-acme-mt-operationele-effectiviteit-2026",
-            "title": "Operationele effectiviteit 2026",
-            "description": "Procesdoorlooptijden binnen norm brengen als uitvoering van de groeidoelstelling.",
-            "horizon": "annual",
-            "body": "managementteam-acme-bv",
-            "owner": "00000000-0000-0000-0000-000000000000",
-            "startDate": "2026-01-01",
-            "deadline": "2026-12-31",
-            "status": "active",
-            "targetValue": 90,
-            "currentValue": 78,
-            "unit": "% doorlooptijd binnen norm",
-            "parentGoal": "goal-acme-groeidoelstelling-2028"
-          },
-          {
-            "slug": "goal-amsterdam-klimaatneutraal-2050",
-            "title": "Amsterdam klimaatneutraal",
-            "description": "Netto CO2-uitstoot van de gemeentelijke organisatie naar nul in 2050, conform het raadsbesluit klimaatakkoord.",
-            "horizon": "multi-year",
-            "body": "gemeenteraad-amsterdam",
-            "owner": "femke-halsema",
-            "startDate": "2026-01-01",
-            "deadline": "2050-01-01",
-            "status": "active",
-            "targetValue": 100,
-            "currentValue": 42,
-            "unit": "% CO2-reductie behaald"
-          },
-          {
-            "slug": "goal-amsterdam-parkeerbeleid-kwartaal",
-            "title": "Herzien parkeerbeleid vastgesteld",
-            "description": "Vaststellen van het herziene parkeerbeleid binnenstad (koppeling met de termijnagenda).",
-            "horizon": "quarterly",
-            "body": "gemeenteraad-amsterdam",
-            "owner": "00000000-0000-0000-0000-000000000000",
-            "startDate": "2026-04-01",
-            "deadline": "2026-09-30",
-            "status": "at-risk",
-            "parentGoal": "goal-amsterdam-klimaatneutraal-2050"
-          },
-          {
-            "slug": "goal-vng-digitale-dienstverlening-2026",
-            "title": "Digitale dienstverlening leden",
-            "description": "Alle VNG-leden kunnen digitaal diensten afnemen bij de vereniging.",
-            "horizon": "annual",
-            "body": "ledenraad-vng",
-            "startDate": "2026-01-01",
-            "deadline": "2026-12-31",
-            "status": "draft"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -80,7 +9,7 @@
         "icon": "TargetVariant",
         "version": "0.1.0",
         "title": "Goal",
-        "description": "An organisation goal (quality objective, ISO 9001 §6.2): a measurable, owned, deadlined objective set at a governance body's level (council, board, department, commission — via GovernanceBody.bodyType), monitored via a declarative progress rollup from linked Toezegging commitments and ActionItem tasks, and optionally cascaded from a parent Goal (single-level only — see parentGoal). Goal is the target end of the accountability chain that Toezegging and ActionItem already track day-to-day (organisation-goals REQ-001).",
+        "description": "An organisation goal (quality objective, ISO 9001 §6.2): a measurable, owned, deadlined objective set at a governance body's level (council, board, department, commission, via GovernanceBody.bodyType), monitored via a declarative progress rollup from linked Toezegging commitments and ActionItem tasks, and optionally cascaded from a parent Goal (single-level only, see parentGoal). Goal is the target end of the accountability chain that Toezegging and ActionItem already track day-to-day (organisation-goals REQ-001).",
         "type": "object",
         "x-schema-org": "schema:PlanAction",
         "x-openregister": {
@@ -179,7 +108,7 @@
             "format": "uuid",
             "$ref": "Person",
             "nullable": true,
-            "description": "Reference to the Person responsible for the goal. Optional — a goal may be collectively owned by its body before an individual is assigned (organisation-goals REQ-002 Scenario 2)."
+            "description": "Reference to the Person responsible for the goal. Optional: a goal may be collectively owned by its body before an individual is assigned (organisation-goals REQ-002 Scenario 2)."
           },
           "body": {
             "title": "Governance body",
@@ -237,7 +166,7 @@
             "title": "Unit",
             "type": "string",
             "nullable": true,
-            "description": "Unit of measure for targetValue/currentValue (free text — e.g. '% omzetgroei', '% CO2-reductie behaald'). Optional.",
+            "description": "Unit of measure for targetValue/currentValue (free text: e.g. '% omzetgroei', '% CO2-reductie behaald'). Optional.",
             "example": "% omzetgroei"
           },
           "parentGoal": {
@@ -246,7 +175,25 @@
             "format": "uuid",
             "$ref": "Goal",
             "nullable": true,
-            "description": "Optional, self-referential reference to a parent Goal, enabling an org-wide -> department -> quarterly cascade. Single-level only: childGoalCount on the parent counts DIRECT children only, never grandchildren (organisation-goals REQ-005 Scenario 2, design.md D3) — a deeper cascade is out of scope for this change."
+            "description": "Optional, self-referential reference to a parent Goal, enabling an org-wide -> department -> quarterly cascade. Single-level only: childGoalCount on the parent counts DIRECT children only, never grandchildren (organisation-goals REQ-005 Scenario 2, design.md D3), a deeper cascade is out of scope for this change."
+          },
+          "commitmentSettlementRate": {
+            "title": "Commitment settlement rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's linked commitments that are settled, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "actionItemCompletionRate": {
+            "title": "Action item completion rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's linked action items that are completed, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
+          },
+          "childGoalAchievedRate": {
+            "title": "Child goal achieved rate",
+            "type": "number",
+            "nullable": true,
+            "description": "Share of this goal's direct child goals that are achieved, as a percentage. Materialised by OpenRegister on save from x-openregister-calculations. Never written by decidiq."
           }
         },
         "x-openregister-aggregations": {
@@ -297,6 +244,54 @@
             }
           }
         },
+        "x-openregister-aggregate-refs": {
+          "linkedCommitmentCount": {
+            "metric": "count",
+            "schema": "toezegging",
+            "filters": {
+              "goal": "@self.id"
+            }
+          },
+          "settledCommitmentCount": {
+            "metric": "count",
+            "schema": "toezegging",
+            "filters": {
+              "goal": "@self.id",
+              "lifecycle": "disposed"
+            }
+          },
+          "linkedActionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "goal": "@self.id"
+            }
+          },
+          "completedActionItemCount": {
+            "metric": "count",
+            "schema": "action-item",
+            "filters": {
+              "goal": "@self.id",
+              "taskStatus": "completed"
+            }
+          },
+          "childGoalCount": {
+            "metric": "count",
+            "schema": "goal",
+            "filters": {
+              "parentGoal": "@self.id"
+            },
+            "_note": "Self-referential by design: Goal counts its DIRECT children via parentGoal, never grandchildren (organisation-goals REQ-005 Scenario 2). Declared here as well as under x-openregister-aggregations because the two blocks feed different readers. AggregationController serves the reporting block, and CalculationPayloadBuilder reads only this one, injecting each result as @aggregate.<name>."
+          },
+          "achievedChildGoalCount": {
+            "metric": "count",
+            "schema": "goal",
+            "filters": {
+              "parentGoal": "@self.id",
+              "status": "achieved"
+            }
+          }
+        },
         "x-openregister-calculations": {
           "commitmentSettlementRate": {
             "type": "number",
@@ -306,20 +301,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "linkedCommitmentCount"
+                      "prop": "@aggregate.linkedCommitmentCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "settledCommitmentCount"
+                          "prop": "@aggregate.settledCommitmentCount"
                         },
                         {
-                          "prop": "linkedCommitmentCount"
+                          "prop": "@aggregate.linkedCommitmentCount"
                         }
                       ]
                     },
@@ -338,20 +333,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "linkedActionItemCount"
+                      "prop": "@aggregate.linkedActionItemCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "completedActionItemCount"
+                          "prop": "@aggregate.completedActionItemCount"
                         },
                         {
-                          "prop": "linkedActionItemCount"
+                          "prop": "@aggregate.linkedActionItemCount"
                         }
                       ]
                     },
@@ -370,20 +365,20 @@
                 {
                   "gt": [
                     {
-                      "prop": "childGoalCount"
+                      "prop": "@aggregate.childGoalCount"
                     },
                     0
                   ]
                 },
                 {
-                  "mul": [
+                  "*": [
                     {
-                      "div": [
+                      "/": [
                         {
-                          "prop": "achievedChildGoalCount"
+                          "prop": "@aggregate.achievedChildGoalCount"
                         },
                         {
-                          "prop": "childGoalCount"
+                          "prop": "@aggregate.childGoalCount"
                         }
                       ]
                     },

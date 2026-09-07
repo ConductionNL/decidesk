@@ -1,0 +1,109 @@
+{
+  "x-openregister": {
+    "_note": "Generic per-body governance configuration (ADR-037 additive pattern; OpenSpec change generic-body-configuration). Declares BodyGovernanceConfiguration and supersedes VveConfiguration NON-DESTRUCTIVELY (x-openregister.active:false, definition and existing rows kept), mirroring the BoardProxy precedent in 67-model-debt-cleanup.json and the supersession unified-decision-templates used for ProcessTemplate and VveDecisionTemplate. MigrateVveConfigurationToBodyConfiguration copies the rows; nothing is deleted. `required` narrows to governanceBody alone: modelRegulation pointed at the retired modelreglement-preset schema and fractionDenominator is meaningless for a body whose members vote equally, so requiring either made the generic schema undeclarable for most organisations."
+  },
+  "components": {
+    "schemas": {
+      "BodyGovernanceConfiguration": {
+        "slug": "body-governance-configuration",
+        "icon": "OfficeBuildingOutline",
+        "version": "0.1.0",
+        "title": "BodyGovernanceConfiguration",
+        "description": "Per-body governance context, for ANY kind of organisation. Binds a governance body to the document that constitutes it, the version of the model regulation it follows, the denominator its weighted votes are expressed over, and any majority overrides. Generalises VveConfiguration, which named the same four facts in VvE terms only (splitsingsakte, modelreglement, breukdelen) and so could not describe a company's articles and share capital or an association's statutes. Contains no financial ledger properties by construction.",
+        "type": "object",
+        "x-openregister": {
+          "schemaType": "schema:OwnershipInfo",
+          "active": true,
+          "hardDelete": false,
+          "searchable": true,
+          "mailEnabled": false
+        },
+        "required": [
+          "governanceBody"
+        ],
+        "properties": {
+          "governanceBody": {
+            "title": "Governance body",
+            "type": "string",
+            "format": "uuid",
+            "$ref": "governance-body",
+            "description": "The governance body this configuration belongs to. One configuration per body."
+          },
+          "constitutiveDocument": {
+            "title": "Constitutive document",
+            "type": "string",
+            "description": "The document that constitutes this body: a splitsingsakte, articles of association, statutes or a gemeenschappelijke regeling."
+          },
+          "regulationVersion": {
+            "title": "Regulation version",
+            "type": "string",
+            "description": "The version of the model regulation this body follows, as plain text.",
+            "example": "2017"
+          },
+          "voteWeightDenominator": {
+            "title": "Vote weight denominator",
+            "type": "integer",
+            "description": "The total this body’s weighted votes are expressed over. Leave empty when every member has one equal vote.",
+            "example": 10000
+          },
+          "majorityOverrides": {
+            "title": "Majority overrides",
+            "type": "array",
+            "description": "Categories where this body needs a different majority than its templates use by default.",
+            "items": {
+              "type": "object",
+              "title": "Majority override",
+              "properties": {
+                "templateCategory": {
+                  "title": "Template category",
+                  "type": "string",
+                  "description": "The template category this override applies to."
+                },
+                "voteThreshold": {
+                  "title": "Vote threshold",
+                  "type": "string",
+                  "description": "The required majority for this category per the splitsingsakte (mirrors the VotingRound voteThreshold enum). Resolves into the existing round-open defaults; never a second threshold enum.",
+                  "enum": [
+                    "simple-majority",
+                    "qualified-majority-two-thirds",
+                    "qualified-majority-three-quarters",
+                    "unanimous"
+                  ]
+                },
+                "quorumFraction": {
+                  "title": "Quorum fraction",
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Optional quorum fraction (e.g. '2/3') required for this category per the akte. Null means no quorum beyond the body default.",
+                  "example": "2/3"
+                },
+                "deedArticle": {
+                  "title": "Akte article",
+                  "type": "string",
+                  "description": "Free-text source note naming the splitsingsakte article this deviation stems from.",
+                  "example": "splitsingsakte 2019 art. 62"
+                }
+              }
+            }
+          }
+        },
+        "_designNote": {
+          "governanceBody": "The GovernanceBody this configuration binds. Exactly one configuration per body. A body without one is entirely unaffected, which is what keeps this fail-soft.",
+          "constitutiveDocument": "Reference to the governing document that constitutes this body: a splitsingsakte for a VvE, articles of association for a company, statutes for an association, a gemeenschappelijke regeling for a shared body. Registered by the governing-documents-register capability, never duplicated here.",
+          "regulationVersion": "The version of the model regulation this body follows, as a plain string. A VvE writes 1992, 2006 or 2017; an association writes the date of its statutes. Deliberately NOT an enum and NOT a reference: ModelreglementPreset was retired by unified-decision-templates, and the majorities it used to carry now live on each DecisionTemplate's own votingRule.",
+          "voteWeightDenominator": "The total this body's weighted votes are expressed over. A VvE divides appartementsrechten into breukdelen over this denominator; a company reads the same field as its issued share count. Absent when every member has one equal vote.",
+          "majorityOverrides": "Per-organisation deviations from a template's own majority. Each entry overrides the template default (but not an explicit caller-supplied threshold) for its category at round-open. Optional; empty when the organisation follows its templates as shipped.",
+          "majorityOverrides.templateCategory": "The DecisionTemplate templateCategory this override applies to. A free string, not an enum: the categories belong to the templates an organisation actually uses, and a VvE's discharge is no more special than a company's capital increase."
+        }
+      },
+      "VveConfiguration": {
+        "version": "0.3.0",
+        "description": "SUPERSEDED (generic-body-configuration): the same four facts are declared on BodyGovernanceConfiguration (slug body-governance-configuration) in terms that fit any organisation. Definition and slug are kept, not deleted (hardDelete:false, existing rows), so a rollback still finds its data and nothing that still reads vve-configuration breaks.",
+        "x-openregister": {
+          "active": false,
+          "hardDelete": false
+        }
+      }
+    }
+  }
+}

@@ -267,9 +267,9 @@ leaf disappears from the primary top-level list. The mapping SHALL be:
 | Group (id) | Relocated leaf ids |
 |---|---|
 | `Meetings` | `MondelingeVragen`, `Interpellaties`, `IngekomenStukken`, `Raadsinformatiebrieven`, `KascommissieVerklaringen` |
-| `Decisions` | `Raadplegingen`, `Consultations`, `WorTrajecten`, `Adviesaanvragen`, `Zienswijzerondes` |
+| `Decisions` | `Raadplegingen`, `Consultations`, `WorksCouncilConsultations`, `Adviesaanvragen`, `Zienswijzerondes` |
 | `ActionItems` | `Toezeggingen`, `Termijnagenda`, `PCCycli`, `Goals` |
-| `GovernanceBodies` | `Roosters`, `Nevenfuncties`, `Geschenken`, `OnboardingTrajecten`, `OffboardingTrajecten`, `ProxyAuthorizations` |
+| `GovernanceBodies` | `Roosters`, `Nevenfuncties`, `Geschenken`, `MemberOnboarding`, `MemberOffboarding`, `ProxyAuthorizations` |
 | `Registers` | `Regelingen`, `GoverningDocuments`, `Bevoegdheidstoedelingen`, `Geheimhoudingen` |
 
 Nominations carry no relocation: the `Voordrachten` menu entry was retired

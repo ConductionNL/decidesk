@@ -15,9 +15,8 @@
  * @e2e openspec/specs/dashboard/spec.md#display-pending-votes-kpi
  * @e2e openspec/specs/dashboard/spec.md#display-overdue-actions-kpi
  */
-import { test, expect } from '@playwright/test'
-
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 
 /**
  * Navigate to the Decidiq dashboard root and wait for the SPA shell to mount.
@@ -51,7 +50,27 @@ test('v2 grid renders the KPI row, list widgets and governance-health chart', as
 	await expect(page.locator('[data-testid="recent-decisions"]')).toBeVisible()
 
 	// Row 5 — minutes-in-review stats-block (English title) + governance-health chart.
-	await expect(page.getByText('Minutes awaiting approval')).toBeVisible()
+	//
+	// 🔴 MATCH THE WIDGET, NOT THE PHRASE. "Minutes awaiting approval" is rendered
+	// TWICE on this dashboard — once as the widget's own heading
+	// (`<h3 class="cn-widget-wrapper__title">`) and once as a KPI card title
+	// (`<h4 class="cn-kpi-card__title">`) — so a bare `getByText` is a strict-mode
+	// violation, not a passing assertion:
+	//
+	//   Error: strict mode violation: getByText('Minutes awaiting approval')
+	//   resolved to 2 elements
+	//
+	// It fails on a dashboard that is entirely correct, and it fails LOUDER the
+	// more complete the row gets, which is the wrong direction for a layout test.
+	//
+	// `CnWidgetWrapper` renders its heading as `<h3 :id="titleId">` with
+	// `titleId = cn-widget-wrapper-title-${widgetId}` (CnWidgetWrapper.vue), and
+	// the widget id here is `minutes-in-review` — the same id src/manifest.json
+	// declares for this row. So the id addresses exactly the stats-block this
+	// line is about, and stays correct if a second surface shows the same phrase.
+	await expect(
+		page.locator('#cn-widget-wrapper-title-minutes-in-review'),
+	).toBeVisible()
 	await expect(page.locator('[data-testid="governance-health"]')).toBeVisible()
 })
 

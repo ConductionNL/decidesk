@@ -1,0 +1,684 @@
+{
+	"_note": "member-onboarding-in-plain-words — a traject is a pathway, and joining or leaving a governance body is a pathway every organisation walks. The-last-two-dutch-names claimed decidiq shipped no Dutch-named schema outside the Woo plumbing; these two were still here, and their descriptions were written for a griffie and a raadswisseling. Renamed to MemberOnboarding and MemberOffboarding, with the Dutch property beëdigingsType and the two swearing-in names renamed with them, and three council vocabularies freed to be free text. Updated by plain-words-for-groups-and-the-installation-step: the notification recipient group is now decidiq-secretariat, and the swearing-in step type is now installation.",
+	"_spec": "openspec/changes/member-onboarding-in-plain-words/specs/member-onboarding-in-plain-words/spec.md",
+	"components": {
+		"schemas": {
+			"MemberOnboarding": {
+				"slug": "member-onboarding",
+				"icon": "AccountPlusOutline",
+				"version": "0.1.0",
+				"title": "Member onboarding",
+				"description": "Everything one person has to go through to take up a place on a governance body, held as data: who is joining, which body, in which role, the checklist of steps and where each one stands, and the installation once it has happened. Renamed from OnboardingTraject (member-onboarding-in-plain-words). A council installs a new member, a board admits a director, an association welcomes a committee member: it is the same record, and only the word was Dutch. Everything it references (Membership, groups, meetings) is owned elsewhere and linked by UUID; this schema creates none of them. Declarative core only: account provisioning and induction-pack delivery stay imperative side effects elsewhere. The manifest and every widget source reference this schema by its slug 'member-onboarding'.",
+				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. No write action is declared, so create, update and delete stay on the baseline.",
+				"authorization": {
+					"read": [
+						"authenticated"
+					]
+				},
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "started",
+					"states": [
+						"started",
+						"in-execution",
+						"completed",
+						"lapsed"
+					],
+					"terminal": [
+						"completed",
+						"lapsed"
+					],
+					"transitions": [
+						{
+							"from": "started",
+							"to": "in-execution"
+						},
+						{
+							"from": "started",
+							"to": "lapsed"
+						},
+						{
+							"from": "in-execution",
+							"to": "completed"
+						},
+						{
+							"from": "in-execution",
+							"to": "lapsed"
+						}
+					],
+					"_note": "COMPLETION GUARD (REQ-MOB-003): an onboarding must NOT reach 'completed' while any mandatory step is not 'completed'. `completed` and `lapsed` are terminal."
+				},
+				"x-openregister-notifications": {
+					"memberOnboardingCreated": {
+						"trigger": {
+							"type": "created"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Nieuw onboardingtraject gestart voor {{person}}",
+							"en": "New onboarding started for {{person}}"
+						},
+						"_note": "Created notification to the secretariat group (REQ-MOB-010). The dialect has no recipient kind that targets the {{person}}'s account directly; object-acl(read) plus decidiq-secretariat and decidesk-members is the closest declarative approximation, and it is never an imperative send."
+					},
+					"onboardingStepDueSoon": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 86400,
+							"filter": {
+								"lifecycle": [
+									"started",
+									"in-execution"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: onboardingstap nadert de deadline — {{person}}",
+							"en": "Reminder: onboarding step due soon — {{person}}"
+						},
+						"_note": "Due-soon step rappel (REQ-MOB-010). intervalSec 86400 (daily) is PROVISIONAL. Filter targets non-terminal lifecycle only. The 'a step's dueDate is approaching' vs 'a step is past its dueDate' distinction lives inside the steps array; the simple filter shape cannot express a per-step dueDate comparison — verify OR's scheduled-notification engine interprets this and onboardingStepOverdue as due-soon/overdue window semantics at live import (same caveat as the toezegging rappels)."
+					},
+					"onboardingStepOverdue": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 86400,
+							"filter": {
+								"lifecycle": [
+									"started",
+									"in-execution"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: onboardingstap over de deadline — {{person}}",
+							"en": "Reminder: onboarding step past due — {{person}}"
+						},
+						"_note": "Overdue step rappel (REQ-MOB-010). intervalSec 86400 (daily) is PROVISIONAL. Filters non-terminal lifecycle so nothing fires for completed or lapsed records. Same per-step-dueDate window caveat as onboardingStepDueSoon."
+					}
+				},
+				"required": [
+					"person",
+					"targetBody",
+					"targetRole",
+					"trigger",
+					"steps",
+					"lifecycle"
+				],
+				"properties": {
+					"person": {
+						"title": "Person",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the incoming member's Person (schema:Action object). Required."
+					},
+					"targetBody": {
+						"title": "Target body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the governance body the person is joining. Required. With targetRole it derives the body-role group mapping the assign-groups step uses."
+					},
+					"targetRole": {
+						"title": "Target role",
+						"type": "string",
+						"facetable": true,
+						"description": "The role the member takes up (matches the Membership role enum, person-and-membership). Required.",
+						"enum": [
+							"chair",
+							"vice-chair",
+							"secretary",
+							"treasurer",
+							"member",
+							"observer",
+							"guest"
+						],
+						"example": "member"
+					},
+					"trigger": {
+						"title": "Trigger",
+						"type": "string",
+						"facetable": true,
+						"description": "What set this off: one person joining, a whole intake at once, or someone stepping in mid-term. Free text, because what an organisation calls its intake is its own vocabulary.",
+						"example": "intake-2026"
+					},
+					"steps": {
+						"title": "Steps",
+						"type": "array",
+						"description": "The onboarding checklist. Required. Each step carries its own status. The work behind account-linking, assign-groups and induction-pack happens elsewhere; this array records that the step exists and where it stands.",
+						"items": {
+							"type": "object",
+							"title": "Onboarding step",
+							"properties": {
+								"stepType": {
+									"title": "Step type",
+									"type": "string",
+									"description": "What kind of step this is. `custom` is a step the organisation defined itself.",
+									"enum": [
+										"installation",
+										"account-linking",
+										"assign-groups",
+										"induction-pack",
+										"ancillary-positions-intake",
+										"body-group-assignment",
+										"custom"
+									],
+									"example": "installation"
+								},
+								"title": {
+									"title": "Title",
+									"type": "string",
+									"description": "Human-readable step title. Required.",
+									"example": "Record the installation"
+								},
+								"status": {
+									"title": "Status",
+									"type": "string",
+									"default": "open",
+									"description": "Where the step stands. A step may only be `skipped` when mandatory is false, enforced at save time.",
+									"enum": [
+										"open",
+										"in-execution",
+										"completed",
+										"skipped"
+									],
+									"example": "open"
+								},
+								"mandatory": {
+									"title": "Mandatory",
+									"type": "boolean",
+									"default": true,
+									"description": "Whether the step is mandatory. A mandatory step blocks the onboarding from reaching `completed` until it is `completed` itself."
+								},
+								"dueDate": {
+									"title": "Due date",
+									"type": "string",
+									"format": "date",
+									"nullable": true,
+									"description": "Optional date the step is due. Drives the declarative due-soon and overdue step reminders and the overdue-steps dashboard KPI."
+								},
+								"completedAt": {
+									"title": "Completed at",
+									"type": "string",
+									"format": "date-time",
+									"nullable": true,
+									"description": "Set when the step is completed."
+								},
+								"completedBy": {
+									"title": "Completed by",
+									"type": "string",
+									"nullable": true,
+									"description": "Nextcloud UID of the person who completed the step."
+								},
+								"note": {
+									"title": "Note",
+									"type": "string",
+									"nullable": true,
+									"description": "Optional free-text note on the step (e.g. a skip reason or a provisioning result)."
+								},
+								"reference": {
+									"title": "Reference",
+									"type": "string",
+									"nullable": true,
+									"description": "Optional object UUID linking what the step is about: the meeting where the person was installed, the induction pack that was delivered, the membership that was created."
+								}
+							}
+						}
+					},
+					"installedOn": {
+						"title": "Oath date",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the person was formally installed. Completing the installation step requires this, installationType and installationMeeting.",
+						"example": "2026-03-26"
+					},
+					"installationType": {
+						"title": "Oath type",
+						"type": "string",
+						"facetable": true,
+						"description": "How the person was formally installed, where the organisation marks that at all. Free text: a council takes an oath or an affirmation, a board signs a deed, an association records a vote, and none of those is every organisation's word.",
+						"example": "oath"
+					},
+					"installationMeeting": {
+						"title": "Oath meeting",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Meeting",
+						"description": "Reference to the Meeting where the person was installed. The meeting itself is owned elsewhere and only linked here."
+					},
+					"ncAccount": {
+						"title": "Nextcloud account",
+						"type": "string",
+						"nullable": true,
+						"description": "Nextcloud user id linked to the person by the account-linking step. Optional until linked; the induction-pack step depends on it.",
+						"example": "mjanssen"
+					},
+					"membership": {
+						"title": "Membership",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Membership",
+						"description": "Reference to the Membership created as an outcome. Optional until created: an intake often onboards a person before the membership row exists."
+					},
+					"batch": {
+						"title": "Batch",
+						"type": "string",
+						"nullable": true,
+						"description": "Free-form label linking the records created by one intake run. Optional; drives the batch filter on the index.",
+						"example": "intake-2026"
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Where the onboarding stands. Declared in x-openregister-lifecycle (ADR-031): started, in-execution, then completed or lapsed.",
+						"enum": [
+							"started",
+							"in-execution",
+							"completed",
+							"lapsed"
+						],
+						"example": "started"
+					}
+				}
+			},
+			"MemberOffboarding": {
+				"slug": "member-offboarding",
+				"icon": "AccountRemoveOutline",
+				"version": "0.1.0",
+				"title": "Member offboarding",
+				"description": "Everything one person has to go through to leave a governance body, held as data: who is leaving, which body, which membership ends and when, why it ends, the checklist of steps and where each one stands, and the confirmation. Renamed from OffboardingTraject (member-onboarding-in-plain-words). The checklist always includes end-dating the membership, withdrawing the account's groups and access, a personal-data note pointing at the author export, and the exit confirmation. Declarative core only: revoking access and end-dating the membership stay imperative side effects elsewhere. The manifest and every widget source reference this schema by its slug 'member-offboarding'.",
+				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. No write action is declared, so create, update and delete stay on the baseline.",
+				"authorization": {
+					"read": [
+						"authenticated"
+					]
+				},
+				"type": "object",
+				"x-schema-org": "schema:Action",
+				"x-openregister": {
+					"schemaType": "schema:Action",
+					"active": true,
+					"hardDelete": false,
+					"searchable": true,
+					"mailEnabled": false
+				},
+				"x-openregister-lifecycle": {
+					"field": "lifecycle",
+					"initial": "started",
+					"states": [
+						"started",
+						"in-execution",
+						"completed",
+						"lapsed"
+					],
+					"terminal": [
+						"completed",
+						"lapsed"
+					],
+					"transitions": [
+						{
+							"from": "started",
+							"to": "in-execution"
+						},
+						{
+							"from": "started",
+							"to": "lapsed"
+						},
+						{
+							"from": "in-execution",
+							"to": "completed"
+						},
+						{
+							"from": "in-execution",
+							"to": "lapsed"
+						}
+					],
+					"_note": "COMPLETION GUARD: an offboarding must NOT reach 'completed' while any mandatory step is not 'completed'; the revoke-groups step is ALWAYS mandatory, so access is never left standing behind a finished record."
+				},
+				"x-openregister-notifications": {
+					"memberOffboardingCreated": {
+						"trigger": {
+							"type": "created"
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Nieuw offboardingtraject gestart voor {{person}}",
+							"en": "New offboarding started for {{person}}"
+						},
+						"_note": "Created notification to the secretariat group (REQ-MOB-010). object-acl(read) plus decidiq-secretariat and decidesk-members is the closest declarative approximation, and it is never an imperative send."
+					},
+					"offboardingStepDueSoon": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 86400,
+							"filter": {
+								"lifecycle": [
+									"started",
+									"in-execution"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: offboardingstap nadert de deadline — {{person}}",
+							"en": "Reminder: offboarding step due soon — {{person}}"
+						},
+						"_note": "Due-soon step rappel (REQ-MOB-010). intervalSec 86400 (daily) is PROVISIONAL. Filters non-terminal lifecycle. Per-step dueDate window semantics: verify against OR's scheduled-notification engine at live import (same caveat as the onboarding rappels)."
+					},
+					"offboardingStepOverdue": {
+						"trigger": {
+							"type": "scheduled",
+							"intervalSec": 86400,
+							"filter": {
+								"lifecycle": [
+									"started",
+									"in-execution"
+								]
+							}
+						},
+						"enabled": true,
+						"channels": [
+							"nc-notification"
+						],
+						"recipients": [
+							{
+								"kind": "object-acl",
+								"permission": "read"
+							},
+							{
+								"kind": "groups",
+								"groups": [
+									"decidiq-secretariat",
+									"decidesk-members"
+								]
+							}
+						],
+						"subject": {
+							"nl": "Rappel: offboardingstap over de deadline — {{person}}",
+							"en": "Reminder: offboarding step past due — {{person}}"
+						},
+						"_note": "Overdue step rappel (REQ-MOB-010). intervalSec 86400 (daily) is PROVISIONAL. Filters non-terminal lifecycle. Same per-step-dueDate window caveat as offboardingStepDueSoon."
+					}
+				},
+				"required": [
+					"person",
+					"body",
+					"membership",
+					"trigger",
+					"endDate",
+					"endReason",
+					"steps",
+					"lifecycle"
+				],
+				"properties": {
+					"person": {
+						"title": "Person",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Person",
+						"description": "Reference to the departing member's Person (schema:Action object). Required."
+					},
+					"body": {
+						"title": "Body",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "governance-body",
+						"description": "Reference to the governance body the person is leaving. Required. With the person's role it derives the body-role group mapping the revoke-groups step uses."
+					},
+					"membership": {
+						"title": "Membership",
+						"type": "string",
+						"format": "uuid",
+						"$ref": "Membership",
+						"description": "Reference to the Membership to be end-dated. Required. End-dating happens on the end-membership step, never as an automatic side effect."
+					},
+					"trigger": {
+						"title": "Trigger",
+						"type": "string",
+						"facetable": true,
+						"description": "What set this off: one person leaving, or a whole turnover at once. Free text, because what an organisation calls its turnover is its own vocabulary.",
+						"example": "individual"
+					},
+					"endDate": {
+						"title": "End date",
+						"type": "string",
+						"format": "date",
+						"facetable": true,
+						"description": "Date the membership ends. The end-membership step sets Membership.endDate to this value.",
+						"example": "2026-03-29"
+					},
+					"endReason": {
+						"title": "End reason",
+						"type": "string",
+						"facetable": true,
+						"description": "Why the membership ends. Free text: end of term, resignation, relocation, death, or whatever else an organisation records.",
+						"example": "end-of-term"
+					},
+					"steps": {
+						"title": "Steps",
+						"type": "array",
+						"description": "The offboarding checklist. Required. Includes at minimum end-membership, revoke-groups (always mandatory), a personal-data note and the exit confirmation.",
+						"items": {
+							"type": "object",
+							"title": "Offboarding step",
+							"properties": {
+								"stepType": {
+									"title": "Step type",
+									"type": "string",
+									"description": "What kind of step this is. `personal-data-note` points at the author export rather than repeating it; `custom` is a step the organisation defined itself.",
+									"enum": [
+										"end-membership",
+										"revoke-groups",
+										"personal-data-note",
+										"exit-confirmation",
+										"custom"
+									],
+									"example": "revoke-groups"
+								},
+								"title": {
+									"title": "Title",
+									"type": "string",
+									"description": "Human-readable step title. Required.",
+									"example": "Withdraw groups and access scopes"
+								},
+								"status": {
+									"title": "Status",
+									"type": "string",
+									"default": "open",
+									"description": "Where the step stands. A step may only be `skipped` when mandatory is false, enforced at save time. The revoke-groups step is always mandatory and can never be skipped.",
+									"enum": [
+										"open",
+										"in-execution",
+										"completed",
+										"skipped"
+									],
+									"example": "open"
+								},
+								"mandatory": {
+									"title": "Mandatory",
+									"type": "boolean",
+									"default": true,
+									"description": "Whether the step is mandatory. A mandatory step blocks the offboarding from reaching `completed` until it is `completed` itself; revoke-groups is always mandatory."
+								},
+								"dueDate": {
+									"title": "Due date",
+									"type": "string",
+									"format": "date",
+									"nullable": true,
+									"description": "Optional date the step is due. Drives the declarative due-soon and overdue step reminders and the overdue-steps dashboard KPI."
+								},
+								"completedAt": {
+									"title": "Completed at",
+									"type": "string",
+									"format": "date-time",
+									"nullable": true,
+									"description": "Set when the step is completed."
+								},
+								"completedBy": {
+									"title": "Completed by",
+									"type": "string",
+									"nullable": true,
+									"description": "Nextcloud UID of the person who completed the step."
+								},
+								"note": {
+									"title": "Note",
+									"type": "string",
+									"nullable": true,
+									"description": "Optional free-text note (e.g. the verified post-revocation group list, or a skip reason)."
+								},
+								"reference": {
+									"title": "Reference",
+									"type": "string",
+									"nullable": true,
+									"description": "Optional URL or object UUID linking the step's subject (e.g. the document-annotations export for the persoonsgegevens-notitie step)."
+								}
+							}
+						}
+					},
+					"exitConfirmedBy": {
+						"title": "Exit confirmed by",
+						"type": "string",
+						"nullable": true,
+						"description": "Account id of the person who confirmed the exit. Optional until confirmed.",
+						"example": "j.jansen"
+					},
+					"exitConfirmedOn": {
+						"title": "Exit confirmed at",
+						"type": "string",
+						"format": "date-time",
+						"nullable": true,
+						"description": "When the exit was confirmed. Optional until confirmed."
+					},
+					"batch": {
+						"title": "Batch",
+						"type": "string",
+						"nullable": true,
+						"description": "Free-form label linking the records created by one turnover run. Optional; drives the batch filter on the index.",
+						"example": "turnover-2026"
+					},
+					"lifecycle": {
+						"title": "Lifecycle",
+						"type": "string",
+						"facetable": true,
+						"description": "Where the offboarding stands. Declared in x-openregister-lifecycle (ADR-031): started, in-execution, then completed or lapsed. It cannot reach completed while the always-mandatory revoke-groups step is not completed.",
+						"enum": [
+							"started",
+							"in-execution",
+							"completed",
+							"lapsed"
+						],
+						"example": "started"
+					}
+				}
+			},
+			"OnboardingTraject": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (member-onboarding-in-plain-words): the same thing as MemberOnboarding (slug member-onboarding). Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"OffboardingTraject": {
+				"version": "0.2.0",
+				"description": "SUPERSEDED (member-onboarding-in-plain-words): the same thing as MemberOffboarding (slug member-offboarding). Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

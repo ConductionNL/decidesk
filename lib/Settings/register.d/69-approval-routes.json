@@ -1,53 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Approval-route schema-declaration fragment (ADR-037 additive pattern; OpenSpec change approval-routes). Declares ApprovalRoute — the reusable template a sign-off sequence is instantiated FROM — and ApprovalAction, the append-only record of what each actor did. The travelling instance stays DecisionStage, which already models one decision's stages; this fragment adds the two things it lacked, a template to come from and a trail of actions against it. NOTE: 'routed' here means routed for SIGN-OFF. routedDocumentsJoin.js routes documents onto a meeting agenda and is a different concept entirely.",
-      "objects": {
-        "approval-route": [
-          {
-            "slug": "collegeadvies-standaard",
-            "name": "Collegeadvies — standaard parafering",
-            "subjectType": "collegeadvies",
-            "isDefault": true,
-            "description": "Advies, twee paraferingen en een accordering. The shape a Dutch collegeadvies travels before it reaches the college.",
-            "steps": [
-              {
-                "order": 1,
-                "stageType": "advisory",
-                "actorType": "role",
-                "actor": "juridisch-adviseur",
-                "mandatory": true,
-                "label": "Juridisch advies"
-              },
-              {
-                "order": 2,
-                "stageType": "endorsement",
-                "actorType": "role",
-                "actor": "afdelingshoofd",
-                "mandatory": true,
-                "label": "Parafering afdelingshoofd"
-              },
-              {
-                "order": 3,
-                "stageType": "endorsement",
-                "actorType": "role",
-                "actor": "concerncontroller",
-                "mandatory": false,
-                "label": "Parafering concerncontrol"
-              },
-              {
-                "order": 4,
-                "stageType": "decisive",
-                "actorType": "role",
-                "actor": "gemeentesecretaris",
-                "mandatory": true,
-                "label": "Accordering gemeentesecretaris"
-              }
-            ]
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -56,10 +9,13 @@
         "icon": "FormatListNumbered",
         "version": "0.1.0",
         "title": "ApprovalRoute",
-        "description": "A REUSABLE sign-off route: an ordered sequence of actors a subject travels for approval. Independent of any one subject — it describes a sequence to be travelled, and the travelling instance is DecisionStage. Distinct from DecisionTemplate/ProcessTemplate, which answer a different question: what STATES a decision may be in and how it moves between them. A route answers WHO signs, in what order.",
+        "description": "A REUSABLE sign-off route: an ordered sequence of actors a subject travels for approval. Independent of any one subject: it describes a sequence to be travelled, and the travelling instance is DecisionStage. Distinct from DecisionTemplate/ProcessTemplate, which answer a different question: what STATES a decision may be in and how it moves between them. A route answers WHO signs, in what order.",
         "x-schema-org": "schema:HowTo",
         "type": "object",
-        "required": ["name", "steps"],
+        "required": [
+          "name",
+          "steps"
+        ],
         "properties": {
           "name": {
             "title": "Name",
@@ -87,7 +43,7 @@
             "title": "Active",
             "type": "boolean",
             "default": true,
-            "description": "Whether this route may still be instantiated. A route already travelled by a subject is unaffected — its stages were copied at instantiation."
+            "description": "Whether this route may still be instantiated. A route already travelled by a subject is unaffected: its stages were copied at instantiation."
           },
           "steps": {
             "title": "Steps",
@@ -95,7 +51,10 @@
             "description": "The ordered steps. Copied into DecisionStage rows at instantiation, so editing a route never changes a route already in flight.",
             "items": {
               "type": "object",
-              "required": ["order", "stageType"],
+              "required": [
+                "order",
+                "stageType"
+              ],
               "properties": {
                 "order": {
                   "title": "Order",
@@ -106,13 +65,23 @@
                 "stageType": {
                   "title": "Stage type",
                   "type": "string",
-                  "enum": ["preparatory", "advisory", "endorsement", "decisive", "ratifying"],
+                  "enum": [
+                    "preparatory",
+                    "advisory",
+                    "endorsement",
+                    "decisive",
+                    "ratifying"
+                  ],
                   "description": "What the step is for. `endorsement` is the parafering case: a sign-off that is not itself the decision."
                 },
                 "actorType": {
                   "title": "Actor type",
                   "type": "string",
-                  "enum": ["person", "body", "role"],
+                  "enum": [
+                    "person",
+                    "body",
+                    "role"
+                  ],
                   "default": "role",
                   "description": "How `actor` resolves. `role` is resolved by the consuming context at instantiation; `person` and `body` name a stored object directly."
                 },
@@ -142,10 +111,15 @@
         "icon": "ClipboardCheckOutline",
         "version": "0.1.0",
         "title": "ApprovalAction",
-        "description": "An APPEND-ONLY record of what one actor did at one step of a sign-off route. Many rows per step: an advice, a return, a re-submission, a delegate acting under mandate. Never overwritten, and never deleted when a route is returned to an earlier step — a DecisionStage holds where a route IS, and these hold what happened, including the attempts a return undid. Collapsing the two loses exactly the history that makes a sign-off auditable.",
+        "description": "An APPEND-ONLY record of what one actor did at one step of a sign-off route. Many rows per step: an advice, a return, a re-submission, a delegate acting under mandate. Never overwritten, and never deleted when a route is returned to an earlier step: a DecisionStage holds where a route IS, and these hold what happened, including the attempts a return undid. Collapsing the two loses exactly the history that makes a sign-off auditable.",
         "x-schema-org": "schema:Action",
         "type": "object",
-        "required": ["subject", "step", "actor", "action"],
+        "required": [
+          "subject",
+          "step",
+          "actor",
+          "action"
+        ],
         "properties": {
           "subject": {
             "title": "Subject",
@@ -171,7 +145,10 @@
           "actorType": {
             "title": "Actor type",
             "type": "string",
-            "enum": ["user", "delegate"],
+            "enum": [
+              "user",
+              "delegate"
+            ],
             "default": "user",
             "description": "Whether the actor acted for themselves or under a mandate for someone else."
           },
@@ -188,7 +165,13 @@
           "action": {
             "title": "Action",
             "type": "string",
-            "enum": ["approved", "endorsed", "advised", "returned", "skipped"],
+            "enum": [
+              "approved",
+              "endorsed",
+              "advised",
+              "returned",
+              "skipped"
+            ],
             "description": "What was done. `returned` sends the route back to an earlier step; every other value completes the current one."
           },
           "returnToStep": {

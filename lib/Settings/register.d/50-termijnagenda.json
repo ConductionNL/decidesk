@@ -1,85 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the termijnagenda (long-term agenda / LTA) register (change: termijnagenda). References resolve by slug against existing decidesk seed objects (governanceBody gemeenteraad-amsterdam); the nil UUID 00000000-0000-0000-0000-000000000000 is an obvious placeholder where no matching seed object exists (wethouder Person, origin toezegging/motie/decision, realised agenda item/decision). Object 1 (lta-herziening-parkeerbeleid) is seeded past-period + non-terminal (verschoven) + unrealised so the overdue dashboard KPI is non-zero and the board shows a shifted card on a fresh install (ADR-016; design.md Seed Data). Object 5 (lta-verordening-marktgelden) is past-period + terminal (vervallen) with a redenVervallen so the public list shows a withdrawn-worthy item with its reason. Objects grouped by schema slug 'termijnagenda-item' (the OR seedData import path resolves the schema from the object key; no literal @self wrapper — the '@self.*' token only appears inside dialect filter expressions, not as a seed envelope).",
-      "objects": {
-        "termijnagenda-item": [
-          {
-            "slug": "lta-herziening-parkeerbeleid",
-            "subject": "Herziening parkeerbeleid binnenstad",
-            "governanceBody": "gemeenteraad-amsterdam",
-            "plannedPeriod": "2026-Q2",
-            "expectedType": "council-proposal",
-            "ownerType": "executive-board",
-            "notes": "Voortkomend uit de aangenomen motie parkeerdruk; college bereidt een raadsvoorstel voor.",
-            "lifecycle": "postponed",
-            "shiftHistory": [
-              {
-                "van": "2026-Q1",
-                "toPeriod": "2026-Q2",
-                "reason": "Wacht op uitkomst parkeeronderzoek regio",
-                "door": "00000000-0000-0000-0000-000000000000",
-                "op": "2026-03-15T10:00:00Z"
-              }
-            ],
-            "originMotion": "00000000-0000-0000-0000-000000000000",
-            "goal": "goal-amsterdam-parkeerbeleid-kwartaal",
-            "publicationDate": "2026-06-20T09:00:00Z"
-          },
-          {
-            "slug": "lta-rib-wachtlijsten-jeugdzorg",
-            "subject": "RIB wachtlijsten jeugdzorg",
-            "governanceBody": "gemeenteraad-amsterdam",
-            "plannedPeriod": "2026-11",
-            "expectedType": "council-information-letter",
-            "ownerType": "portfolio-holder",
-            "owner": "00000000-0000-0000-0000-000000000000",
-            "notes": "Toegezegde raadsinformatiebrief over de aanpak van de wachtlijsten jeugdzorg.",
-            "lifecycle": "planned",
-            "shiftHistory": [],
-            "originCommitment": "00000000-0000-0000-0000-000000000000",
-            "publicationDate": "2026-06-20T09:00:00Z"
-          },
-          {
-            "slug": "lta-themabijeenkomst-energietransitie",
-            "subject": "Themabijeenkomst energietransitie",
-            "governanceBody": "gemeenteraad-amsterdam",
-            "plannedPeriod": "2027-Q1",
-            "expectedType": "theme-session",
-            "ownerType": "council-registry",
-            "notes": "Beeldvormende bijeenkomst ter voorbereiding op de warmtevisie.",
-            "lifecycle": "planned",
-            "shiftHistory": [],
-            "publicationDate": "2026-06-20T09:00:00Z"
-          },
-          {
-            "slug": "lta-kadernota-2027",
-            "subject": "Kadernota 2027",
-            "governanceBody": "gemeenteraad-amsterdam",
-            "plannedPeriod": "2027-Q2",
-            "expectedType": "budget-document",
-            "ownerType": "executive-board",
-            "notes": "Reguliere jaarlijkse kadernota in de P&C-cyclus.",
-            "lifecycle": "planned",
-            "shiftHistory": [],
-            "originDecision": "00000000-0000-0000-0000-000000000000"
-          },
-          {
-            "slug": "lta-verordening-marktgelden",
-            "subject": "Actualisatie verordening marktgelden",
-            "governanceBody": "gemeenteraad-amsterdam",
-            "plannedPeriod": "2026-Q1",
-            "expectedType": "council-proposal",
-            "ownerType": "portfolio-holder",
-            "owner": "00000000-0000-0000-0000-000000000000",
-            "lifecycle": "lapsed",
-            "shiftHistory": [],
-            "reasonExpired": "Opgegaan in de bredere herziening van de legesverordening",
-            "publicationDate": "2026-06-20T09:00:00Z"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -88,7 +9,7 @@
         "icon": "CalendarClockOutline",
         "version": "0.1.0",
         "title": "TermijnagendaItem",
-        "description": "A termijnagenda (long-term agenda / LTA) item: a forward-planned proposal or topic a governance body can expect (raadsvoorstel, raadsinformatiebrief, themabijeenkomst, begrotingsstuk), in which period, owned by griffie/college/portefeuillehouder, optionally originating from a toezegging, motie, or earlier decision, and optionally realised into an actual AgendaItem/Decision. It closes the accountability loop between commitments (toezegging), motion execution (Decision/UitvoeringsUpdate — referenced, NEVER duplicated here) and the meeting agenda, and doubles as a live public transparency instrument via the OpenRegister published-predicate. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property; shift reasons are deliberately public). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A termijnagenda (long-term agenda / LTA) item: a forward-planned proposal or topic a governance body can expect (raadsvoorstel, raadsinformatiebrief, themabijeenkomst, begrotingsstuk), in which period, owned by griffie/college/portefeuillehouder, optionally originating from a toezegging, motie, or earlier decision, and optionally realised into an actual AgendaItem/Decision. It closes the accountability loop between commitments (toezegging), motion execution (Decision/UitvoeringsUpdate: referenced, NEVER duplicated here) and the meeting agenda, and doubles as a live public transparency instrument via the OpenRegister published-predicate. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property; shift reasons are deliberately public). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:PlanAction",
         "x-openregister": {
@@ -215,7 +136,7 @@
             "type": "string",
             "facetable": true,
             "pattern": "^\\d{4}-(Q[1-4]|(0[1-9]|1[0-2]))$",
-            "description": "The planned period at month or quarter granularity: quarter YYYY-Qn (n 1-4, e.g. 2026-Q4) or month YYYY-MM (e.g. 2026-11). Required. Free-form text is rejected by this pattern. Sort-key convention (design D2): a period maps to its LAST DAY (2026-11 -> 2026-11-30, 2026-Q4 -> 2026-12-31); chronological order = order by last day; overdue = last day < today AND lifecycle non-terminal AND no realisation link (REQ-LTA-002).",
+            "description": "The planned period at month or quarter granularity: quarter YYYY-Qn (n 1-4, e.g. 2026-Q4) or month YYYY-MM (e.g. 2026-11). Required. Free-form text is rejected by this pattern. Sort-key convention (design D2): a period maps to its LAST DAY (2026-11 -> 2026-11-30, 2026-Q4 -> 2026-12-31); chronological order = order by last day; overdue = last day < today AND lifecycle non-terminal AND no realisation link.",
             "example": "2026-Q4"
           },
           "expectedType": {
@@ -235,7 +156,7 @@
             "title": "Owner type",
             "type": "string",
             "facetable": true,
-            "description": "Who owns delivery of the item. Required. When 'portefeuillehouder', the owner Person reference is required (conditional-required — see owner).",
+            "description": "Who owns delivery of the item. Required. When 'portefeuillehouder', the owner Person reference is required (conditional-required: see owner).",
             "enum": [
               "council-registry",
               "executive-board",
@@ -249,7 +170,7 @@
             "format": "uuid",
             "$ref": "Person",
             "nullable": true,
-            "description": "Reference to the owning Person (portefeuillehouder). REQUIRED when ownerType is 'portefeuillehouder', otherwise null (REQ-LTA-001). This conditional-required rule is NOT expressible in the OR 'required' array (which cannot be value-dependent); it is enforced at save time by the UI and documented here."
+            "description": "Reference to the owning Person (portefeuillehouder). REQUIRED when ownerType is 'portefeuillehouder', otherwise null. This conditional-required rule is NOT expressible in the OR 'required' array (which cannot be value-dependent); it is enforced at save time by the UI and documented here."
           },
           "notes": {
             "title": "Note",
@@ -260,7 +181,7 @@
             "title": "Lifecycle",
             "type": "string",
             "facetable": true,
-            "description": "Item status (declared in x-openregister-lifecycle, ADR-031): gepland -> verschoven (repeat shifts allowed) -> gerealiseerd | vervallen. gerealiseerd and vervallen are terminal. Entering vervallen requires redenVervallen; a reschedule to verschoven appends to verschuifHistorie (REQ-LTA-003/004).",
+            "description": "Item status (declared in x-openregister-lifecycle, ADR-031): gepland -> verschoven (repeat shifts allowed) -> gerealiseerd | vervallen. gerealiseerd and vervallen are terminal. Entering vervallen requires redenVervallen; a reschedule to verschoven appends to verschuifHistorie.",
             "enum": [
               "planned",
               "postponed",
@@ -272,7 +193,7 @@
           "shiftHistory": {
             "title": "Shift history",
             "type": "array",
-            "description": "Append-only history of reschedules (REQ-LTA-004). Each reschedule appends one entry (previous period, new period, mandatory reason, acting user, timestamp); existing entries are never edited or removed by the reschedule flow. Part of the public record (transparency instrument, design D4). Embedded array, not a separate schema (design D1): a shift has no independent lifecycle and never travels outside its item.",
+            "description": "Append-only history of reschedules. Each reschedule appends one entry (previous period, new period, mandatory reason, acting user, timestamp); existing entries are never edited or removed by the reschedule flow. Part of the public record (transparency instrument, design D4). Embedded array, not a separate schema (design D1): a shift has no independent lifecycle and never travels outside its item.",
             "items": {
               "type": "object",
               "title": "Shift",
@@ -310,7 +231,7 @@
             "title": "Drop reason",
             "type": "string",
             "nullable": true,
-            "description": "Reason the item was dropped (recorded when moving lifecycle to vervallen). REQUIRED when entering vervallen (REQ-LTA-003, enforced at the UI layer; not expressible as a state-dependent OR 'required' rule). Optional otherwise.",
+            "description": "Reason the item was dropped (recorded when moving lifecycle to vervallen). REQUIRED when entering vervallen (enforced at the UI layer; not expressible as a state-dependent OR 'required' rule). Optional otherwise.",
             "example": "Onderwerp opgegaan in omgevingsvisie"
           },
           "originCommitment": {
@@ -319,7 +240,7 @@
             "format": "uuid",
             "$ref": "Toezegging",
             "nullable": true,
-            "description": "Optional reference to the Toezegging (toezeggingen-ingekomen-stukken) this planned item stems from. Renders as a navigable reference on the detail page (REQ-LTA-006). Nullable; degrades to an absent link if that change is not installed."
+            "description": "Optional reference to the Toezegging (toezeggingen-ingekomen-stukken) this planned item stems from. Renders as a navigable reference on the detail page. Nullable; degrades to an absent link if that change is not installed."
           },
           "originMotion": {
             "title": "Origin motion",
@@ -327,7 +248,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Optional reference to a Decision of decisionType 'motion' (motie-amendement-administratie) this planned item stems from. The execution narrative lives EXCLUSIVELY on that motion's UitvoeringsUpdate log; the termijnagenda never duplicates it (REQ-LTA-006). Nullable."
+            "description": "Optional reference to a Decision of decisionType 'motion' (motie-amendement-administratie) this planned item stems from. The execution narrative lives EXCLUSIVELY on that motion's UitvoeringsUpdate log; the termijnagenda never duplicates it. Nullable."
           },
           "originDecision": {
             "title": "Origin decision",
@@ -335,7 +256,7 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Optional reference to an earlier Decision this planned item stems from. Renders as a navigable reference on the detail page (REQ-LTA-006). Nullable."
+            "description": "Optional reference to an earlier Decision this planned item stems from. Renders as a navigable reference on the detail page. Nullable."
           },
           "goal": {
             "title": "Goal",
@@ -351,7 +272,7 @@
             "format": "uuid",
             "$ref": "agenda-item",
             "nullable": true,
-            "description": "Reference to the actual AgendaItem that realised this planned item, set (assisted, always user-confirmed) when marking gerealiseerd (REQ-LTA-006). The termijnagenda NEVER creates, moves, or modifies agenda items or meetings itself. Nullable; presence means 'realised' for the overdue computation."
+            "description": "Reference to the actual AgendaItem that realised this planned item, set (assisted, always user-confirmed) when marking gerealiseerd. The termijnagenda NEVER creates, moves, or modifies agenda items or meetings itself. Nullable; presence means 'realised' for the overdue computation."
           },
           "realisedDecision": {
             "title": "Realised decision",
@@ -359,21 +280,21 @@
             "format": "uuid",
             "$ref": "Decision",
             "nullable": true,
-            "description": "Reference to the actual Decision that realised this planned item, set when marking gerealiseerd (REQ-LTA-006). Nullable; presence means 'realised' for the overdue computation."
+            "description": "Reference to the actual Decision that realised this planned item, set when marking gerealiseerd. Nullable; presence means 'realised' for the overdue computation."
           },
           "publicationDate": {
             "title": "Publication date",
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Publication date (WOO/DIWOO). When set in the past, the live item is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public termijnagenda reflects reschedules and lifecycle changes without republication (REQ-LTA-009 / design D4)."
+            "description": "Publication date (WOO/DIWOO). When set in the past, the live item is anonymously readable through the OpenRegister published-predicate (public-group authorization.read rule publicationDate <= $now). Publish is an explicit staff action; because the predicate sits on the live object the public termijnagenda reflects reschedules and lifecycle changes without republication (design D4)."
           },
           "depublicationDate": {
             "title": "Depublication date",
             "type": "string",
             "format": "date-time",
             "facetable": true,
-            "description": "Depublication date (WOO/DIWOO). When set and in the past, the item is withdrawn from public access. Set by staff on withdraw (REQ-LTA-009)."
+            "description": "Depublication date (WOO/DIWOO). When set and in the past, the item is withdrawn from public access. Set by staff on withdraw."
           }
         }
       }

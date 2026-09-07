@@ -1,0 +1,32 @@
+{
+	"_note": "hand-woo-diwoo-to-integriq — the last Dutch-specific schemas in this app, and the only ones this programme retires WITHOUT a generic replacement here. Woo (Wet open overheid) informatiecategorieën, TOOI bestuursorgaan identifiers and DROP/STOP-TPOD delivery packages are not a governance concept an organisation has; they are the wire format of one country's publication regime. Mapping an object onto a publication standard is integriq's responsibility, which is where the fleet's other mappings live. Retired here so decidiq stops shipping them, non-destructively so nothing is lost while integriq's side is built: every row stays readable under its original schema, and the handover is written up in the change's proposal.",
+	"_spec": "openspec/changes/hand-woo-diwoo-to-integriq/specs/hand-woo-diwoo-to-integriq/spec.md",
+	"components": {
+		"schemas": {
+			"WooCategorieMapping": {
+				"version": "0.2.0",
+				"description": "RETIRED (hand-woo-diwoo-to-integriq): binds a publishable object type to a Woo informatiecategorie. That is a mapping onto a national publication standard, which belongs in integriq with the fleet's other mappings, not in the app that happens to hold the objects. NO generic replacement is declared here, deliberately: there is no organisation-neutral concept to replace it with, and inventing one would be worse than the Dutch name. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"WooBestuursorgaan": {
+				"version": "0.2.0",
+				"description": "RETIRED (hand-woo-diwoo-to-integriq): binds a governance body to its TOOI bestuursorgaan identifier, so a publication can name the body in the national thesaurus. Same reasoning as the category mapping: an identifier in one country's register is integriq's business. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			},
+			"RegelingExportPackage": {
+				"version": "0.3.0",
+				"description": "RETIRED (hand-woo-diwoo-to-integriq): a DROP/STOP-TPOD delivery package for publishing governing documents to the national regulations register. fold-regulations-into-governing-documents repointed it at governing-document rather than moving it, precisely so it would not dangle until this step. Definition and slug are kept (hardDelete:false, existing rows).",
+				"x-openregister": {
+					"active": false,
+					"hardDelete": false
+				}
+			}
+		}
+	}
+}

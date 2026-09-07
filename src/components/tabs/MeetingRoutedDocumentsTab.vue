@@ -22,7 +22,7 @@
  sensitive to which body-widget render path (manifest `slots` map vs.
  auto-body) mounts it.
 
- @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
+ @spec openspec/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
 -->
 <template>
 	<div
@@ -93,7 +93,7 @@ export default {
 		 * `cnObjectContext` inject, which stays reliable regardless of the
 		 * widget-grid slot render path.
 		 *
-		 * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
+		 * @spec openspec/specs/meeting-detail-view/spec.md#requirement-req-mdv-013-routed-incoming-documents-facet-read-only
 		 * @return {string}
 		 */
 		resolvedObjectId() {
@@ -104,7 +104,7 @@ export default {
 			return (value && value.objectId) || ''
 		},
 
-		/** @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
+		/** @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
 		columns() {
 			return [
 				{
@@ -123,7 +123,7 @@ export default {
 			]
 		},
 
-		/** @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
+		/** @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
 		typeColors() {
 			return {
 				Raadsinformatiebrief: 'info',
@@ -135,7 +135,7 @@ export default {
 	watch: {
 		resolvedObjectId: {
 			immediate: true,
-			/** @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
+			/** @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
 			handler() {
 				this.refresh()
 			},
@@ -143,7 +143,7 @@ export default {
 	},
 
 	methods: {
-		/** @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
+		/** @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda */
 		async refresh() {
 			if (!this.resolvedObjectId) return
 			this.loading = true
@@ -197,7 +197,7 @@ export default {
 		 * Navigate to the correct detail page for a row, per its own `type`.
 		 *
 		 * @param {object} row Combined row (must carry `id` and `type`).
-		 * @spec openspec/changes/meeting-facet-composition/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
+		 * @spec openspec/specs/meeting-detail-view/spec.md#scenario-documents-routed-onto-the-meetings-agenda
 		 */
 		openDetail(row) {
 			const id = row && row.id

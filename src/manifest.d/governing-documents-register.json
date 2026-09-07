@@ -27,30 +27,59 @@
 				"quickFilterMode": "dropdown",
 				"quickFilterMultiple": true,
 				"quickFilters": [
-					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "In force", "filter": { "status": "in-force" } },
-					{ "label": "Lapsed", "filter": { "status": "lapsed" } },
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "In force",
+						"filter": {
+							"status": "in-force"
+						}
+					},
+					{
+						"label": "Lapsed",
+						"filter": {
+							"status": "lapsed"
+						}
+					},
 					{
 						"label": "Statuten",
-						"filter": { "type": "articles-of-association" }
+						"filter": {
+							"type": "articles-of-association"
+						}
 					},
 					{
 						"label": "Huishoudelijk reglement",
-						"filter": { "type": "internal-regulations" }
+						"filter": {
+							"type": "internal-regulations"
+						}
 					},
 					{
 						"label": "Reglement van orde",
-						"filter": { "type": "rules-of-procedure" }
+						"filter": {
+							"type": "rules-of-procedure"
+						}
 					},
 					{
 						"label": "Directiestatuut",
-						"filter": { "type": "management-charter" }
+						"filter": {
+							"type": "management-charter"
+						}
 					},
 					{
 						"label": "Splitsingsakte",
-						"filter": { "type": "deed-of-division" }
+						"filter": {
+							"type": "deed-of-division"
+						}
 					},
-					{ "label": "Other", "filter": { "type": "other" } }
+					{
+						"label": "Other",
+						"filter": {
+							"type": "other"
+						}
+					}
 				],
 				"columns": [
 					{
@@ -58,9 +87,26 @@
 						"label": "Citeertitel",
 						"widget": "link"
 					},
-					{ "key": "type", "label": "Type", "widget": "badge" },
-					{ "key": "governingBody", "label": "Governing body", "widget": "fkResolve", "widgetProps": { "register": "decidiq", "schema": "governance-body", "labelField": "name" } },
-					{ "key": "status", "label": "Status", "widget": "badge" }
+					{
+						"key": "type",
+						"label": "Type",
+						"widget": "badge"
+					},
+					{
+						"key": "governingBody",
+						"label": "Governing body",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "decidiq",
+							"schema": "governance-body",
+							"labelField": "name"
+						}
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "badge"
+					}
 				],
 				"actions": [
 					{
@@ -73,7 +119,10 @@
 					}
 				],
 				"showMassExport": true,
-				"sidebar": { "enabled": true, "showMetadata": true },
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
 				"documentationUrl": "https://decidiq.conduction.nl"
 			}
 		},
@@ -93,7 +142,9 @@
 						"type": "data",
 						"title": "Governing document",
 						"icon": "FileDocument",
-						"content": { "columns": 2 }
+						"content": {
+							"columns": 2
+						}
 					},
 					{
 						"id": "document-files",
@@ -132,7 +183,10 @@
 									"label": "Deed date",
 									"format": "date"
 								},
-								{ "field": "notary", "label": "Notary" }
+								{
+									"field": "notary",
+									"label": "Notary"
+								}
 							]
 						}
 					}
@@ -179,7 +233,90 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://decidiq.conduction.nl"
+			}
+		},
+		{
+			"id": "GoverningDocumentVersieDetail",
+			"route": "/governing-document-versies/:id",
+			"type": "detail",
+			"title": "Document version",
+			"_note": "spec: openspec/changes/fold-regulations-into-governing-documents/specs/fold-regulations-into-governing-documents/spec.md#requirement-existing-regulations-are-carried-across",
+			"config": {
+				"register": "decidiq",
+				"schema": "governing-document-versie",
+				"_note": "Version detail. Ported from the retired RegelingVersieDetail by fold-regulations-into-governing-documents, which found the same page had no generic counterpart: deleting the fragment would have removed a working surface rather than a duplicated one. Version metadata leads 8-wide; the parent document and the enacting decision render as resolved references in the data and Related widgets. The consolidated text is the Files leaf, attached through the OpenRegister file abstraction rather than a schema property. Once a version is in force it is sealed and immutable, enforced server-side, independent of this UI.",
+				"widgets": [
+					{
+						"id": "versie-data",
+						"type": "data",
+						"title": "Document version",
+						"icon": "FileDocument",
+						"content": {
+							"columns": 2
+						}
+					},
+					{
+						"id": "versie-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Consolidated text",
+						"icon": "FolderOutline"
+					},
+					{
+						"id": "versie-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "versie-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 8,
+						"gridHeight": 6
+					},
+					{
+						"id": "2",
+						"widgetId": "versie-files",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "3",
+						"widgetId": "versie-related",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 3
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
 				},

@@ -4,17 +4,18 @@
  *
  * Gate-19 e2e coverage — Admin settings (admin-settings-v1).
  *
- * Drives the governance-body detail sidebar (Members tab: role
- * assignment + Nextcloud-group/CSV import dialogs; Process template tab:
- * default + specialized template assignment) and the admin settings
- * Organization section. The body create/quorum scenarios stay covered by
- * governance-body.spec.ts. API/contract assertions live in Newman
+ * Drives the governance-body detail widgets (Members: role assignment +
+ * Nextcloud-group/CSV import dialogs; Process template: default + specialized
+ * template assignment) and the admin settings Organization section. The body
+ * create/quorum scenarios stay covered by governance-body.spec.ts.
+ * API/contract assertions live in Newman
  * (tests/integration/decidiq-admin-settings.postman_collection.json),
  * not here.
  *
- * Defensive skips: when the deployed instance does not serve this
- * branch's surfaces yet (deploy mismatch) the specs skip instead of
- * failing — same convention as the other spec-coverage suites.
+ * These are WIDGETS, not sidebar tabs. The distinction is not pedantry: the
+ * helper that hunted a tab could never match, so four tests here skipped
+ * permanently while reporting "not deployed on this instance". Surfaces the
+ * shipped manifest declares are asserted, so an absent one fails.
  *
  * @e2e openspec/specs/admin-settings/spec.md#assign-roles-within-a-body
  * @e2e openspec/specs/admin-settings/spec.md#assign-default-and-specialized-templates-to-a-body
@@ -22,9 +23,10 @@
  * @e2e openspec/specs/admin-settings/spec.md#import-members-from-a-nextcloud-group
  * @e2e openspec/specs/admin-settings/spec.md#import-members-from-csv
  */
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { BASE_URL as BASE } from '../base-url'
+import { expect, test } from '@playwright/test'
+import { BASE_URL as BASE } from '../base-url.ts'
 import { becomesVisible } from '../becomes-visible.js'
 
 /**
@@ -36,7 +38,17 @@ async function openFirstBodyDetail(page: Page): Promise<boolean> {
 	try {
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })
 		// Open the first row of the bodies list.
-		const firstRow = page.locator('tbody tr').first()
+		//
+		// `cn-object-row`, NOT `tbody tr`. CnDataTable renders its empty state
+		// as a row inside the same tbody:
+		//
+		//   <tr v-if="effectiveRows.length === 0" data-testid="cn-object-list-empty">
+		//   <tr v-for=...                         data-testid="cn-object-row">
+		//
+		// so `tbody tr` matches when there is no governance body at all. This
+		// helper then clicked that empty row, navigated nowhere, and returned
+		// TRUE — every caller took the false premise and carried on.
+		const firstRow = page.locator('[data-testid="cn-object-row"]').first()
 		await firstRow.waitFor({ state: 'visible', timeout: 10_000 })
 		await firstRow.click()
 		await page.waitForTimeout(1_000)
@@ -46,20 +58,21 @@ async function openFirstBodyDetail(page: Page): Promise<boolean> {
 	}
 }
 
-/**
- * Click a sidebar tab by its visible label; false when the tab is absent
- * (older deploy without this branch).
+/*
+ * openSidebarTab() used to live here. It clicked `getByRole('tab', { name })`
+ * and, when nothing matched, skipped the test as "not deployed on this
+ * instance".
+ *
+ * ⚠️ GovernanceBodyDetail HAS NO SIDEBAR TABS. Its `config.sidebar` declares
+ * exactly one, `audit` / "History"; body-members, body-template and
+ * body-efficiency are `type: "custom"` WIDGETS in `config.widgets`, rendered
+ * inline. Dumped off the live page, `getByRole('tab')` returns an EMPTY list,
+ * so the helper could only ever return false and every test behind it skipped
+ * permanently, with a reason about deployment that was never true.
+ *
+ * The widgets are asserted directly now. Same finding as the five minutes tests
+ * fixed alongside these.
  */
-async function openSidebarTab(page: Page, label: string): Promise<boolean> {
-	const tab = page.getByRole('tab', { name: label }).first()
-	try {
-		await tab.waitFor({ state: 'visible', timeout: 10_000 })
-		await tab.click()
-		return true
-	} catch {
-		return false
-	}
-}
 
 // @e2e openspec/specs/admin-settings/spec.md#assign-roles-within-a-body
 test('Members tab lists body members and offers the Change role action', async ({
@@ -69,16 +82,9 @@ test('Members tab lists body members and offers the Change role action', async (
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
 	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
-	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
-	test.skip(
-		!(await becomesVisible(tabRoot)),
-		'members tab body not deployed on this instance',
-	)
+	await expect(tabRoot).toBeVisible({ timeout: 15_000 })
 
 	// The tab renders its member table (root-cause fix: governanceBody is
 	// now a real Participant property, so the filter resolves).
@@ -87,7 +93,17 @@ test('Members tab lists body members and offers the Change role action', async (
 	// Role assignment: when the body has at least one member, the row
 	// actions expose "Change role" opening the role dialog with the role
 	// enum select.
-	const rows = tabRoot.locator('tbody tr')
+	// Data rows only. With no members, CnDataTable still renders one row —
+	// its empty state — so `tbody tr` counted 1, `hover()` worked on it, and
+	// `getByRole('button').last()` then waited out the full 20 s timeout
+	// looking for an action button the empty row never has. That is the
+	// failure on development at 34fd275.
+	//
+	// ⚠️ It is NOT a budget problem, which is what it first looked like: the
+	// test ran 20.5s against a 20s cap while its four siblings here took 8.9 to
+	// 11.5s. Under test.slow(), given 60s, it failed identically on the same
+	// locator. A timeout that survives a tripled budget is not about time.
+	const rows = tabRoot.locator('[data-testid="cn-object-row"]')
 	if ((await rows.count()) > 0) {
 		await rows.first().hover()
 		const actions = rows.first().getByRole('button').last()
@@ -109,6 +125,15 @@ test('Members tab lists body members and offers the Change role action', async (
 			).toBeVisible()
 			await dialog.locator('[data-testid="member-role-cancel"]').click()
 		}
+	} else {
+		// No members to act on, so assert the empty state rather than falling
+		// through silently. A conditional whose false branch asserts nothing
+		// passes identically whether the widget works or renders nothing at all,
+		// which is how this test could have gone green without ever proving the
+		// members table exists.
+		await expect(
+			tabRoot.locator('[data-testid="cn-object-list-empty"]'),
+		).toBeVisible()
 	}
 })
 
@@ -119,10 +144,6 @@ test('Members tab opens the Nextcloud-group import dialog with a group selector'
 	test.skip(
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
-	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
 	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
@@ -150,10 +171,6 @@ test('Members tab CSV import validates rows and previews duplicates before impor
 	test.skip(
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
-	)
-	test.skip(
-		!(await openSidebarTab(page, 'Members')),
-		'Members tab not deployed on this instance',
 	)
 
 	const tabRoot = page.locator('[data-testid="body-members-tab"]')
@@ -196,10 +213,6 @@ test('Process template tab assigns a default and specialized templates', async (
 	test.skip(
 		!(await openFirstBodyDetail(page)),
 		'governance-body detail not reachable on this instance',
-	)
-	test.skip(
-		!(await openSidebarTab(page, 'Process template')),
-		'Process template tab not deployed on this instance',
 	)
 
 	const tabRoot = page.locator('[data-testid="body-template-tab"]')

@@ -19,12 +19,13 @@
  * from launchpad's journeydoc setup.
  */
 
-import { chromium, request, type FullConfig } from '@playwright/test'
-import { execSync } from 'child_process'
-import * as path from 'path'
-import * as fs from 'fs'
+import type { FullConfig } from '@playwright/test'
 
-import { BASE_URL } from './base-url'
+import { chromium, request } from '@playwright/test'
+import { execSync } from 'child_process'
+import * as fs from 'fs'
+import * as path from 'path'
+import { BASE_URL } from './base-url.ts'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
@@ -48,7 +49,7 @@ function ensureBundleBuilt(): void {
 	if (fs.existsSync(BUNDLE_PATH)) {
 		return
 	}
-	// eslint-disable-next-line no-console
+
 	console.log(
 		`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`,
 	)
@@ -133,7 +134,28 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	await page.evaluate(() => {
 		try {
 			window.localStorage.setItem('cn-walkthrough-seen:decidiq', '9999.0.0')
-		} catch (e) {
+
+			// Same problem, different overlay: the NON-GATING first-time-setup
+			// wizard (ADR-042). Dismissing only the walkthrough left this one
+			// armed, and its `modal-mask` subtree intercepts every click on the
+			// app behind it. The tell is precise: a click reports the target as
+			// "visible, enabled and stable" and then times out anyway, with
+			// `data-testid-modal="cn-wizard-dialog"` named as the interceptor.
+			//
+			// It splits a suite rather than failing it. Specs that navigate by
+			// URL pass; specs that click do not. On this suite that was 52
+			// passing against 42 failing, which reads like a half-broken app
+			// instead of one un-dismissed dialog.
+			//
+			// The dismissal key is per manifest `setup.version`; seed a generous
+			// range so a version bump does not silently re-arm it.
+			for (let v = 0; v <= 20; v++) {
+				window.localStorage.setItem(
+					`cn-setup-wizard-dismissed:decidiq:${v}`,
+					'1',
+				)
+			}
+		} catch {
 			// Non-fatal: private mode / no storage.
 		}
 	})

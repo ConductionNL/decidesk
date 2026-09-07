@@ -1,109 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "Seed objects for the toezeggingen (commitments) and ingekomen-stukken (incoming documents) registers (toezeggingen-ingekomen-stukken). References resolve by slug against existing decidesk seed objects (governance-body/meeting/agenda-item); the nil UUID 00000000-0000-0000-0000-000000000000 is an obvious placeholder where no matching seed object exists (wethouder Person, related motion Decision). One toezegging is seeded past-deadline + non-terminal so the dashboard KPI is non-zero on a fresh install (ADR-016). One IngekomenStuk stays geregistreerd so the placement flow is demoable. A 'Lijst ingekomen stukken' AgendaItem is appended to the agenda-item seed array (deepMergeConfig concatenates list arrays, ADR-037) and attached to the seeded raadsvergadering.",
-      "objects": {
-        "toezegging": [
-          {
-            "slug": "toezegging-raadsbrief-jeugdzorg",
-            "text": "Wethouder Van Dijk zegt toe de raad vóór 1 maart per raadsbrief te informeren over de wachtlijsten jeugdzorg.",
-            "madeBy": "00000000-0000-0000-0000-000000000000",
-            "meeting": "raadsvergadering-2025-01-15",
-            "agendaItem": "begroting-2026-bespreking",
-            "directedTo": "gemeenteraad-amsterdam",
-            "deadline": "2026-03-01",
-            "lifecycle": "open",
-            "publicationDate": "2026-01-20T09:00:00Z"
-          },
-          {
-            "slug": "toezegging-schouw-marktplein",
-            "text": "Wethouder Pietersen zegt toe binnen zes weken een schouw van het Marktplein te organiseren met de klankbordgroep.",
-            "madeBy": "00000000-0000-0000-0000-000000000000",
-            "meeting": "raadsvergadering-2025-01-15",
-            "agendaItem": "rondvraag",
-            "directedTo": "gemeenteraad-amsterdam",
-            "deadline": "2026-05-15",
-            "lifecycle": "in-execution",
-            "goal": "goal-amsterdam-klimaatneutraal-2050",
-            "publicationDate": "2026-02-10T09:00:00Z"
-          },
-          {
-            "slug": "toezegging-evaluatie-afvalbeleid",
-            "text": "Het college zegt toe de evaluatie van het afvalbeleid gelijktijdig met de kadernota aan te bieden.",
-            "madeBy": "00000000-0000-0000-0000-000000000000",
-            "meeting": "raadsvergadering-2025-01-15",
-            "directedTo": "gemeenteraad-amsterdam",
-            "deadline": "2026-06-30",
-            "lifecycle": "disposed",
-            "settlementNotes": "Evaluatierapport aangeboden bij kadernota 2026; besproken in commissie Middelen.",
-            "settlementEvidence": "https://gemeente-voorbeeldingen.nl/raadsbrieven/evaluatie-afvalbeleid-2026.pdf",
-            "relatedMotion": "00000000-0000-0000-0000-000000000000",
-            "publicationDate": "2026-02-10T09:00:00Z"
-          }
-        ],
-        "ingekomen-stuk": [
-          {
-            "slug": "brief-verkeersveiligheid-schoolzone",
-            "title": "Brief inzake verkeersveiligheid schoolzone Lindelaan",
-            "sender": "J. Jansen",
-            "senderType": "natural-person",
-            "receivedAt": "2026-01-12",
-            "category": "letter-resident",
-            "routingAdvice": "referred-to-executive-board-for-disposal",
-            "listAgendaItem": "lijst-ingekomen-stukken-2025-01-15",
-            "directedTo": "gemeenteraad-amsterdam",
-            "lifecycle": "routing-determined"
-          },
-          {
-            "slug": "petitie-behoud-zwembad",
-            "title": "Petitie behoud zwembad De Plons (1.243 ondertekenaars)",
-            "sender": "Actiecomité De Plons",
-            "senderType": "organisation",
-            "receivedAt": "2026-01-15",
-            "category": "petition",
-            "routingAdvice": "include-with-agenda-item",
-            "targetAgendaItem": "begroting-2026-bespreking",
-            "listAgendaItem": "lijst-ingekomen-stukken-2025-01-15",
-            "directedTo": "gemeenteraad-amsterdam",
-            "lifecycle": "agendised"
-          },
-          {
-            "slug": "collegestuk-jaarverantwoording",
-            "title": "Jaarverantwoording kinderopvang 2025",
-            "sender": "College van B&W",
-            "senderType": "governingBody",
-            "receivedAt": "2026-01-18",
-            "category": "executive-board-paper",
-            "routingAdvice": "noted-for-information",
-            "listAgendaItem": "lijst-ingekomen-stukken-2025-01-15",
-            "directedTo": "gemeenteraad-amsterdam",
-            "lifecycle": "routing-determined"
-          },
-          {
-            "slug": "uitnodiging-veiligheidsregio",
-            "title": "Uitnodiging werkbezoek Veiligheidsregio",
-            "sender": "Veiligheidsregio Midden-Nederland",
-            "senderType": "governingBody",
-            "receivedAt": "2026-01-19",
-            "category": "invitation",
-            "routingAdvice": "noted-for-information",
-            "directedTo": "gemeenteraad-amsterdam",
-            "lifecycle": "registered"
-          }
-        ],
-        "agenda-item": [
-          {
-            "slug": "lijst-ingekomen-stukken-2025-01-15",
-            "title": "Lijst ingekomen stukken",
-            "itemType": "decision",
-            "orderNumber": 5,
-            "estimatedDuration": 10,
-            "description": "Hamerstuk-verzamelagendapunt voor de lijst ingekomen stukken; de griffie-routeringsadviezen worden en bloc bekrachtigd via de hamerstuk-flow (agenda-live-management REQ-LIV-003). AgendaItem draagt geen tag-veld, zodat 'hamerstuk' hier conventioneel via itemType 'decision' + deze omschrijving is vastgelegd.",
-            "meeting": "raadsvergadering-2025-01-15"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -112,7 +9,7 @@
         "icon": "HandshakeOutline",
         "version": "0.1.0",
         "title": "Toezegging",
-        "description": "A political commitment (toezegging) made by a portefeuillehouder or college member to a council or committee, tracked from the moment it is made in a meeting through afdoening, with a deadline, declarative rappels (ADR-031), and a live public toezeggingenlijst via the OpenRegister published-predicate. A toezegging is a public-accountability instrument: it is NOT an ActionItem (CalDAV VTODO) and NOT motion-execution tracking (UitvoeringsUpdate) — it only cross-references both. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
+        "description": "A political commitment (toezegging) made by a portefeuillehouder or college member to a council or committee, tracked from the moment it is made in a meeting through afdoening, with a deadline, declarative rappels (ADR-031), and a live public toezeggingenlijst via the OpenRegister published-predicate. A toezegging is a public-accountability instrument: it is NOT an ActionItem (CalDAV VTODO) and NOT motion-execution tracking (UitvoeringsUpdate), it only cross-references both. CONSTRAINT (design D4): this schema contains ONLY publishable fields by construction (no internal-only property). Adding ANY non-public property requires revisiting the public-predicate design in D4, because the whole live object is exposed through the public-group authorization.read rule when publicationDate <= $now.",
         "type": "object",
         "x-schema-org": "schema:Action",
         "x-openregister": {
@@ -363,7 +260,7 @@
           "settlementEvidence": {
             "title": "Afdoening evidence",
             "type": "string",
-            "description": "Link or reference to evidence of afdoening (e.g. the raadsbrief). Optional. A plain URL/reference string — not a UID field — so the object stays fully publishable (design D4).",
+            "description": "Link or reference to evidence of afdoening (e.g. the raadsbrief). Optional. A plain URL/reference string: not a UID field, so the object stays fully publishable (design D4).",
             "example": "https://gemeente-voorbeeldingen.nl/raadsbrieven/evaluatie-afvalbeleid-2026.pdf"
           },
           "relatedMotion": {
@@ -479,7 +376,7 @@
             "title": "Sender type",
             "type": "string",
             "facetable": true,
-            "description": "Nature of the sender — drives public anonymisation (natuurlijk-persoon is anonymised, organisatie/bestuursorgaan pass through). Required.",
+            "description": "Nature of the sender: drives public anonymisation (natuurlijk-persoon is anonymised, organisatie/bestuursorgaan pass through). Required.",
             "enum": [
               "natural-person",
               "organisation",
@@ -519,7 +416,7 @@
             "title": "Routing advice",
             "type": "string",
             "facetable": true,
-            "description": "Griffie routing advice for the document. Optional until advised. CONSTRAINT: when set to 'betrekken-bij-agendapunt', targetAgendaItem MUST be referenced — this conditional-required rule is NOT expressible in the OR schema 'required' array (no if/then dialect is used here to avoid inventing one); it is enforced at save time by IngekomenStukRoutingService (Tasks 5-8) and documented here per REQ-001.",
+            "description": "Griffie routing advice for the document. Optional until advised. CONSTRAINT: when set to 'betrekken-bij-agendapunt', targetAgendaItem MUST be referenced, this conditional-required rule is NOT expressible in the OR schema 'required' array (no if/then dialect is used here to avoid inventing one); it is enforced at save time by IngekomenStukRoutingService (Tasks 5-8) and documented here per REQ-001.",
             "enum": [
               "noted-for-information",
               "referred-to-executive-board-for-disposal",
@@ -533,7 +430,7 @@
             "type": "string",
             "format": "uuid",
             "$ref": "agenda-item",
-            "description": "Reference to the AgendaItem the document should be handled under. REQUIRED when routingAdvice is 'betrekken-bij-agendapunt' (conditional-required, enforced at save time — see routingAdvice). Optional otherwise."
+            "description": "Reference to the AgendaItem the document should be handled under. REQUIRED when routingAdvice is 'betrekken-bij-agendapunt' (conditional-required, enforced at save time: see routingAdvice). Optional otherwise."
           },
           "listAgendaItem": {
             "title": "List agenda item",

@@ -101,6 +101,14 @@ class VotingRoundCloser {
 			);
 		}
 
+		if ($round !== null) {
+			$this->resolveDecisionStage(
+				round: $round,
+				result: (string)($tally['result'] ?? 'invalid'),
+				votingRoundId: $votingRoundId
+			);
+		}
+
 		$round = $this->publishOri(votingRoundId: $votingRoundId, round: $round);
 
 		// Anonymise vote values if requested (sequence: tally -> publish -> anonymise).
@@ -277,6 +285,108 @@ class VotingRoundCloser {
 		}
 
 	}//end afterAdoption()
+
+	/**
+	 * Record the vote outcome on the DecisionStage this round resolves.
+	 *
+	 * This is the writer for `DecisionStage.outcome` on a `method=vote` stage.
+	 * The schema used to declare it as an x-openregister-calculations entry, and
+	 * no configuration of that annotation can work: a virtual calculation named
+	 * after a stored property replaces that property on every read and cannot
+	 * read it back (the self-reference is a cycle the annotation validator
+	 * rejects), a materialised one would clear the outcome every other method
+	 * writes directly, and the virtual read path resolves neither `@ref` nor
+	 * `@aggregate`, so it cannot see VotingRound.result across the relation at
+	 * all. The round is still the single source of truth: this method copies its
+	 * result through a fixed map at the moment the round closes and decides
+	 * nothing of its own.
+	 *
+	 * Only an `active` stage is resolved. `pending -> decided` is not in the
+	 * stage's declared lifecycle, and a stage the route never activated is not
+	 * this round's to conclude. An `invalid` result yields no outcome.
+	 *
+	 * @param array<string,mixed> $round The closed voting round
+	 * @param string $result The computed result
+	 * @param string $votingRoundId The voting round UUID (for logging)
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/decision-methods/spec.md
+	 * @spec openspec/specs/voting-system/spec.md
+	 */
+	private function resolveDecisionStage(array $round, string $result, string $votingRoundId): void {
+		$outcome = match ($result) {
+			'adopted' => 'adopted',
+			'rejected', 'tied' => 'rejected',
+			default => null,
+		};
+
+		$stageId = $this->stageIdOf(round: $round);
+		if ($stageId === null || $outcome === null) {
+			return;
+		}
+
+		try {
+			$stage = $this->findObject(objectId: $stageId, schema: 'decision-stage');
+			if ($stage === null) {
+				return;
+			}
+
+			if ((string)($stage['status'] ?? '') !== 'active') {
+				$this->logger->info(
+					'Decidiq: round closed on a decision stage that is not active, outcome not recorded',
+					['votingRoundId' => $votingRoundId, 'stageId' => $stageId, 'status' => ($stage['status'] ?? null)]
+				);
+
+				return;
+			}
+
+			$stage['status'] = 'decided';
+			$stage['outcome'] = $outcome;
+			$stage['decidedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+			$this->objectService()->saveObject(register: 'decidiq', schema: 'decision-stage', object: $stage);
+
+			$this->logger->info(
+				'Decidiq: decision stage resolved by its voting round',
+				['votingRoundId' => $votingRoundId, 'stageId' => $stageId, 'outcome' => $outcome]
+			);
+		} catch (Throwable $e) {
+			// Fail soft, exactly as the subject transition does: the round is
+			// closed and its result is recorded, and losing the stage write must
+			// not undo that.
+			$this->logger->error(
+				'Decidiq: round closed but the decision stage outcome could not be recorded',
+				['votingRoundId' => $votingRoundId, 'stageId' => $stageId, 'error' => $e->getMessage()]
+			);
+		}//end try
+
+	}//end resolveDecisionStage()
+
+	/**
+	 * Pick the DecisionStage this round resolves, if it has one.
+	 *
+	 * The link is the `decisionStage` property (a UUID, or the expanded object
+	 * when the round was read with the relation extended). A round that resolves
+	 * no stage returns null.
+	 *
+	 * @param array<string,mixed> $round The voting round
+	 *
+	 * @return string|null The stage UUID, or null when the round resolves none.
+	 *
+	 * @spec openspec/specs/decision-methods/spec.md
+	 */
+	private function stageIdOf(array $round): ?string {
+		$stage = ($round['decisionStage'] ?? null);
+		if (is_array($stage) === true) {
+			$stage = ($stage['id'] ?? ($stage['uuid'] ?? null));
+		}
+
+		if (is_string($stage) === false || $stage === '') {
+			return null;
+		}
+
+		return $stage;
+	}//end stageIdOf()
 
 	/**
 	 * Pick the motion or amendment the round decides on.

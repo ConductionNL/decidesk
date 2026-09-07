@@ -1,0 +1,760 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Decidiq example set: Works council",
+		"version": "1.0.0",
+		"description": "A works council inside a company. Advice requests, consent requests and staff consultation."
+	},
+	"x-openregister": {
+		"type": "profile",
+		"app": "decidiq",
+		"profile": {
+			"id": "works-council",
+			"label": "Works council",
+			"description": "A works council inside a company. Advice requests, consent requests and staff consultation.",
+			"order": 4,
+			"objectCount": 45,
+			"icon": "HandshakeOutline"
+		},
+		"description": "An example set an operator picks in the first-time setup wizard (ADR-042). NEVER imported on install: the register.d fragments declare schemas only, so a bare install has zero objects. Every object carries @self.configuration/register/schema so the import resolves the live decidiq register WITHOUT this descriptor declaring components.registers. That is deliberate and load-bearing: ImportHandler::importRegister() calls setApplication($appId) unconditionally on an existing register, so a descriptor that declared the register would re-point the decidiq register at this profile config id and hydrate over its authorization baseline. Verified on a live instance: importing this shape left application=decidiq, version and authorization byte-identical. Import is idempotent by slug, so loading a profile twice adds nothing. Descriptors live in this SUBDIRECTORY on purpose: RegisterDescriptorService scans lib/Settings/*.json non-recursively and matches descriptors by declared register slug, so four profile files in lib/Settings would collide with each other and with decidesk_register.json.",
+		"seedData": {
+			"description": "Example objects for the works council set.",
+			"objects": {
+				"action-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "or-actie-sociaal-plan",
+						"title": "Sociaal plan opvragen bij de bestuurder",
+						"description": "De secretaris vraagt het concept-sociaal plan op en verspreidt het onder de OR-leden.",
+						"assignee": "or-youssef-benali",
+						"dueDate": "2026-03-13",
+						"taskStatus": "completed",
+						"completedAt": "2026-03-13T12:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "or-actie-achterban-terugkoppeling",
+						"title": "Terugkoppeling achterbanraadpleging opstellen",
+						"description": "De uitkomst van de raadpleging wordt samengevat en aan de achterban teruggekoppeld.",
+						"assignee": "or-linda-vermeer",
+						"dueDate": "2026-03-02",
+						"taskStatus": "completed",
+						"completedAt": "2026-03-02T12:00:00Z"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "action-item"
+						},
+						"slug": "or-actie-zelfroosteren-analyse",
+						"title": "Effect zelfroosteren op de productieploegen uitzoeken",
+						"description": "Voor de instemmingsaanvraag wordt in kaart gebracht wat zelfroosteren betekent voor de ploegendiensten.",
+						"assignee": "or-dennis-kok",
+						"dueDate": "2026-06-10",
+						"taskStatus": "in-progress"
+					}
+				],
+				"agenda-item": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-2026-01-adviesaanvraag-ict",
+						"title": "Adviesaanvraag uitbesteding ICT-beheer",
+						"itemType": "decision",
+						"orderNumber": 1,
+						"estimatedDuration": 60,
+						"meeting": "or-vergadering-2026-01-14",
+						"description": "Behandeling van de adviesaanvraag art. 25 WOR over de uitbesteding van het ICT-beheer."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-2026-01-achterban",
+						"title": "Opzet achterbanraadpleging thuiswerkregeling",
+						"itemType": "discussion",
+						"orderNumber": 2,
+						"estimatedDuration": 30,
+						"meeting": "or-vergadering-2026-01-14",
+						"description": "Vaststellen van de vraagstelling voor de raadpleging van de achterban."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-overleg-2026-02-reorganisatie",
+						"title": "Voorgenomen reorganisatie logistiek",
+						"itemType": "discussion",
+						"orderNumber": 1,
+						"estimatedDuration": 45,
+						"meeting": "or-overlegvergadering-2026-02-18",
+						"description": "Toelichting door de bestuurder op de voorgenomen inkrimping van de afdeling logistiek."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-overleg-2026-02-ict",
+						"title": "Advies OR over uitbesteding ICT-beheer",
+						"itemType": "decision",
+						"orderNumber": 2,
+						"estimatedDuration": 30,
+						"meeting": "or-overlegvergadering-2026-02-18",
+						"description": "De OR licht zijn advies met voorwaarden toe aan de bestuurder."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-2026-06-instemming-werktijden",
+						"title": "Instemmingsverzoek werktijdenregeling",
+						"itemType": "decision",
+						"orderNumber": 1,
+						"estimatedDuration": 60,
+						"meeting": "or-vergadering-2026-06-17",
+						"description": "Besluitvorming over het instemmingsverzoek art. 27 WOR over zelfroosteren."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "agenda-item"
+						},
+						"slug": "or-2026-06-rondvraag",
+						"title": "Rondvraag",
+						"itemType": "informational",
+						"orderNumber": 2,
+						"estimatedDuration": 10,
+						"meeting": "or-vergadering-2026-06-17"
+					}
+				],
+				"consultation-request": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "consultation-request"
+						},
+						"slug": "adviesaanvraag-outsourcing-ict",
+						"type": "adviceRequest",
+						"worArticle": "art. 25 lid 1 sub n WOR",
+						"subject": "Uitbesteding ICT-beheer aan externe dienstverlener",
+						"director": "acme-bestuurder-hilde-jansen",
+						"governanceBody": "ondernemingsraad-acme",
+						"receivedDate": "2026-01-06",
+						"requestedResponseDate": "2026-03-01",
+						"consultationMeeting": "or-overlegvergadering-2026-02-18",
+						"agendaItem": "or-2026-01-adviesaanvraag-ict",
+						"responseOutcome": "advice-with-conditions",
+						"responseText": "De OR adviseert positief onder voorwaarde van een sociaal plan en een evaluatiemoment na 12 maanden.",
+						"responseDate": "2026-02-24",
+						"relatedDecision": "or-advies-uitbesteding-ict",
+						"decisionOutcome": "in-line-with-advice",
+						"decisionText": "De bestuurder neemt het advies over en zegt een sociaal plan en een evaluatie na 12 maanden toe.",
+						"decisionDate": "2026-03-05",
+						"lifecycle": "completed"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "consultation-request"
+						},
+						"slug": "adviesaanvraag-reorganisatie-logistiek",
+						"type": "adviceRequest",
+						"worArticle": "art. 25 lid 1 sub d WOR",
+						"subject": "Voorgenomen reorganisatie afdeling logistiek (inkrimping 12 fte)",
+						"director": "acme-bestuurder-hilde-jansen",
+						"governanceBody": "ondernemingsraad-acme",
+						"receivedDate": "2026-02-09",
+						"requestedResponseDate": "2026-04-17",
+						"consultationMeeting": "or-overlegvergadering-2026-02-18",
+						"agendaItem": "or-overleg-2026-02-reorganisatie",
+						"suspensionTo": "2026-05-15",
+						"lifecycle": "consultationMeeting"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "consultation-request"
+						},
+						"slug": "instemmingsverzoek-werktijdenregeling",
+						"type": "consent-request",
+						"worArticle": "art. 27 lid 1 sub b WOR",
+						"subject": "Wijziging werktijdenregeling: invoering zelfroosteren productie",
+						"director": "acme-bestuurder-hilde-jansen",
+						"governanceBody": "ondernemingsraad-acme",
+						"receivedDate": "2026-05-11",
+						"requestedResponseDate": "2026-07-01",
+						"agendaItem": "or-2026-06-instemming-werktijden",
+						"constituencyConsultation": "achterban-or-thuiswerkregeling",
+						"lifecycle": "constituencyConsultation"
+					}
+				],
+				"decision": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "or-advies-uitbesteding-ict",
+						"decisionType": "report-adoption",
+						"title": "Advies OR over uitbesteding ICT-beheer",
+						"text": "De ondernemingsraad adviseert positief over de uitbesteding van het ICT-beheer, onder voorwaarde van een sociaal plan voor de zes betrokken medewerkers en een evaluatie na 12 maanden.",
+						"decisionDate": "2026-02-18T14:45:00Z",
+						"outcome": "adopted",
+						"isPublished": "internal",
+						"legalBasis": "art. 25 lid 1 sub n WOR",
+						"lifecycle": "enacted",
+						"enactedAt": "2026-02-24T09:00:00Z",
+						"voteType": "named",
+						"voteThreshold": "simple-majority",
+						"meeting": "or-overlegvergadering-2026-02-18",
+						"agendaItem": "or-overleg-2026-02-ict"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision"
+						},
+						"slug": "beleid-thuiswerkregeling",
+						"decisionType": "policy",
+						"title": "Vaststelling thuiswerkregeling",
+						"text": "De organisatie stelt de thuiswerkregeling 2026 vast: standaard twee thuiswerkdagen per week, met een vergoeding conform de fiscale onbelaste norm.",
+						"lifecycle": "enacted",
+						"outcome": "adopted",
+						"decisionDate": "2026-03-18T11:00:00Z",
+						"isPublished": "public"
+					}
+				],
+				"decision-template": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "decision-template"
+						},
+						"slug": "works-council-advice",
+						"name": "Works council advice request",
+						"description": "The route a WOR advice or consent request travels: received, consulted, decided, sent to the director.",
+						"decisionType": "report-adoption",
+						"context": "corporate",
+						"templateCategory": "works-council-consultation",
+						"builtIn": true,
+						"quorumRequired": true,
+						"quorumRule": "majority-of-seats",
+						"votingRule": {
+							"threshold": "simple-majority",
+							"abstentionHandling": "exclude"
+						},
+						"allowDecideWithoutVote": false,
+						"regulationSource": "Wet op de ondernemingsraden, art. 25 en art. 27",
+						"checklist": []
+					}
+				],
+				"governance-body": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-body"
+						},
+						"slug": "ondernemingsraad-acme",
+						"name": "Ondernemingsraad ACME B.V.",
+						"bodyType": "works-council",
+						"domain": "medezeggenschap",
+						"statutoryBasis": "Wet op de ondernemingsraden (WOR)",
+						"votingDefault": "for-against-abstain",
+						"quorum": 4,
+						"active": true,
+						"termStart": "2025-04-01T00:00:00Z",
+						"termEnd": "2029-03-31T00:00:00Z",
+						"parentBody": "raad-van-bestuur-acme-bv"
+					}
+				],
+				"governance-consultation": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation"
+						},
+						"slug": "achterban-or-thuiswerkregeling",
+						"subject": "Wat vindt de achterban van de voorgestelde thuiswerkregeling (instemmingsaanvraag art. 27 WOR)?",
+						"audienceType": "user-group",
+						"binding": false,
+						"deadline": "2026-02-15T17:00:00Z",
+						"description": "Informele raadpleging van de achterban voor het OR-besluit over de instemmingsaanvraag.",
+						"responseType": "open-text",
+						"audienceGroup": "or-achterban-acme",
+						"agendaItem": "or-2026-01-achterban",
+						"opensAt": "2026-02-01T09:00:00Z",
+						"anonymousResponses": true,
+						"lifecycle": "processed",
+						"results": {
+							"audienceSize": 12,
+							"responseCount": 9,
+							"openTextDigest": "Meerderheid positief. Zorgen over de bereikbaarheid van de servicedesk en over de productieploegen, die niet thuis kunnen werken."
+						}
+					}
+				],
+				"governance-consultation-response": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-1",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Positief, maar de regeling moet ook voor de productieploegen een alternatief bieden.",
+						"submittedAt": "2026-02-03T12:05:00Z",
+						"respondentId": "pdevries",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-2",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Twee vaste thuiswerkdagen werkt goed. Graag wel duidelijkheid over de bezetting van de servicedesk.",
+						"submittedAt": "2026-02-05T08:40:00Z",
+						"respondentId": "mbakker",
+						"status": "submitted"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "governance-consultation-response"
+						},
+						"slug": "respons-or-achterban-3",
+						"consultation": "achterban-or-thuiswerkregeling",
+						"text": "Ik mis een regeling voor de reiskostenvergoeding op thuiswerkdagen.",
+						"submittedAt": "2026-02-11T16:20:00Z",
+						"respondentId": "janssen",
+						"status": "submitted"
+					}
+				],
+				"meeting": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "or-vergadering-2026-01-14",
+						"title": "OR-vergadering 14 januari 2026",
+						"meetingType": "regular",
+						"governanceBody": "ondernemingsraad-acme",
+						"scheduledDate": "2026-01-14T09:30:00Z",
+						"endDate": "2026-01-14T12:00:00Z",
+						"location": "ACME B.V., vergaderruimte Noord",
+						"meetingMode": "in-person",
+						"lifecycle": "closed",
+						"quorumRequired": 4,
+						"chair": "or-sanne-de-groot",
+						"isPublic": false
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "or-overlegvergadering-2026-02-18",
+						"title": "Overlegvergadering 18 februari 2026",
+						"meetingType": "regular",
+						"governanceBody": "ondernemingsraad-acme",
+						"scheduledDate": "2026-02-18T13:00:00Z",
+						"endDate": "2026-02-18T15:30:00Z",
+						"location": "ACME B.V., directiekamer",
+						"meetingMode": "hybrid",
+						"lifecycle": "closed",
+						"quorumRequired": 4,
+						"chair": "or-sanne-de-groot",
+						"isPublic": false
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "meeting"
+						},
+						"slug": "or-vergadering-2026-06-17",
+						"title": "OR-vergadering 17 juni 2026",
+						"meetingType": "regular",
+						"governanceBody": "ondernemingsraad-acme",
+						"scheduledDate": "2026-06-17T09:30:00Z",
+						"endDate": "2026-06-17T12:00:00Z",
+						"location": "ACME B.V., vergaderruimte Noord",
+						"meetingMode": "in-person",
+						"lifecycle": "scheduled",
+						"quorumRequired": 4,
+						"chair": "or-sanne-de-groot",
+						"isPublic": false
+					}
+				],
+				"membership": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-or-de-groot",
+						"role": "chair",
+						"person": "or-sanne-de-groot",
+						"governanceBody": "ondernemingsraad-acme",
+						"votingWeight": 1,
+						"startDate": "2025-04-01",
+						"post": "post-or-voorzitter-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-or-benali",
+						"role": "secretary",
+						"person": "or-youssef-benali",
+						"governanceBody": "ondernemingsraad-acme",
+						"votingWeight": 1,
+						"startDate": "2025-04-01",
+						"post": "post-or-secretaris-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-or-vermeer",
+						"role": "member",
+						"person": "or-linda-vermeer",
+						"governanceBody": "ondernemingsraad-acme",
+						"votingWeight": 1,
+						"startDate": "2025-04-01"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "membership"
+						},
+						"slug": "lidmaatschap-or-kok",
+						"role": "member",
+						"person": "or-dennis-kok",
+						"governanceBody": "ondernemingsraad-acme",
+						"votingWeight": 1,
+						"startDate": "2025-04-01"
+					}
+				],
+				"minutes": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-or-2026-01-14",
+						"title": "Notulen OR-vergadering 14 januari 2026",
+						"lifecycle": "approved",
+						"version": 2,
+						"approvedAt": "2026-02-18T13:10:00Z",
+						"meeting": "or-vergadering-2026-01-14"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "minutes"
+						},
+						"slug": "notulen-or-overleg-2026-02-18",
+						"title": "Notulen overlegvergadering 18 februari 2026",
+						"lifecycle": "review",
+						"version": 1,
+						"meeting": "or-overlegvergadering-2026-02-18"
+					}
+				],
+				"participant": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "or-p-sanne-de-groot",
+						"displayName": "Sanne de Groot",
+						"role": "chair",
+						"email": "s.degroot@acme.nl",
+						"joinedAt": "2025-04-01T00:00:00Z",
+						"votingWeight": 1,
+						"attendanceStatus": "present",
+						"participantType": "in-person",
+						"governanceBody": "ondernemingsraad-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "or-p-youssef-benali",
+						"displayName": "Youssef Benali",
+						"role": "secretary",
+						"email": "y.benali@acme.nl",
+						"joinedAt": "2025-04-01T00:00:00Z",
+						"votingWeight": 1,
+						"attendanceStatus": "present",
+						"participantType": "in-person",
+						"governanceBody": "ondernemingsraad-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "or-p-linda-vermeer",
+						"displayName": "Linda Vermeer",
+						"role": "member",
+						"email": "l.vermeer@acme.nl",
+						"joinedAt": "2025-04-01T00:00:00Z",
+						"votingWeight": 1,
+						"attendanceStatus": "present",
+						"participantType": "in-person",
+						"governanceBody": "ondernemingsraad-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "participant"
+						},
+						"slug": "or-p-dennis-kok",
+						"displayName": "Dennis Kok",
+						"role": "member",
+						"email": "d.kok@acme.nl",
+						"joinedAt": "2025-04-01T00:00:00Z",
+						"votingWeight": 1,
+						"attendanceStatus": "present",
+						"participantType": "in-person",
+						"governanceBody": "ondernemingsraad-acme"
+					}
+				],
+				"person": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "or-sanne-de-groot",
+						"name": "Sanne de Groot",
+						"givenName": "Sanne",
+						"familyName": "de Groot",
+						"gender": "female",
+						"email": "s.degroot@acme.nl",
+						"biography": "Voorzitter van de ondernemingsraad, teamleider logistiek."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "or-youssef-benali",
+						"name": "Youssef Benali",
+						"givenName": "Youssef",
+						"familyName": "Benali",
+						"gender": "male",
+						"email": "y.benali@acme.nl",
+						"biography": "Secretaris van de ondernemingsraad, medewerker ICT-beheer."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "or-linda-vermeer",
+						"name": "Linda Vermeer",
+						"givenName": "Linda",
+						"familyName": "Vermeer",
+						"gender": "female",
+						"email": "l.vermeer@acme.nl",
+						"biography": "OR-lid namens de productieploegen."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "or-dennis-kok",
+						"name": "Dennis Kok",
+						"givenName": "Dennis",
+						"familyName": "Kok",
+						"gender": "male",
+						"email": "d.kok@acme.nl",
+						"biography": "OR-lid namens de servicedesk."
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "person"
+						},
+						"slug": "acme-bestuurder-hilde-jansen",
+						"name": "Hilde Jansen",
+						"givenName": "Hilde",
+						"familyName": "Jansen",
+						"gender": "female",
+						"email": "h.jansen@acme.nl",
+						"biography": "Bestuurder in de zin van de WOR, directeur bedrijfsvoering ACME B.V."
+					}
+				],
+				"post": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-or-voorzitter-acme",
+						"label": "OR-voorzitter",
+						"role": "chair",
+						"startDate": "2025-04-01T00:00:00Z",
+						"governanceBody": "ondernemingsraad-acme"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "post"
+						},
+						"slug": "post-or-secretaris-acme",
+						"label": "OR-secretaris",
+						"role": "secretary",
+						"startDate": "2025-04-01T00:00:00Z",
+						"governanceBody": "ondernemingsraad-acme"
+					}
+				],
+				"vote": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-or-de-groot-ict",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-02-18T14:40:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-or-advies-ict",
+						"participant": "or-p-sanne-de-groot"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-or-benali-ict",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-02-18T14:40:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-or-advies-ict",
+						"participant": "or-p-youssef-benali"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-or-vermeer-ict",
+						"value": "for",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-02-18T14:40:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-or-advies-ict",
+						"participant": "or-p-linda-vermeer"
+					},
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "vote"
+						},
+						"slug": "stem-or-kok-ict",
+						"value": "abstain",
+						"weight": 1,
+						"isProxy": false,
+						"castAt": "2026-02-18T14:40:00Z",
+						"castAs": "in-person",
+						"votingRound": "stemming-or-advies-ict",
+						"participant": "or-p-dennis-kok"
+					}
+				],
+				"voting-round": [
+					{
+						"@self": {
+							"configuration": "decidiq",
+							"register": "decidiq",
+							"schema": "voting-round"
+						},
+						"slug": "stemming-or-advies-ict",
+						"votingMethod": "for-against-abstain",
+						"isSecret": false,
+						"openedAt": "2026-02-18T14:35:00Z",
+						"closedAt": "2026-02-18T14:44:00Z",
+						"quorumWith": true,
+						"result": "adopted",
+						"votesFor": 3,
+						"votesAgainst": 0,
+						"votesAbstain": 1,
+						"voteThreshold": "simple-majority",
+						"abstentionHandling": "exclude",
+						"voteBase": 4
+					}
+				]
+			}
+		}
+	},
+	"paths": {},
+	"components": {}
+}

@@ -3,25 +3,26 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage — MeetingDetail's five meeting-facet-composition
- * facets: oral questions (vragenuur), interpellations, proxy authorizations,
+ * facets: typed agenda items, proxy authorizations,
  * the assoc-mode-gated kascommissie verklaringen facet, and the read-only
  * routed-incoming-documents facet. Before this file these five widgets
  * (src/manifest.json:474-478) had no e2e coverage at all — a green suite
  * proved nothing about whether they actually render.
  *
- * Fixtures (a meeting + one mondelinge-vraag) are seeded through the
- * OpenRegister object API with Basic auth (CSRF-exempt, mirrors
+ * Fixtures (a meeting, an agenda-item-type and one agenda item) are seeded
+ * through the OpenRegister object API with Basic auth (CSRF-exempt, mirrors
  * agenda-management.spec.ts's `newApiContext`) and deleted in a `finally`
  * block — explicitly, by id, rather than via the workflows/governance-fixture
- * TEARDOWN_ORDER list, because `mondelinge-vraag` is not a member of that
- * list and would leak silently if routed through `cleanupAll()` (see that
- * file's TEARDOWN_ORDER doc comment for the five schemas that already leaked
- * this way).
+ * TEARDOWN_ORDER list, because `agenda-item-type` is not a member of that list
+ * and would leak silently if routed through `cleanupAll()` (see that file's
+ * TEARDOWN_ORDER doc comment for the five schemas that already leaked this
+ * way).
  *
  * @e2e openspec/specs/meeting-detail-view/spec.md#oral-questions-scoped-to-the-current-meeting
+ *   (now served by the generic typed-agenda-item assertion — see the first test)
  * @e2e openspec/specs/meeting-detail-view/spec.md#interpellations-scheduled-at-the-current-meeting
  * @e2e openspec/specs/meeting-detail-view/spec.md#proxy-authorizations-scoped-to-the-current-meeting
- * @e2e openspec/specs/meeting-detail-view/spec.md#kascommissie-facet-hidden-outside-association-mode
+ * @e2e openspec/specs/meeting-detail-view/spec.md#audit-statement-facet-hidden-outside-association-mode
  * @e2e openspec/specs/meeting-detail-view/spec.md#documents-routed-onto-the-meetings-agenda
  */
 import type { APIRequestContext, PlaywrightWorkerArgs } from '@playwright/test'
@@ -34,7 +35,6 @@ const ADMIN_USER = process.env.NEXTCLOUD_USER || 'admin'
 const ADMIN_PASS = process.env.NEXTCLOUD_PASS || 'admin'
 
 /** A placeholder Person/Decision reference for required-but-irrelevant refs, matching the nil-UUID convention already used throughout lib/Settings seed data for unresolved references. */
-const NIL_UUID = '00000000-0000-0000-0000-000000000000'
 
 /**
  * Basic-auth API context for seeding fixtures (session cookies would trip
@@ -60,47 +60,36 @@ function objectId(body: any): string | null {
 	return body?.id ?? body?.['@self']?.id ?? null
 }
 
-/** Find a seeded GovernanceBody's id by its exact `name`. */
-async function findGovernanceBodyId(
-	api: APIRequestContext,
-	name: string,
-): Promise<string | null> {
-	const resp = await api.get(`${OR}/governance-body?_limit=200`, {
-		headers: { Accept: 'application/json' },
-	})
-	if (!resp.ok()) return null
-	const body = await resp.json()
-	const rows = body.results ?? body.items ?? []
-	const match = rows.find((r: any) => r.name === name)
-	return match ? objectId(match) : null
-}
-
 // @e2e openspec/specs/meeting-detail-view/spec.md#oral-questions-scoped-to-the-current-meeting
-test('MeetingDetail: oral-questions facet lists a mondelinge-vraag created via API', async ({
+//
+// 🔴 THIS TEST CHANGED SUBJECT, NOT SCOPE. It used to create a
+// `mondelinge-vraag` and look for an "Oral questions" facet. Both are gone:
+// questions-as-agenda-items retired that schema and removed the facet, because
+// an oral question is an agenda item whose TYPE says what kind it is, and the
+// app is not supposed to know that a council calls it a mondelinge vraag.
+//
+// So what is asserted now is the thing the collapse has to get right and the
+// unit tests cannot see: an agenda item carrying a configured type renders on
+// the meeting under THAT TYPE'S NAME. If the type never resolves, the Type
+// column silently falls back to the coarse enum and every collapsed item reads
+// as "discussion" — a regression that looks like a working page.
+test('MeetingDetail: an agenda item renders under its configured type name', async ({
 	page,
 	playwright,
 }) => {
-	// Detail pages are widget-heavy: MeetingDetail declares 18 widgets, each
+	// Detail pages are widget-heavy: MeetingDetail declares 16 widgets, each
 	// an object-list query costing ~1s on this instance, on top of the
 	// pre-mount initializeStores() settings round trip every navigation
 	// blocks on — the 30s global test timeout is nowhere near enough.
 	test.setTimeout(120_000)
 	const api = await newApiContext(playwright)
 	let meetingId: string | null = null
-	let questionId: string | null = null
+	let typeId: string | null = null
+	let itemId: string | null = null
 	try {
-		const governanceBodyId = await findGovernanceBodyId(
-			api,
-			'Gemeenteraad Amsterdam',
-		)
-		test.skip(
-			!governanceBodyId,
-			'Seed governance body "Gemeenteraad Amsterdam" not found',
-		)
-
 		const meetingResp = await api.post(`${OR}/meeting`, {
 			data: {
-				title: `E2E facet meeting (vragenuur) ${Date.now()}`,
+				title: `E2E facet meeting (typed agenda item) ${Date.now()}`,
 				meetingType: 'regular',
 				scheduledDate: '2027-02-01T10:00:00Z',
 				meetingMode: 'in-person',
@@ -114,29 +103,42 @@ test('MeetingDetail: oral-questions facet lists a mondelinge-vraag created via A
 		meetingId = objectId(await meetingResp.json())
 		test.skip(!meetingId, 'Seeded meeting has no id')
 
-		const subject = `E2E facet oral question ${Date.now()}`
-		const questionResp = await api.post(`${OR}/mondelinge-vraag`, {
+		// A run-unique name, so the assertion cannot pass on a type some example
+		// set happens to have seeded.
+		const typeName = `E2E oral question ${Date.now()}`
+		const typeResp = await api.post(`${OR}/agenda-item-type`, {
+			data: { name: typeName, isDraft: false, active: true },
+		})
+		test.skip(
+			!typeResp.ok(),
+			`Could not seed agenda-item-type (HTTP ${typeResp.status()})`,
+		)
+		typeId = objectId(await typeResp.json())
+		test.skip(!typeId, 'Seeded agenda-item-type has no id')
+
+		const subject = `E2E typed agenda item ${Date.now()}`
+		const itemResp = await api.post(`${OR}/agenda-item`, {
 			data: {
-				// Pattern-validated MV-{jaar}-{volgnummer}; a run-unique suffix
-				// avoids colliding with any other seeded/created question.
-				questionNumber: `MV-2026-${Date.now() % 100000}`,
-				submitter: NIL_UUID,
-				portfolioHolder: NIL_UUID,
-				politicalGroup: 'E2E test fraction',
-				subject,
-				rationale:
-					'E2E fixture rationale text for the oral-questions facet.',
-				governanceBody: governanceBodyId,
-				targetMeeting: meetingId,
-				lifecycle: 'submitted',
+				title: subject,
+				itemType: 'discussion',
+				orderNumber: 1,
+				meeting: meetingId,
+				type: typeId,
+				// The fields the retired schema declared as columns now live here,
+				// which is what `typeFields` was added for.
+				typeFields: {
+					questionNumber: `MV-2026-${Date.now() % 100000}`,
+					politicalGroup: 'E2E test fraction',
+					lifecycle: 'submitted',
+				},
 			},
 		})
 		test.skip(
-			!questionResp.ok(),
-			`Could not seed mondelinge-vraag (HTTP ${questionResp.status()})`,
+			!itemResp.ok(),
+			`Could not seed agenda-item (HTTP ${itemResp.status()})`,
 		)
-		questionId = objectId(await questionResp.json())
-		test.skip(!questionId, 'Seeded mondelinge-vraag has no id')
+		itemId = objectId(await itemResp.json())
+		test.skip(!itemId, 'Seeded agenda-item has no id')
 
 		await page.goto(`${BASE}/apps/decidiq/meetings/${meetingId}`)
 		// app-root appearing only proves the shell mounted, not that data has
@@ -144,19 +146,28 @@ test('MeetingDetail: oral-questions facet lists a mondelinge-vraag created via A
 		// trip, so 30s (double the old budget) before even the shell shows up.
 		await page.waitForSelector('[data-testid="app-root"]', { timeout: 30_000 })
 
-		// MeetingDetail issues ~18 widget queries at ~1s each after mount;
-		// give content assertions real headroom instead of the 10s expect default.
-		await expect(
-			page.getByRole('heading', { name: 'Oral questions', exact: true }),
-		).toBeVisible({ timeout: 45_000 })
-		await expect(page.getByText(subject, { exact: true })).toBeVisible({
+		// Scoped to the agenda tab on purpose: "Agenda" is BOTH the widget's
+		// page-level title and the tab's own heading, so an unscoped
+		// getByRole('heading') matches two elements and fails strict mode
+		// without telling you the page rendered perfectly well.
+		const agenda = page.getByTestId('agenda-tab')
+		await expect(agenda).toBeVisible({ timeout: 45_000 })
+		await expect(agenda.getByText(subject, { exact: true })).toBeVisible({
+			timeout: 45_000,
+		})
+
+		// 🔑 THE TYPE NAME IS THE ASSERTION. Finding the item proves the agenda
+		// lists it; finding the type name proves the Type column resolved the
+		// configured kind rather than falling back to "discussion".
+		await expect(agenda.getByText(typeName, { exact: true })).toBeVisible({
 			timeout: 45_000,
 		})
 	} finally {
-		if (questionId) {
-			await api
-				.delete(`${OR}/mondelinge-vraag/${questionId}`)
-				.catch(() => null)
+		if (itemId) {
+			await api.delete(`${OR}/agenda-item/${itemId}`).catch(() => null)
+		}
+		if (typeId) {
+			await api.delete(`${OR}/agenda-item-type/${typeId}`).catch(() => null)
 		}
 		if (meetingId) {
 			await api.delete(`${OR}/meeting/${meetingId}`).catch(() => null)
@@ -168,12 +179,12 @@ test('MeetingDetail: oral-questions facet lists a mondelinge-vraag created via A
 // @e2e openspec/specs/meeting-detail-view/spec.md#interpellations-scheduled-at-the-current-meeting
 // @e2e openspec/specs/meeting-detail-view/spec.md#proxy-authorizations-scoped-to-the-current-meeting
 // @e2e openspec/specs/meeting-detail-view/spec.md#documents-routed-onto-the-meetings-agenda
-// @e2e openspec/specs/meeting-detail-view/spec.md#kascommissie-facet-hidden-outside-association-mode
-test('MeetingDetail: interpellations, proxy-authorizations and routed-documents facets render their real empty states; kascommissie is absent in gov mode', async ({
+// @e2e openspec/specs/meeting-detail-view/spec.md#audit-statement-facet-hidden-outside-association-mode
+test('MeetingDetail: proxy-authorizations and routed-documents facets render their real empty states; interpellations and kascommissie are absent', async ({
 	page,
 	playwright,
 }) => {
-	// Detail pages are widget-heavy: MeetingDetail declares 18 widgets, each
+	// Detail pages are widget-heavy: MeetingDetail declares 16 widgets, each
 	// an object-list query costing ~1s on this instance, on top of the
 	// pre-mount initializeStores() settings round trip every navigation
 	// blocks on — the 30s global test timeout is nowhere near enough.
@@ -205,18 +216,14 @@ test('MeetingDetail: interpellations, proxy-authorizations and routed-documents 
 
 		// MeetingDetail issues ~18 widget queries at ~1s each after mount;
 		// give content assertions real headroom instead of the 10s expect default.
-		// Interpellations facet (object-list widget) — real declared empty state.
+		// 🔴 THE INTERPELLATIONS FACET IS ASSERTED ABSENT, NOT EMPTY.
+		// questions-as-agenda-items removed it: an interpellation request is an
+		// agenda item carrying a type that requires support before it is
+		// admitted, so it belongs in the Agenda widget. Asserting its heading is
+		// gone is what keeps a revert from passing this test quietly.
 		await expect(
 			page.getByRole('heading', { name: 'Interpellations', exact: true }),
-		).toBeVisible({ timeout: 45_000 })
-		await expect(
-			page.getByText(
-				'No interpellation requests scheduled for this meeting.',
-				{
-					exact: true,
-				},
-			),
-		).toBeVisible({ timeout: 45_000 })
+		).toHaveCount(0)
 
 		// Proxy authorizations facet (object-list widget) — real declared empty state.
 		await expect(
@@ -265,7 +272,7 @@ test('MeetingDetail: interpellations, proxy-authorizations and routed-documents 
 		// proven rendered above, so by this point Vue has already decided
 		// whether to mount it — an absence check with nothing rendered yet
 		// would pass for the wrong reason (not-loaded looks identical to gated-off).
-		await expect(page.getByTestId('meeting-kascommissie-tab')).toHaveCount(0)
+		await expect(page.getByTestId('meeting-audit-statements-tab')).toHaveCount(0)
 	} finally {
 		if (meetingId) {
 			await api.delete(`${OR}/meeting/${meetingId}`).catch(() => null)

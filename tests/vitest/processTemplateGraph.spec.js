@@ -7,19 +7,21 @@
 //
 // @spec openspec/specs/process-configuration/spec.md
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { validateStateMachineGraph } from '../../src/services/processTemplateGraph.js'
 
-const validTemplate = () => ({
-	initialState: 'draft',
-	stateMachine: {
-		states: [{ name: 'draft' }, { name: 'proposed' }, { name: 'decided' }],
-		transitions: [
-			{ from: 'draft', to: 'proposed' },
-			{ from: 'proposed', to: 'decided' },
-		],
-	},
-})
+function validTemplate() {
+	return {
+		initialState: 'draft',
+		stateMachine: {
+			states: [{ name: 'draft' }, { name: 'proposed' }, { name: 'decided' }],
+			transitions: [
+				{ from: 'draft', to: 'proposed' },
+				{ from: 'proposed', to: 'decided' },
+			],
+		},
+	}
+}
 
 describe('validateStateMachineGraph', () => {
 	it('accepts a well-formed graph', () => {

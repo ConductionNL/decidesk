@@ -9,7 +9,7 @@
  * assert exactly what registerObjectType is called with.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Controllable fakes for the two stores ensureRelationType pulls in.
 const registerObjectType = vi.fn()

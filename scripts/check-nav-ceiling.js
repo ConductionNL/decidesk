@@ -235,7 +235,9 @@ function applySettingsSection(menu, settingsIds) {
 	const strip = (nodes) =>
 		nodes.reduce((acc, n) => {
 			if (want.has(n.id)) {
-				const { children, ...leaf } = n
+				// The lifted entry is the node WITHOUT its children.
+				const leaf = { ...n }
+				delete leaf.children
 				lifted.push({ ...leaf, section: 'settings' })
 				return acc
 			}

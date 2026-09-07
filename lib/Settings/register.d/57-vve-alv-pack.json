@@ -1,192 +1,6 @@
 {
   "x-openregister": {
-    "seedData": {
-      "description": "VvE ALV statutory pack seed data (planted via OpenRegister x-openregister.seedData path, ADR-016). Three built-in ModelreglementPreset objects (1992/2006/2017) and six built-in VveDecisionTemplate objects ship read-only-but-duplicable exactly like process-configuration's built-ins (builtIn: true). One VveConfiguration (VvE Zeewaarts) binds a body to modelreglement-2017, denominator 10.000, and one splitsingsakte majority override; two KascommissieVerklaring objects demonstrate the goedkeurend and met-voorbehoud verdicts. References resolve by slug against same-fragment seeds (modelreglement-2017) or existing decidesk seeds; the nil UUID 00000000-0000-0000-0000-000000000000 is an obvious placeholder where no matching seed object exists yet (the VvE governance body, the jaarrekening agenda item, and the splitsingsakte governing document registered by the governing-documents-register sibling). Seeded majorities name their modelreglement article and require juridical review before release (proposal Risk 1 / Open Questions).",
-      "objects": {
-        "modelreglement-preset": [
-          {
-            "slug": "modelreglement-1992",
-            "name": "Modelreglement 1992",
-            "description": "Modelreglement bij splitsing in appartementsrechten, versie 1992. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-            "builtIn": true,
-            "categoryRules": [
-              {
-                "decisionCategory": "authorisation-above-threshold",
-                "voteThreshold": "qualified-majority-three-quarters",
-                "quorumFraction": "2/3",
-                "article": "MR 1992 art. 38 lid 5"
-              },
-              {
-                "decisionCategory": "amendment-internal-regulations",
-                "voteThreshold": "qualified-majority-two-thirds",
-                "quorumFraction": null,
-                "article": "MR 1992 art. 44"
-              },
-              {
-                "decisionCategory": "other",
-                "voteThreshold": "simple-majority",
-                "quorumFraction": null,
-                "article": "MR 1992 hoofdregel gewone meerderheid"
-              }
-            ]
-          },
-          {
-            "slug": "modelreglement-2006",
-            "name": "Modelreglement 2006",
-            "description": "Modelreglement bij splitsing in appartementsrechten, versie 2006. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-            "builtIn": true,
-            "categoryRules": [
-              {
-                "decisionCategory": "authorisation-above-threshold",
-                "voteThreshold": "qualified-majority-two-thirds",
-                "quorumFraction": "2/3",
-                "article": "MR 2006 art. 52 lid 5"
-              },
-              {
-                "decisionCategory": "amendment-internal-regulations",
-                "voteThreshold": "qualified-majority-two-thirds",
-                "quorumFraction": null,
-                "article": "MR 2006 art. 59"
-              },
-              {
-                "decisionCategory": "other",
-                "voteThreshold": "simple-majority",
-                "quorumFraction": null,
-                "article": "MR 2006 hoofdregel gewone meerderheid"
-              }
-            ]
-          },
-          {
-            "slug": "modelreglement-2017",
-            "name": "Modelreglement 2017",
-            "description": "Modelreglement bij splitsing in appartementsrechten, versie 2017. Categoriemajoriteiten en quora per de artikelen van dit modelreglement. Read-only built-in; dupliceer om af te wijken.",
-            "builtIn": true,
-            "categoryRules": [
-              {
-                "decisionCategory": "authorisation-above-threshold",
-                "voteThreshold": "qualified-majority-two-thirds",
-                "quorumFraction": "2/3",
-                "article": "MR 2017 art. 56 lid 5"
-              },
-              {
-                "decisionCategory": "amendment-internal-regulations",
-                "voteThreshold": "qualified-majority-two-thirds",
-                "quorumFraction": null,
-                "article": "MR 2017 art. 60"
-              },
-              {
-                "decisionCategory": "other",
-                "voteThreshold": "simple-majority",
-                "quorumFraction": null,
-                "article": "MR 2017 hoofdregel gewone meerderheid"
-              }
-            ]
-          }
-        ],
-        "vve-decision-template": [
-          {
-            "slug": "decharge-bestuur",
-            "name": "Decharge bestuur",
-            "description": "Decharge van het bestuur over het afgelopen boekjaar door de algemene ledenvergadering.",
-            "decisionCategory": "discharge",
-            "proposedText": "De vergadering verleent het bestuur decharge voor het gevoerde beleid en beheer over het boekjaar {boekjaar}, gehoord de verklaring van de kascommissie.",
-            "builtIn": true,
-            "defaultVoteThreshold": "simple-majority",
-            "defaultQuorumFraction": null,
-            "regulationSource": "BW 2:48/2:49"
-          },
-          {
-            "slug": "vaststelling-jaarrekening",
-            "name": "Vaststelling jaarrekening",
-            "description": "Vaststelling van de jaarrekening (exploitatie- en balansoverzicht) van het afgelopen boekjaar.",
-            "decisionCategory": "annual-accounts",
-            "proposedText": "De vergadering stelt de jaarrekening over het boekjaar {boekjaar} vast conform het door het bestuur aangeboden exploitatie- en balansoverzicht.",
-            "builtIn": true,
-            "defaultVoteThreshold": "simple-majority",
-            "defaultQuorumFraction": null,
-            "regulationSource": "MR 2017 art. 14/15"
-          },
-          {
-            "slug": "dotatie-reservefonds",
-            "name": "Dotatie reservefonds",
-            "description": "Besluit tot dotatie aan het reservefonds voor groot onderhoud.",
-            "decisionCategory": "reserve-fund-contribution",
-            "proposedText": "De vergadering besluit over het boekjaar {boekjaar} een bedrag te doteren aan het reservefonds ten behoeve van toekomstig groot onderhoud, conform de MJOP-grondslag.",
-            "builtIn": true,
-            "defaultVoteThreshold": "simple-majority",
-            "defaultQuorumFraction": null,
-            "regulationSource": "Woningwet reservefonds (BW 5:126)"
-          },
-          {
-            "slug": "vaststelling-mjop",
-            "name": "Vaststelling/actualisatie MJOP",
-            "description": "Vaststelling of actualisatie van het meerjarenonderhoudsplan (MJOP).",
-            "decisionCategory": "mjop-adoption",
-            "proposedText": "De vergadering stelt het meerjarenonderhoudsplan (MJOP) {periode} vast, respectievelijk actualiseert het geldende MJOP conform het aangeboden concept.",
-            "builtIn": true,
-            "defaultVoteThreshold": "simple-majority",
-            "defaultQuorumFraction": null,
-            "regulationSource": "MR 2017 art. 14 (MJOP-grondslag)"
-          },
-          {
-            "slug": "machtiging-boven-drempel",
-            "name": "Machtiging bestuur onderhoud boven drempel",
-            "description": "Machtiging aan het bestuur voor onderhoudsuitgaven boven de in het reglement bepaalde drempel.",
-            "decisionCategory": "authorisation-above-threshold",
-            "proposedText": "De vergadering machtigt het bestuur tot het aangaan van de onderhoudsverplichting {omschrijving} voor een bedrag van {bedrag}, welk bedrag de reglementaire drempel overschrijdt.",
-            "builtIn": true,
-            "defaultVoteThreshold": "qualified-majority-two-thirds",
-            "defaultQuorumFraction": "2/3",
-            "regulationSource": "MR 2017 art. 56 lid 5"
-          },
-          {
-            "slug": "wijziging-huishoudelijk-reglement",
-            "name": "Wijziging huishoudelijk reglement",
-            "description": "Wijziging van het huishoudelijk reglement van de vereniging van eigenaars.",
-            "decisionCategory": "amendment-internal-regulations",
-            "proposedText": "De vergadering besluit het huishoudelijk reglement te wijzigen conform het aangeboden voorstel {omschrijving}.",
-            "builtIn": true,
-            "defaultVoteThreshold": "qualified-majority-two-thirds",
-            "defaultQuorumFraction": null,
-            "regulationSource": "MR 2017 art. 60"
-          }
-        ],
-        "vve-configuration": [
-          {
-            "slug": "vve-zeewaarts-configuratie",
-            "governanceBody": "00000000-0000-0000-0000-000000000000",
-            "modelRegulation": "modelreglement-2017",
-            "fractionDenominator": 10000,
-            "deedOfDivisionDocument": "00000000-0000-0000-0000-000000000000",
-            "majorityOverrides": [
-              {
-                "decisionCategory": "amendment-internal-regulations",
-                "voteThreshold": "qualified-majority-three-quarters",
-                "quorumFraction": null,
-                "deedArticle": "splitsingsakte 2019 art. 62"
-              }
-            ]
-          }
-        ],
-        "kascommissie-verklaring": [
-          {
-            "slug": "kascommissie-verklaring-2025",
-            "financialYear": 2025,
-            "verdict": "approving",
-            "notes": "Administratie ordelijk; reservefondsdotatie conform MJOP.",
-            "agendaItem": "00000000-0000-0000-0000-000000000000",
-            "governanceBody": "00000000-0000-0000-0000-000000000000"
-          },
-          {
-            "slug": "kascommissie-verklaring-2024",
-            "financialYear": 2024,
-            "verdict": "qualified",
-            "notes": "Voorbehoud: onderhoudsfacturen Q3 ontbraken bij controle.",
-            "governanceBody": "00000000-0000-0000-0000-000000000000"
-          }
-        ]
-      }
-    }
+    "_seedDataNote": "Seed objects MOVED to lib/Settings/profiles/*.json (OpenSpec change seed-profiles). A register.d fragment declares SCHEMAS ONLY, so installing this app plants zero objects. The examples that used to live here are now part of an example set an operator picks in the first-time setup wizard, which is the only thing that imports them."
   },
   "components": {
     "schemas": {
@@ -195,7 +9,7 @@
         "icon": "OfficeBuildingOutline",
         "version": "0.1.0",
         "title": "VveConfiguration",
-        "description": "Per-body VvE statutory context: binds a governance body (the VvE) to its modelreglement preset, its breukdelen denominator, the splitsingsakte governing document (reference only — registered by the governing-documents-register capability, never duplicated here), and any per-akte majority overrides. Exactly one VveConfiguration per governance body. A governance body without a VveConfiguration is entirely unaffected by this pack (fail-soft to existing behaviour). Contains no financial ledger properties by construction (REQ-VVE-001).",
+        "description": "Per-body VvE statutory context: binds a governance body (the VvE) to its modelreglement preset, its breukdelen denominator, the splitsingsakte governing document (reference only, registered by the governing-documents-register capability, never duplicated here), and any per-akte majority overrides. Exactly one VveConfiguration per governance body. A governance body without a VveConfiguration is entirely unaffected by this pack (fail-soft to existing behaviour). Contains no financial ledger properties by construction.",
         "type": "object",
         "x-schema-org": "schema:OwnershipInfo",
         "x-openregister": {
@@ -235,7 +49,7 @@
           "deedOfDivisionDocument": {
             "title": "Splitsingsakte document",
             "type": "string",
-            "description": "Reference to the splitsingsakte governing document registered by the governing-documents-register capability. Reference only — this pack never registers the document itself. A plain reference string (governing document uuid/slug); nil UUID placeholder until the sibling registration lands.",
+            "description": "Reference to the splitsingsakte governing document registered by the governing-documents-register capability. Reference only: this pack never registers the document itself. A plain reference string (governing document uuid/slug); nil UUID placeholder until the sibling registration lands.",
             "example": "splitsingsakte-vve-zeewaarts-2019"
           },
           "majorityOverrides": {
@@ -294,7 +108,7 @@
         "icon": "Gavel",
         "version": "0.1.0",
         "title": "VveDecisionTemplate",
-        "description": "Statutory content for a VvE ALV decision: name, proposed besluittekst, decision category, and default required majority/quorum sourced from the modelreglementen. Distinct from ProcessTemplate (which models a state machine): this is decision content, instantiated into an ordinary Decision object — decision lifecycle, routes, and voting stay in the existing decision model, never forked. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins (REQ-VVE-002).",
+        "description": "Statutory content for a VvE ALV decision: name, proposed besluittekst, decision category, and default required majority/quorum sourced from the modelreglementen. Distinct from ProcessTemplate (which models a state machine): this is decision content, instantiated into an ordinary Decision object, decision lifecycle, routes, and voting stay in the existing decision model, never forked. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins.",
         "type": "object",
         "x-schema-org": "schema:HowTo",
         "x-openregister": {
@@ -380,7 +194,7 @@
         "icon": "BookOpenVariantOutline",
         "version": "0.1.0",
         "title": "ModelreglementPreset",
-        "description": "A modelreglement voting-rule preset (1992/2006/2017): maps VvE decision categories to their required voteThreshold and quorumFraction per that modelreglement, each mapping carrying its article reference. A VvE picks its preset via VveConfiguration.modelreglement and may deviate per splitsingsakte via majorityOverrides. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins (REQ-VVE-003). Resolution feeds the existing round-open defaults; this introduces no second threshold enum, tally path, or quorum calculator.",
+        "description": "A modelreglement voting-rule preset (1992/2006/2017): maps VvE decision categories to their required voteThreshold and quorumFraction per that modelreglement, each mapping carrying its article reference. A VvE picks its preset via VveConfiguration.modelreglement and may deviate per splitsingsakte via majorityOverrides. Built-in seeds (builtIn: true) are read-only-but-duplicable exactly like ProcessTemplateService built-ins. Resolution feeds the existing round-open defaults; this introduces no second threshold enum, tally path, or quorum calculator.",
         "type": "object",
         "x-schema-org": "schema:HowTo",
         "x-openregister": {
@@ -468,7 +282,7 @@
         "icon": "ClipboardCheckOutline",
         "version": "0.1.0",
         "title": "KascommissieVerklaring",
-        "description": "The kascommissie's verklaring over a boekjaar: its verdict (goedkeurend / met-voorbehoud / afkeurend), toelichting, a link to the jaarrekening agenda item, and its verslag uploaded as an OpenRegister FileService attachment (no app-local file storage). Referenced by the decharge Decision for that boekjaar and surfaced to the meeting; a missing or afkeurend verklaring produces a visible warning but never a hard block (the ALV remains sovereign, BW 2:48). The verklaring outlives the agenda item and may be recorded before the ALV agenda exists (REQ-VVE-006).",
+        "description": "The kascommissie's verklaring over a boekjaar: its verdict (goedkeurend / met-voorbehoud / afkeurend), toelichting, a link to the jaarrekening agenda item, and its verslag uploaded as an OpenRegister FileService attachment (no app-local file storage). Referenced by the decharge Decision for that boekjaar and surfaced to the meeting; a missing or afkeurend verklaring produces a visible warning but never a hard block (the ALV remains sovereign, BW 2:48). The verklaring outlives the agenda item and may be recorded before the ALV agenda exists.",
         "type": "object",
         "x-schema-org": "schema:AssessAction",
         "x-openregister": {
