@@ -109,7 +109,7 @@ The system MUST support sending meeting convocations (uitnodigingen) to all memb
 
 #### Scenario: Warn when convocation is sent close to the statutory deadline
 
-@e2e exclude time-dependent deadline arithmetic; pinned-clock coverage in BoardMeetingServiceTest::getNoticeDeadlineInfo (PHPUnit) + noticeRules vitest; the warning surface itself is asserted by the delivery-table e2e test
+@e2e exclude time-dependent deadline arithmetic; pinned-clock coverage in agendaRules.spec.js (vitest, over src/services/noticeRules.js): computes the deadline from meetingDate minus noticePeriodDays, defaults the period to 15 days, warns within 3 days, and flags an overdue deadline. The warning surface itself is asserted by the delivery-table e2e test
 
 - GIVEN a meeting whose statutory notice deadline (scheduled date minus `noticePeriodDays`) is at most 3 days away
 - WHEN the secretary sends the notice
