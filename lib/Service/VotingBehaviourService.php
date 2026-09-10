@@ -95,12 +95,25 @@ class VotingBehaviourService {
 
 		// Both halves are deliberate. `isResolved()` is the contract's own way
 		// of asking the question and is what a reader should see. The explicit
-		// null check is for the analyser: `isResolved()` is defined as
+		// null check is for the analyser: `isResolved()` is DEFINED as
 		// `slug !== null`, but psalm cannot see through the method call, so
 		// without it `$resolution->slug` stays `?string` against a `string`
-		// return. Adding a suppression instead would have hidden a real
-		// nullable, which is the one thing this contract exists to make
-		// impossible to ignore.
+		// return. Suppressing that instead would have hidden a real nullable,
+		// which is the one thing this contract exists to make impossible to
+		// ignore.
+		//
+		// WHEN THIS CAN BE SIMPLIFIED, and what it needs. openregister#3582
+		// proposes `@psalm-assert-if-true !null $this->slug` on `isResolved()`,
+		// which makes the narrowing real. Measured against a patched contract:
+		// it narrows for `if (isResolved() === false) { throw; }` followed by a
+		// read, and it does NOT narrow a copy taken BEFORE the branch, because
+		// nothing can narrow a value retroactively.
+		//
+		// So the annotation alone will not be enough here. The line below reads
+		// the property before the check, and deleting `|| $slug === null` while
+		// leaving that order would simply move the nullable somewhere psalm has
+		// stopped looking. Move the read AFTER the branch first, then re-run the
+		// trace, then delete.
 		$slug = $resolution->slug;
 		if ($resolution->isResolved() === false || $slug === null) {
 			throw new DoesNotExistException(

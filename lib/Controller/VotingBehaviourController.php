@@ -124,6 +124,11 @@ class VotingBehaviourController extends Controller {
 		// the analyser: `isResolved()` is DEFINED as `slug !== null`, but psalm
 		// cannot see through the method call, so without it `->slug` stays
 		// `?string` where a `string` is required below.
+		//
+		// Same caveat as `VotingBehaviourService::registerSlug()`, which carries
+		// the measurements: openregister#3582 would make the narrowing real, but
+		// not for a copy taken before the branch, which is what the next line is.
+		// Reorder before deleting the second condition.
 		$slug = $registerSlug->slug;
 		if ($registerSlug->isResolved() === false || $slug === null) {
 			return new JSONResponse(
