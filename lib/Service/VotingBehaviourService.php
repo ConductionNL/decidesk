@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
+use OCP\AppFramework\Db\DoesNotExistException;
 
 /**
  * Stateless service computing voting behaviour statistics on-demand from Vote objects.
@@ -40,10 +42,28 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/changes/p2-motion-and-voting-core-t2/tasks.md#task-1
  */
 class VotingBehaviourService {
+
+	/**
+	 * The canonical slug of the register this service reads.
+	 *
+	 * Canonical, and not what the reads use. The four `setRegister()` calls
+	 * below named `'decidiq'` directly, which is the CURRENT slug and therefore
+	 * wrong on every instance that has not yet run this app's own
+	 * `Repair\MigrateRegisterSlug`. That is the same defect as pinning the old
+	 * slug, pointed at the other half of the estate: the read matches nothing
+	 * and returns an empty set, and empty statistics are what a participant who
+	 * has never voted legitimately has.
+	 *
+	 * @var string
+	 */
+	private const BEHAVIOUR_REGISTER = 'decidiq';
+
 	/**
 	 * Constructor for VotingBehaviourService.
 	 *
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
+	 * @param RegisterSlugResolverInterface $slugResolver Which slug the decidiq register answers
+	 *                                                    to on THIS instance
 	 *
 	 * @return void
 	 *
@@ -51,8 +71,46 @@ class VotingBehaviourService {
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objectService,
+		private readonly RegisterSlugResolverInterface $slugResolver,
 	) {
 	}//end __construct()
+
+	/**
+	 * The slug the behaviour register answers to here.
+	 *
+	 * Throws rather than returning a default, because every caller of this
+	 * service is reporting counts. A default would put a wrong slug into a read
+	 * whose empty result is indistinguishable from an honest zero, which is the
+	 * whole reason the resolution exists. `DoesNotExistException` is what
+	 * `VotingBehaviourController` already translates into a status the caller
+	 * can act on.
+	 *
+	 * @return string The register slug to read with.
+	 *
+	 * @throws DoesNotExistException When the register is not on this instance
+	 *                               under any slug it has answered to.
+	 */
+	private function registerSlug(): string {
+		$resolution = $this->slugResolver->resolve(canonical: self::BEHAVIOUR_REGISTER);
+
+		// Both halves are deliberate. `isResolved()` is the contract's own way
+		// of asking the question and is what a reader should see. The explicit
+		// null check is for the analyser: `isResolved()` is defined as
+		// `slug !== null`, but psalm cannot see through the method call, so
+		// without it `$resolution->slug` stays `?string` against a `string`
+		// return. Adding a suppression instead would have hidden a real
+		// nullable, which is the one thing this contract exists to make
+		// impossible to ignore.
+		$slug = $resolution->slug;
+		if ($resolution->isResolved() === false || $slug === null) {
+			throw new DoesNotExistException(
+				'The decidiq register is not on this instance under any of its known slugs ('
+				. implode(', ', $resolution->candidates) . ').'
+			);
+		}
+
+		return $slug;
+	}//end registerSlug()
 
 	/**
 	 * Resolve OpenRegister ObjectService.
@@ -151,7 +209,7 @@ class VotingBehaviourService {
 
 		// Step 1: Fetch all motions for this governance body. ADR-005: motions
 		// are `decision` objects selected by the decisionType discriminator.
-		$objectService->setRegister('decidiq');
+		$objectService->setRegister($this->registerSlug());
 		$objectService->setSchema('decision');
 		$motionEntities = $objectService->findAll(
 			[
@@ -191,7 +249,7 @@ class VotingBehaviourService {
 	 */
 	private function closedRoundsForMotion(string $motionId): array {
 		$objectService = $this->objectService();
-		$objectService->setRegister('decidiq');
+		$objectService->setRegister($this->registerSlug());
 		$objectService->setSchema('voting-round');
 		$roundEntities = $objectService->findAll(
 			['filters' => ['_relations.motion' => $motionId]]
@@ -281,7 +339,7 @@ class VotingBehaviourService {
 	 */
 	private function participantVotes(string $roundId, string $participantId): array {
 		$objectService = $this->objectService();
-		$objectService->setRegister('decidiq');
+		$objectService->setRegister($this->registerSlug());
 		$objectService->setSchema('vote');
 		$voteEntities = $objectService->findAll(
 			[
@@ -307,7 +365,7 @@ class VotingBehaviourService {
 	 */
 	private function proxiesReceived(string $roundId, string $participantId): int {
 		$objectService = $this->objectService();
-		$objectService->setRegister('decidiq');
+		$objectService->setRegister($this->registerSlug());
 		$objectService->setSchema('vote');
 		$proxyVoteEntities = $objectService->findAll(
 			[

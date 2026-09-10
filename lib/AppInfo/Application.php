@@ -28,8 +28,8 @@ use OCA\Decidiq\AppInfo\Registrar\CrossAppEventRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\DomainServiceRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\IntegrationLeafRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\ObjectListenerRegistrar;
+use OCA\Decidiq\AppInfo\Registrar\OpenRegisterContractRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\PlatformIntegrationRegistrar;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -52,6 +52,7 @@ use OCP\Util;
  *   - {@see PlatformIntegrationRegistrar} search, object-write guards, dashboard widget.
  *   - {@see IntegrationLeafRegistrar}    server-side half of the OR integration leaves (ADR-066).
  *   - {@see ObjectListenerRegistrar}     boot()-time filtered object-lifecycle subscriptions.
+ *   - {@see OpenRegisterContractRegistrar} OpenRegister's published contract bindings (ADR-084).
  *
  * Decidiq's services, controllers and background jobs that are NOT listed in a
  * registrar are resolved by Nextcloud's autowiring container from their
@@ -87,21 +88,12 @@ class Application extends App implements IBootstrap {
 	 */
 	public function register(IRegistrationContext $context): void {
 
-		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
-		// concrete class, so this app's unit tests can mock a type they are able to
-		// load. Nextcloud autowires concrete classes across apps but not interfaces,
-		// so the binding has to be stated — and the composition root is where this
-		// app says how it is wired.
-		//
-		// An ALIAS, not a factory: it resolves when something actually asks for the
-		// interface, so an instance without OpenRegister fails at the route that
-		// needed the data rather than at registration. Both names are strings and
-		// neither triggers an autoload, which is what keeps ADR-083 rule 3's promise
-		// that the start screen still boots.
-		$context->registerServiceAlias(
-			ObjectServiceInterface::class,
-			'OCA\OpenRegister\Service\ObjectService'
-		);
+		// OpenRegister's published contracts (ADR-084): ObjectServiceInterface and
+		// RegisterSlugResolverInterface, both bound as lazy aliases so an instance
+		// without OpenRegister fails at the route that needed the data rather than
+		// at registration.
+		(new OpenRegisterContractRegistrar())->register(context: $context);
+
 		// AppHost adoption (ADR-040 / ADR-022): re-point the mechanical
 		// dashboard + observability + deep-link plumbing at the OpenRegister
 		// AppHost generics, keeping decidiq's URLs unchanged. Decidiq's
