@@ -62,7 +62,10 @@ describe('currentPermissions', () => {
 		expect(libraryPassesPermission({ permission: 'admin' }, oldList)).toBe(true)
 		// The replacement closes it for a non-admin.
 		expect(
-			libraryPassesPermission({ permission: 'admin' }, currentPermissions(false)),
+			libraryPassesPermission(
+				{ permission: 'admin' },
+				currentPermissions(false),
+			),
 		).toBe(false)
 	})
 })
@@ -80,7 +83,9 @@ describe('the nav filter, given the list this app now builds', () => {
 	})
 
 	it('leaves an ungated entry alone for everyone', () => {
-		expect(libraryPassesPermission(ungated, currentPermissions(false))).toBe(true)
+		expect(libraryPassesPermission(ungated, currentPermissions(false))).toBe(
+			true,
+		)
 		expect(libraryPassesPermission(ungated, currentPermissions(true))).toBe(true)
 	})
 })
