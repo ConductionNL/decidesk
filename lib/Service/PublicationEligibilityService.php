@@ -18,7 +18,7 @@
  *     isSchemaDenied/isFileDenied/assertPublishable helpers.
  *   - publish-decisions-via-opencatalogi adds the board-governance family and
  *     the lifecycle eligibility gates (its tasks 2.2/2.3) via DENY_TYPES and
- *     isDeniedType/assertEligible/guardDirectPublicationWrite.
+ *     isDeniedType/assertEligible.
  * The two deny-lists are unioned here so the merge reconciles cleanly.
  *
  * @category Service
@@ -305,40 +305,6 @@ class PublicationEligibilityService {
 
 		return $data;
 	}//end assertEligible()
-
-	/**
-	 * Guard a direct client write to the flow-owned Decision publication fields.
-	 *
-	 * The publication state fields (isPublished/publishedAt) are derived outputs
-	 * of the publication flow. A client object-update that attempts to set them
-	 * to a value differing from the stored value is rejected — only the
-	 * publication flow may move them (decision-management delta).
-	 *
-	 * @param array<string,mixed> $stored The currently-stored object data.
-	 * @param array<string,mixed> $incoming The incoming update payload.
-	 *
-	 * @spec openspec/specs/decision-management/spec.md
-	 *
-	 * @throws AccessDeniedException When the incoming write changes a flow-owned field.
-	 *
-	 * @return void
-	 */
-	public function guardDirectPublicationWrite(array $stored, array $incoming): void {
-		foreach (['isPublished', 'publishedAt'] as $field) {
-			if (array_key_exists($field, $incoming) === false) {
-				continue;
-			}
-
-			$storedValue = ($stored[$field] ?? null);
-			$incomingValue = ($incoming[$field] ?? null);
-			if ($incomingValue !== $storedValue) {
-				throw new AccessDeniedException(
-					message: "The field '$field' is owned by the publication flow and cannot be written directly."
-				);
-			}
-		}
-
-	}//end guardDirectPublicationWrite()
 
 	/**
 	 * Assert a decision is in a publishable lifecycle (decided|enacted).

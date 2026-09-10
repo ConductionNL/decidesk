@@ -1283,7 +1283,7 @@
               "nl": "Besluit gepubliceerd: {{title}}",
               "en": "Decision published: {{title}}"
             },
-            "_note": "Publication is the one Decision event that had NO declarative rule, while an imperative DecisionNotificationService::notifyOnPublish() sat beside it with zero callers, no tests and no DI registration — so nobody was ever notified that a decision had become public. ADR-031 keeps notifications declarative (gate-18 flagged the imperative class by name), so the rule lands here and the dead service is removed rather than wired up. isPublished is FLOW-OWNED: it only reaches 'public' through the guarded publication flow (PublicationEligibilityService::guardDirectPublicationWrite rejects a direct object write), so this trigger cannot be fired by an ordinary object update. Recipients mirror decisionProposed/decisionRecorded rather than inventing a third shape."
+            "_note": "Publication is the one Decision event that had NO declarative rule, while an imperative DecisionNotificationService::notifyOnPublish() sat beside it with zero callers, no tests and no DI registration — so nobody was ever notified that a decision had become public. ADR-031 keeps notifications declarative (gate-18 flagged the imperative class by name), so the rule lands here and the dead service is removed rather than wired up. isPublished is flow owned: the property authorization block on isPublished refuses a direct object update from the administrator groups, so an ordinary object update cannot fire this trigger. A Nextcloud superuser can still write the field directly, because property authorization exempts superusers by design. Recipients mirror decisionProposed/decisionRecorded rather than inventing a third shape."
           },
           "voteRequested": {
             "trigger": {
@@ -1403,7 +1403,12 @@
           "isPublished": {
             "title": "Publication state",
             "type": "string",
-            "description": "Publication state controlling citizen visibility. FLOW-OWNED (publish-decisions-via-opencatalogi): this field is a DERIVED OUTPUT of the public-publication flow, set to 'public' on publish, reset to 'internal' on withdraw, and is REJECTED when written directly through an OR object update outside that flow (PublicationEligibilityService:guardDirectPublicationWrite). 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
+            "authorization": {
+              "update": [
+                "decidiq-publication-flow"
+              ]
+            },
+            "description": "Publication state controlling citizen visibility. Flow owned by publish-decisions-via-opencatalogi. The flow sets 'public' on publish and 'internal' on withdraw. The authorization block on this property refuses a direct object update from decidiq-administrators and decidesk-administrators, the only groups the register grants update. The group decidiq-publication-flow has no members by design. It names the flow, not a team. Nextcloud superusers bypass property authorization by design (OpenRegister PropertyRbacHandler::getUnauthorizedProperties), so this field is NOT protected against them. That is also why the flow itself still works: the publish endpoint admits only superusers. 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
             "enum": [
               "internal",
               "public",
@@ -1416,7 +1421,12 @@
             "title": "Published at",
             "type": "string",
             "format": "date-time",
-            "description": "Publication timestamp. FLOW-OWNED (publish-decisions-via-opencatalogi): stamped by the publication flow on publish and cleared on withdraw; rejected on direct client writes alongside isPublished."
+            "authorization": {
+              "update": [
+                "decidiq-publication-flow"
+              ]
+            },
+            "description": "Publication timestamp. Flow owned by publish-decisions-via-opencatalogi. The flow stamps it on publish and clears it on withdraw. The authorization block on this property refuses a direct object update on the same terms as isPublished, including the superuser exemption."
           },
           "legalBasis": {
             "title": "Legal basis",

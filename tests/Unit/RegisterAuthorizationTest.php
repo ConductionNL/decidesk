@@ -555,4 +555,83 @@ class RegisterAuthorizationTest extends TestCase {
 		}
 
 	}//end testARenamedSchemaKeepsItsPredecessorsAuthorization()
+
+	/**
+	 * The flow-owned publication fields declare a property-level update rule.
+	 *
+	 * This replaces `PublicationEligibilityService::guardDirectPublicationWrite()`,
+	 * which was removed in #1268 because it had no production caller. The write it
+	 * claimed to stop is an OpenRegister object update, which never enters decidiq
+	 * PHP, so no imperative guard could ever have run. The declaration below is
+	 * read by `PropertyRbacHandler::getUnauthorizedProperties()` on the OR side,
+	 * which is the only code on that path.
+	 *
+	 * What this pins, and what it does NOT:
+	 *
+	 *   - PINNED: both shipped registers declare an `update` rule naming only
+	 *     `decidiq-publication-flow`, a group with no members. Every group the
+	 *     register grants `update` (decidiq-administrators, decidesk-administrators)
+	 *     is therefore refused a direct write to these two fields.
+	 *   - NOT PINNED, and NOT enforceable here: a Nextcloud superuser bypasses
+	 *     property authorization unconditionally
+	 *     (`PropertyRbacHandler::getUnauthorizedProperties()` returns `[]` for
+	 *     `isAdmin()`). The publish endpoint admits only superusers, so the
+	 *     legitimate flow keeps working for exactly that reason. Closing the
+	 *     superuser gap needs a mechanism OpenRegister does not have yet.
+	 *
+	 * Both files are checked because they do NOT resolve to the same permissions
+	 * today (decidiq#1269), so asserting on one would leave the other free to drift.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-006-the-register-declares-an-authorization-baseline-so-an-absent-block-cannot-grant-writes
+	 */
+	public function testFlowOwnedPublicationFieldsRefuseADirectUpdate(): void {
+		$registers = [
+			'decidesk_register.json'    => __DIR__ . '/../../lib/Settings/decidesk_register.json',
+			'decidiq_mock_register.json' => __DIR__ . '/../../lib/Settings/decidiq_mock_register.json',
+		];
+
+		foreach ($registers as $label => $path) {
+			$decoded = json_decode((string)file_get_contents($path), true);
+			$this->assertIsArray($decoded, sprintf('%s must be valid JSON.', $label));
+
+			$properties = $decoded['components']['schemas']['Decision']['properties'] ?? null;
+			$this->assertIsArray($properties, sprintf('%s must declare Decision properties.', $label));
+
+			foreach (['isPublished', 'publishedAt'] as $field) {
+				$this->assertArrayHasKey(
+					$field,
+					$properties,
+					sprintf('%s: Decision must declare the flow-owned field `%s`.', $label, $field)
+				);
+
+				$rules = $properties[$field]['authorization']['update'] ?? null;
+
+				$this->assertIsArray(
+					$rules,
+					sprintf(
+						'%s: `%s` must declare authorization.update. Without it '
+							. 'PropertyRbacHandler treats the field as following object-level rules, '
+							. 'which grant update to both administrator groups.',
+						$label,
+						$field
+					)
+				);
+
+				$this->assertSame(
+					['decidiq-publication-flow'],
+					$rules,
+					sprintf(
+						'%s: `%s` must grant update to `decidiq-publication-flow` and nothing else. '
+							. 'Naming any populated group here reopens the direct write; naming '
+							. '`public` or `authenticated` reopens it to everyone.',
+						$label,
+						$field
+					)
+				);
+			}
+		}
+
+	}//end testFlowOwnedPublicationFieldsRefuseADirectUpdate()
 }//end class
