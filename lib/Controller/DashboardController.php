@@ -43,7 +43,10 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUserSession;
 
 /**
  * SPA host for Decidiq.
@@ -54,11 +57,19 @@ class DashboardController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest $request The request object.
+	 * @param IRequest      $request      The request object.
+	 * @param IInitialState $initialState Initial-state writer for the SPA bootstrap.
+	 * @param IUserSession  $userSession  The current session, for the acting user.
+	 * @param IGroupManager $groupManager Group manager, used only for the admin test.
 	 *
 	 * @return void
 	 */
-	public function __construct(IRequest $request) {
+	public function __construct(
+		IRequest $request,
+		private readonly IInitialState $initialState,
+		private readonly IUserSession $userSession,
+		private readonly IGroupManager $groupManager,
+	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
 	}//end __construct()
@@ -92,9 +103,24 @@ class DashboardController extends Controller {
 	/**
 	 * Build the `index` TemplateResponse.
 	 *
+	 * Publishes `isAdmin` into initial state. It is the ONLY input to the
+	 * frontend's permission list (`src/utils/permissions.js`), which feeds both
+	 * the CnAppNav filter and the router's permission guard. The frontend used
+	 * to derive that list from `window.OC.currentUser.permissions`, a property
+	 * that does not exist, so the list was always empty and the nav filter
+	 * failed open.
+	 *
+	 * Defaults to `false` when there is no session, so an unauthenticated or
+	 * half-booted request denies rather than permits.
+	 *
 	 * @return TemplateResponse The rendered Decidiq index template.
 	 */
 	protected function renderIndex(): TemplateResponse {
+		$user = $this->userSession->getUser();
+		$isAdmin = ($user !== null && $this->groupManager->isAdmin($user->getUID()));
+
+		$this->initialState->provideInitialState('isAdmin', $isAdmin);
+
 		return new TemplateResponse($this->appName, 'index');
 	}//end renderIndex()
 }//end class

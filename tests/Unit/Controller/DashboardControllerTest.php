@@ -24,7 +24,11 @@ use OCA\Decidiq\AppInfo\Application;
 use OCA\Decidiq\Controller\DashboardController;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -54,6 +58,27 @@ class DashboardControllerTest extends TestCase {
 	private DashboardController $controller;
 
 	/**
+	 * Initial-state writer, asserted against for the `isAdmin` key.
+	 *
+	 * @var IInitialState&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $initialState;
+
+	/**
+	 * The session the controller reads the acting user from.
+	 *
+	 * @var IUserSession&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $userSession;
+
+	/**
+	 * Group manager, mocked to answer the admin test either way.
+	 *
+	 * @var IGroupManager&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $groupManager;
+
+	/**
 	 * Set up the controller.
 	 *
 	 * @return void
@@ -61,9 +86,37 @@ class DashboardControllerTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->controller = new DashboardController($this->createMock(IRequest::class));
+		$this->initialState = $this->createMock(IInitialState::class);
+		$this->userSession  = $this->createMock(IUserSession::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+
+		$this->controller = new DashboardController(
+			$this->createMock(IRequest::class),
+			$this->initialState,
+			$this->userSession,
+			$this->groupManager,
+		);
 
 	}//end setUp()
+
+	/**
+	 * Point the session at a user with the given uid, or at no user at all.
+	 *
+	 * @param string|null $uid The uid to sign in as, or null for no session.
+	 *
+	 * @return void
+	 */
+	private function signInAs(?string $uid): void {
+		if ($uid === null) {
+			$this->userSession->method('getUser')->willReturn(null);
+			return;
+		}
+
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$this->userSession->method('getUser')->willReturn($user);
+
+	}//end signInAs()
 
 	/**
 	 * page() renders the decidiq `index` template with HTTP 200.
@@ -100,5 +153,75 @@ class DashboardControllerTest extends TestCase {
 		self::assertSame($this->controller->page()->getTemplateName(), $response->getTemplateName());
 
 	}//end testCatchAllServesTheSameSpaShell()
+
+	/**
+	 * An administrator is published to the SPA as `isAdmin: true`.
+	 *
+	 * 🔴 THIS IS THE ONLY INPUT TO THE FRONTEND'S PERMISSION LIST.
+	 *
+	 * `src/utils/permissions.js` turns this boolean into the list read by BOTH
+	 * the CnAppNav filter and the router's permission guard. If this key stops
+	 * being published, `loadState`'s fallback denies — which is the safe
+	 * direction, and is asserted separately below.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Bootstrap wiring for the manifest permission gate; no behavioural spec yet.
+	 */
+	public function testAdminIsPublishedAsIsAdminTrue(): void {
+		$this->signInAs('alice');
+		$this->groupManager->method('isAdmin')->with('alice')->willReturn(true);
+
+		$this->initialState->expects(self::once())
+			->method('provideInitialState')
+			->with('isAdmin', true);
+
+		$this->controller->page();
+
+	}//end testAdminIsPublishedAsIsAdminTrue()
+
+	/**
+	 * An ordinary account is published as `isAdmin: false`.
+	 *
+	 * The assertion that matters is the VALUE, not the call. Publishing the key
+	 * with a truthy value for a non-admin is precisely the failure this pair
+	 * exists to catch, and it would be invisible from the nav: the entry would
+	 * simply be there.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Bootstrap wiring for the manifest permission gate; no behavioural spec yet.
+	 */
+	public function testOrdinaryAccountIsPublishedAsIsAdminFalse(): void {
+		$this->signInAs('bob');
+		$this->groupManager->method('isAdmin')->with('bob')->willReturn(false);
+
+		$this->initialState->expects(self::once())
+			->method('provideInitialState')
+			->with('isAdmin', false);
+
+		$this->controller->page();
+
+	}//end testOrdinaryAccountIsPublishedAsIsAdminFalse()
+
+	/**
+	 * With no session the controller denies rather than consulting the group
+	 * manager with a null uid.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Bootstrap wiring for the manifest permission gate; no behavioural spec yet.
+	 */
+	public function testNoSessionDenies(): void {
+		$this->signInAs(null);
+		$this->groupManager->expects(self::never())->method('isAdmin');
+
+		$this->initialState->expects(self::once())
+			->method('provideInitialState')
+			->with('isAdmin', false);
+
+		$this->controller->page();
+
+	}//end testNoSessionDenies()
 
 }//end class
