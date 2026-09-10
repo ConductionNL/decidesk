@@ -188,7 +188,24 @@
         <InvalidArgument errorLevel="suppress"/>
         <InvalidReturnType errorLevel="suppress"/>
         <InvalidReturnStatement errorLevel="suppress"/>
-        <MismatchingDocblockReturnType errorLevel="suppress"/>
+        <!--
+            Un-suppressed, and measured before it was: ZERO findings across the
+            whole analysed tree, so this was protecting nothing.
+
+            It is worth having on because it is the rule that reports a docblock
+            `@return` contradicting the native return type, and psalm reads the
+            DOCBLOCK in preference to the signature. Suppressed, a file can carry
+            two different answers to "what does this return" and psalm silently
+            uses one of them. Measured on pipelinq: a mutation test that changed
+            only the signature, leaving `@return string|null` in place, passed
+            clean and was read as "psalm cannot catch this", when psalm had
+            simply been told not to mention the contradiction. Changing both
+            gives two NullableReturnStatement errors and exit 2.
+
+            A suppression that costs nothing today still costs the next person an
+            honest mutation test.
+        -->
+        <MismatchingDocblockReturnType errorLevel="error"/>
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <LessSpecificImplementedReturnType errorLevel="suppress"/>
