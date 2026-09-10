@@ -38,6 +38,12 @@ require_once __DIR__ . '/stubs/DoctrineStubs.php';
 // (which extends OCP\...\Event) is actually loaded.
 $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
 
+// Test-only helper classes that are not themselves tests, so PHPUnit's `*Test.php`
+// suffix never loads them and something has to. `OCA\Decidiq\Tests\` is LONGER
+// than composer's `OCA\Decidiq\` -> `lib/`, and PSR-4 is longest-prefix-wins, so
+// this claims the test namespace without disturbing the app's own.
+$autoloader->addPsr4('OCA\\Decidiq\\Tests\\', __DIR__ . '/');
+
 // THE OpenRegister CONTRACT INTERFACES, OPTED INTO RATHER THAN AUTOLOADED.
 //
 // conduction/hydra-gates claims `OCA\OpenRegister\Contract\` as a RUNTIME psr-4
@@ -57,8 +63,24 @@ $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does NOT
 // work: spl_autoload_register appends relative to registration order, and that
 // order across independently loaded apps is exactly what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
-	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
+//
+// `RegisterSlugResolution` is a CLASS, not an interface, so the guard has to ask
+// both questions. Asking only interface_exists() would answer false for a class
+// that is already loaded and then require its file a second time, and a
+// duplicate declaration is a fatal, not a no-op.
+//
+// These two arrived in `conduction/hydra-gates` v1.18.0. v1.17.0 and earlier
+// ship only the two Object* contracts, so on an older constraint the file is
+// simply absent and the loop leaves the name undefined, exactly as it did
+// before they existed.
+foreach ([
+	'ObjectEntityInterface',
+	'ObjectServiceInterface',
+	'RegisterSlugResolution',
+	'RegisterSlugResolverInterface',
+] as $contract) {
+	$fqcn = '\\OCA\\OpenRegister\\Contract\\' . $contract;
+	if (interface_exists($fqcn) === false && class_exists($fqcn) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {
 			require_once $shipped;

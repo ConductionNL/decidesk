@@ -21,6 +21,7 @@ namespace OCA\Decidiq\Tests\Unit\Controller;
 
 use OCA\Decidiq\Controller\VotingBehaviourController;
 use OCA\Decidiq\Service\VotingBehaviourService;
+use OCA\Decidiq\Tests\Unit\Support\FakeSlugResolver;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Http;
@@ -112,6 +113,9 @@ class VotingBehaviourControllerTest extends TestCase {
 			userSession: $this->userSession,
 			groupManager: $this->groupManager,
 			objectService: $this->objectService,
+			// A MIGRATED instance, which is what these tests always assumed without
+			// saying so. RegisterSlugResolutionTest tells the two states apart.
+			slugResolver: new FakeSlugResolver(['decidiq']),
 		);
 
 	}//end setUp()
@@ -154,6 +158,9 @@ class VotingBehaviourControllerTest extends TestCase {
 			userSession: $unauthSession,
 			groupManager: $this->groupManager,
 			objectService: $this->objectService,
+			// A MIGRATED instance, which is what these tests always assumed without
+			// saying so. RegisterSlugResolutionTest tells the two states apart.
+			slugResolver: new FakeSlugResolver(['decidiq']),
 		);
 
 		$this->behaviourService->expects($this->never())->method('getStats');
@@ -232,7 +239,13 @@ class VotingBehaviourControllerTest extends TestCase {
 		// Participant UUID resolves to the calling user.
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with($participantUuid, [], false, 'decidesk', 'participant')
+			// The RESOLVED slug, not a literal. This read 'decidesk' and passed
+			// for as long as the controller pinned the same word, which is what
+			// an assertion that copies the implementation buys you: it agreed
+			// with the code and with no instance the code ran on. The controller
+			// is built here with a migrated instance, so this is now the
+			// assertion that reddens if the resolution is dropped.
+			->with($participantUuid, [], false, 'decidiq', 'participant')
 			->willReturn($this->makeParticipantEntity('user-1'));
 
 		$expectedStats = [
