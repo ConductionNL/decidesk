@@ -99,8 +99,12 @@ describe('routesFromManifest', () => {
 		const byName = Object.fromEntries(
 			routes.filter((r) => r.name).map((r) => [r.name, r]),
 		)
-		expect(byName.AdminThing.meta.permission).toBe('admin')
-		expect(byName.Meetings.meta.permission).toBeNull()
+		// Optional chaining on purpose: a dropped `meta` must fail as "the
+		// permission did not reach the route", not as a TypeError about
+		// reading a property of undefined. A guard test whose message names
+		// the wrong thing cannot tell a security failure from a broken build.
+		expect(byName.AdminThing?.meta?.permission).toBe('admin')
+		expect(byName.Meetings?.meta?.permission).toBeNull()
 	})
 
 	it('keeps the props-on-parameterised-route and catch-all behaviour', () => {
@@ -114,6 +118,41 @@ describe('routesFromManifest', () => {
 			path: '/:pathMatch(.*)*',
 			redirect: '/',
 		})
+	})
+})
+
+describe('a manifest page, end to end through both halves', () => {
+	// 🔴 THE TWO HALVES ARE ONLY A GATE IF THEY ARE WIRED TOGETHER.
+	//
+	// Written after a mutation check: dropping `meta` from routesFromManifest
+	// left every permissionGuard test green, because they build their route
+	// object by hand. The guard was perfect and gated nothing. So this block
+	// takes a real manifest page all the way to the answer.
+	const manifest = {
+		pages: [
+			{ id: 'AdminThing', route: '/admin/thing', permission: 'admin' },
+			{ id: 'Meetings', route: '/meetings' },
+		],
+	}
+	const routeNamed = (name) =>
+		routesFromManifest(manifest, {}).find((r) => r.name === name)
+
+	it('refuses a gated page to a non-admin', () => {
+		expect(
+			permissionGuard(routeNamed('AdminThing'), currentPermissions(false)),
+		).toEqual({ path: '/' })
+	})
+
+	it('serves a gated page to an admin', () => {
+		expect(
+			permissionGuard(routeNamed('AdminThing'), currentPermissions(true)),
+		).toBe(true)
+	})
+
+	it('serves an ungated page to everyone', () => {
+		expect(
+			permissionGuard(routeNamed('Meetings'), currentPermissions(false)),
+		).toBe(true)
 	})
 })
 
