@@ -26,7 +26,7 @@
  * manifest contract). A route whose path declares a `:` parameter gets
  * `props: true` — generic and schema-agnostic.
  *
- * `page.permission` is carried onto `meta` so {@see permissionGuard} can read
+ * `page.permission` is carried onto `meta` so `permissionGuard` can read
  * it without re-deriving the manifest at navigation time.
  *
  * @param {object} manifest The merged manifest (with `pages[]`).
