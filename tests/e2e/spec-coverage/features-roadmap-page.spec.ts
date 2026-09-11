@@ -14,8 +14,6 @@
  * their own org-mode-conditional nav rows. Then asserts the real
  * roadmap surface: the "Features" heading and the "Show roadmap" /
  * "Suggest feature" CTAs.
- *
- * @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
  */
 import type { Page } from '@playwright/test'
 
@@ -57,7 +55,10 @@ async function appNavClick(
 	await dismissSupportDialog(page)
 }
 
-// @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
+// No e2e citation on purpose. No canonical spec describes this page as it
+// ships: app-navigation REQ-NAV-010 still lists FeaturesRoadmapMenu under
+// menu-layout.json#removals, but that list is empty by decision and the
+// footer entry stays. The spec fix is tracked in decidiq#1277.
 test('Features & roadmap: app-scoped nav lands on the roadmap surface', async ({
 	page,
 }) => {
@@ -82,7 +83,10 @@ test('Features & roadmap: app-scoped nav lands on the roadmap surface', async ({
 	await expect(suggest).toHaveAttribute('href', /github\.com\/.*\/issues\/new/)
 })
 
-// @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
+// No e2e citation on purpose. No canonical spec describes this page as it
+// ships: app-navigation REQ-NAV-010 still lists FeaturesRoadmapMenu under
+// menu-layout.json#removals, but that list is empty by decision and the
+// footer entry stays. The spec fix is tracked in decidiq#1277.
 test('Features & roadmap: no decidiq-origin console error or 500 on load', async ({
 	page,
 }) => {
