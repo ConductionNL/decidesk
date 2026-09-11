@@ -232,7 +232,7 @@ consumer-rewrite change lands. The legacy `initialState` and `stateMachine`
 properties MAY stay declared, deprecated and read only by the conversion
 repair step, until a follow-up change removes them.
 
-@e2e exclude schema/register-shape assertions (fragment declares the schema additively; a ported built-in's field values); no UI surface, since "no consumer yet" is explicit in this requirement's own text (resolution still goes through `ProcessTemplate` until a future change); checkable directly by inspecting `lib/Settings/register.d/68-unified-decision-templates.json`.
+@e2e exclude register-shape assertions with no browser flow of their own. MigrateLegacyTemplatesToDecisionTemplateTest covers the port: ::testRunMigratesProcessTemplateFieldsVerbatim for a generic default and ::testRunMapsVveDecisionTemplateFields for a VvE template. The schema lives in `lib/Settings/register.d/68-unified-decision-templates.json`. The `/decision-templates` pages added since are only opened by every-index-route-resolves.spec.ts; nothing checks the schema's properties in a browser.
 
 #### Scenario: Fragment adds DecisionTemplate without touching existing schemas
 
