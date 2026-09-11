@@ -23,7 +23,7 @@ The GovernanceBody entity SHALL include a `workflowTemplate` property (string, o
 |----------|------|----------|-------------|
 | workflowTemplate | string | No | Domain preset key: legislative, association, corporate, operations, citizen |
 
-@e2e exclude no current e2e or PHPUnit test asserts the domain→workflowTemplate default-on-create behaviour or an admin override of it; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e or PHPUnit test asserts the domain→workflowTemplate default-on-create behaviour or an admin override of it; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: REQ-GBD-001-S1 — Set workflowTemplate on body creation
 - **GIVEN** the user creates a GovernanceBody with domain "legislative"
@@ -39,7 +39,7 @@ The GovernanceBody entity SHALL include a `workflowTemplate` property (string, o
 
 The GovernanceBody detail page SHALL include a "Scheduled Meetings" `CnDetailCard` section displaying upcoming and recent meetings for the body. The section SHALL use a `CnDataTable` with columns: title, scheduledDate, lifecycle status. Meetings SHALL be fetched via reverse lookup (`fetchUsed`) from the Meeting wrapper's relation to GovernanceBody.
 
-@e2e exclude no current e2e test asserts the "Scheduled Meetings" section on GovernanceBodyDetail or its row-click navigation; same gap as governance-body-crud's `related-meetings-shown-in-detail` scenario — genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Scheduled Meetings" section on GovernanceBodyDetail or its row-click navigation; same gap as governance-body-crud's `related-meetings-shown-in-detail` scenario — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: REQ-GBD-002-S1 — Meetings listed on body detail page
 - **GIVEN** GovernanceBody "Gemeenteraad Delft" has 3 upcoming and 2 recent meetings
@@ -58,7 +58,7 @@ mode. After retiring the board portal, a corporate board meeting is a universal
 `meeting` seed and `minutes` seed are provided so the corporate scenario is
 demonstrable on install.
 
-@e2e exclude no current e2e test creates a meeting from a corporate GovernanceBody, nor asserts the seeded `rvc-vergadering-2025-q2`/`notulen-rvc-2025-q2` objects exist; genuine coverage gap tracked as e2e debt (the schema-level "no board-meeting schema exists" half is covered by tests/Unit/RegisterJsonTest.php::testAllSchemasExist).
+@e2e exclude no current e2e test creates a meeting from a corporate GovernanceBody, nor asserts the seeded `rvc-vergadering-2025-q2`/`notulen-rvc-2025-q2` objects exist; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277 (the schema-level "no board-meeting schema exists" half is covered by tests/Unit/RegisterJsonTest.php::testAllSchemasExist).
 
 #### Scenario: Pre-filled meeting from a corporate governance body
 - GIVEN a `governance-body` with `bodyType=supervisory-board`

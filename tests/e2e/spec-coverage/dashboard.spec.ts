@@ -6,8 +6,6 @@
  * @e2e openspec/specs/dashboard/spec.md#default-grid-layout-on-first-load
  * @e2e openspec/specs/dashboard/spec.md#empty-state-for-new-installation
  * @e2e openspec/specs/dashboard/spec.md#display-active-decisions-count
- * @e2e openspec/specs/dashboard/spec.md#display-pending-votes-count
- * @e2e openspec/specs/dashboard/spec.md#display-overdue-action-items-count
  * @e2e openspec/specs/dashboard/spec.md#show-pending-votes-with-urgency-indicators
  * @e2e openspec/specs/dashboard/spec.md#no-pending-votes
  * @e2e openspec/specs/dashboard/spec.md#show-upcoming-meetings-with-context
@@ -18,8 +16,6 @@ import { BASE_URL as BASE } from '../base-url.ts'
 
 // @e2e openspec/specs/dashboard/spec.md#default-grid-layout-on-first-load
 // @e2e openspec/specs/dashboard/spec.md#display-active-decisions-count
-// @e2e openspec/specs/dashboard/spec.md#display-pending-votes-count
-// @e2e openspec/specs/dashboard/spec.md#display-overdue-action-items-count
 test('dashboard renders KPI stat blocks', async ({ page }) => {
 	await page.goto(`${BASE}/apps/decidiq/`)
 	await page.waitForSelector('[data-testid="app-root"]', { timeout: 15_000 })

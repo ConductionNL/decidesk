@@ -63,7 +63,7 @@ The system MUST store and manage meeting documents using Nextcloud Files. Each m
 
 #### Scenario: Attach document to agenda item via file picker
 
-@e2e exclude pre-existing scenario delivered by the OR file-attachment surface; unchanged by this change
+@e2e exclude the attach control is the integration registry's built-in `files` tab from nextcloud-vue, which the AgendaItemIntegrations page mounts. integration-registry.spec.ts proves that tab mounts, but only on the meeting integrations page. No test picks a file, links it to an agenda item or checks the meeting document package: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 - GIVEN a user editing an agenda item
 - WHEN they click "Attach Document" and select a file from Nextcloud Files
 - THEN the file MUST be linked to the agenda item
@@ -124,7 +124,7 @@ The system MUST send Nextcloud Notifications for time-sensitive governance event
 
 #### Scenario: Send pending vote notification
 
-@e2e exclude NC notification bell is platform chrome; pre-existing sender behaviour unchanged by this change
+@e2e exclude the bell is Nextcloud chrome, and no test in this repo checks the vote-opened notification: the voting unit tests construct VotingOpenedNotifier but never assert on it. Reading the code, subjectTitle() looks the subject up in a `motion` schema that no longer exists, so the title falls back to the literal "Motion" (see #391). Genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 - GIVEN a new vote has been initiated for decision "Policy Update"
 - WHEN the vote opens
 - THEN all eligible voters MUST receive a Nextcloud notification

@@ -45,6 +45,8 @@ namespace OCA\Decidiq\AppInfo;
  * container, so an inline prelude is unreachable from a unit test. Here the
  * degraded-path contract — "this NEVER throws, whatever the instance looks
  * like" — is directly assertable, and it is asserted.
+ *
+ * @spec openspec/specs/apphost-adoption/spec.md
  */
 final class OpenRegisterAutoloader {
 

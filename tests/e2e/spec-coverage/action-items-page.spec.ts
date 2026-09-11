@@ -8,8 +8,8 @@
  * the app's LEFT navigation (cn-nav-entry-ActionItems, not the global
  * NC header), then asserts the real index surface and the create form.
  *
- * @e2e openspec/specs/action-item-management/spec.md#view-the-action-items-list
- * @e2e openspec/specs/action-item-management/spec.md#create-an-action-item
+ * @e2e openspec/specs/app-navigation/spec.md#req-nav-002
+ * @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ait-001
  */
 import type { Page } from '@playwright/test'
 
@@ -94,7 +94,7 @@ async function appNavClick(page: Page, entryId: string): Promise<void> {
 	await nav.getByTestId(`cn-nav-entry-${entryId}`).click()
 }
 
-// @e2e openspec/specs/action-item-management/spec.md#view-the-action-items-list
+// @e2e openspec/specs/app-navigation/spec.md#req-nav-002
 test('Action items: app-scoped nav lands on the index with its real content', async ({
 	page,
 }) => {
@@ -110,7 +110,7 @@ test('Action items: app-scoped nav lands on the index with its real content', as
 	await expect(page.getByRole('button', { name: 'Add ActionItem' })).toBeVisible()
 })
 
-// @e2e openspec/specs/action-item-management/spec.md#create-an-action-item
+// @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ait-001
 test('Action items: Add ActionItem opens a real create form dialog', async ({
 	page,
 }) => {
@@ -128,7 +128,7 @@ test('Action items: Add ActionItem opens a real create form dialog', async ({
 	await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5_000 })
 })
 
-// @e2e openspec/specs/action-item-management/spec.md#view-the-action-items-list
+// @e2e openspec/specs/app-navigation/spec.md#req-nav-002
 test('Action items: no decidiq-origin console error or 500 on load', async ({
 	page,
 }) => {
