@@ -347,13 +347,8 @@ class MinutesController extends Controller {
 			return $denied;
 		}
 
-		$user = $this->userSession->getUser();
-
 		return $this->responder->runInternal(
-			operation: fn (): array => $this->workflowService->submitForApproval(
-				minutesId: $minutesId,
-				actorId: $user->getUID()
-			)
+			operation: fn (): array => $this->workflowService->submitForApproval(minutesId: $minutesId)
 		);
 
 	}//end submitForApproval()

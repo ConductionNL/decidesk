@@ -116,7 +116,7 @@ class SeedProfileService {
 	 * source of truth, so a set that ships without being listed here is
 	 * impossible by construction.
 	 *
-	 * @return array<int, array{id: string, label: string, description: string, objectCount: integer}> The sets.
+	 * @return array<int, array{id: string, label: string, description: string, objectCount: integer, icon: string}> The sets.
 	 *
 	 * @spec openspec/changes/seed-profiles/specs/seed-profiles/spec.md#requirement-list-example-sets
 	 */

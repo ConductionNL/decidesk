@@ -61,7 +61,6 @@ class LiveDecisionService {
 	 *
 	 * @param string $meetingId The Meeting ID
 	 * @param array $decisionData Decision data (title, text, outcome, legalBasis)
-	 * @param string $actorId The actor ID (user making the recording)
 	 *
 	 * @return string The slug of the created Decision
 	 *
@@ -69,10 +68,8 @@ class LiveDecisionService {
 	 * @throws Exception If the Meeting lifecycle is not 'opened'
 	 *
 	 * @spec openspec/changes/p2-minutes-and-decisions-core-t3/tasks.md#task-2.1
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $actorId reserved for future audit-log enrichment.
 	 */
-	public function recordDecision(string $meetingId, array $decisionData, string $actorId): string {
+	public function recordDecision(string $meetingId, array $decisionData): string {
 		try {
 			// Fetch Meeting.
 			$meetingEntity = $this->objectService->find(id: $meetingId, register: 'decidiq', schema: 'meeting');

@@ -84,7 +84,7 @@ class ProofPackageService {
 	 * @throws MissingObjectException When the meeting is not found
 	 * @throws RuntimeException When OpenRegister or Files is unavailable
 	 *
-	 * @return array<string,mixed> { files: string[], sha256: string, generatedAt: string }
+	 * @return array<string,mixed> Keys: files (string[]), sha256 (string), generatedAt (string).
 	 *
 	 * @spec openspec/specs/resolution-minutes/spec.md
 	 */

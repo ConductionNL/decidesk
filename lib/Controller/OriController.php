@@ -353,22 +353,22 @@ class OriController extends Controller {
 			// (publicationDate <= $now, not depublished). A future-dated or
 			// depublished payload is not-found for anonymous callers — return 404
 			// (not 403) so the endpoint never confirms an unpublished payload exists.
-			if ($this->serializer->isPayloadLive(object: (array)$object) === false) {
+			if ($this->serializer->isPayloadLive(object: $object) === false) {
 				return $this->errorResponse(message: 'Not found', status: Http::STATUS_NOT_FOUND);
 			}
 
 			return $this->jsonLdResponse(
-				payload: $this->serializer->serializePayload(object: (array)$object, fallbackType: $type)
+				payload: $this->serializer->serializePayload(object: $object, fallbackType: $type)
 			);
 		}//end if
 
 		// #316: Treat non-published objects as not-found for anonymous callers.
 		// Return 404 (not 403) to avoid confirming the object exists.
-		if ($this->isLifecycleBlocked(object: (array)$object) === true) {
+		if ($this->isLifecycleBlocked(object: $object) === true) {
 			return $this->errorResponse(message: 'Not found', status: Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->jsonLdResponse(payload: $this->serializer->serialize(type: $type, object: (array)$object));
+		return $this->jsonLdResponse(payload: $this->serializer->serialize(type: $type, object: $object));
 	}//end show()
 
 	/**

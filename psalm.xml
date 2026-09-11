@@ -74,8 +74,135 @@
         <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
     </stubs>
     <issueHandlers>
-        <UndefinedDocblockClass errorLevel="suppress"/>
-        <UnusedClosureParam errorLevel="suppress"/>
+        <!--
+            WHAT IS SUPPRESSED, AND WHY. Measured 2026-09-11 (#1277 W1a).
+
+            This block used to suppress 33 issue types for the whole of lib/
+            and list 74 classes as undefined. Lifting all 33 produced 389
+            errors: about 296 unused-code reports caused by DI wiring, and
+            the rest real type and docblock problems, which were fixed in
+            the same change. What remains below is only what is still
+            needed, scoped as narrowly as psalm allows.
+
+            Before widening any of these again, lift it in a scratch config
+            and read what it hides. A global suppression silences the next
+            real finding of that type as well as the one it was added for.
+        -->
+
+        <!--
+            UNUSED-CODE REPORTS FROM DEPENDENCY INJECTION. Kept global.
+            Nextcloud builds controllers from appinfo/routes.php, listeners
+            and background jobs from registration calls, and services by
+            autowiring. None of that is a PHP call site psalm can see, so
+            nearly every class and public method in lib/ reads as unused
+            (73 UnusedClass and 223 PossiblyUnusedMethod when lifted). Scoping
+            these per file would mean listing most of lib/.
+        -->
+        <UnusedClass errorLevel="suppress"/>
+        <PossiblyUnusedMethod errorLevel="suppress"/>
+
+        <!--
+            A RETURN VALUE NO CALLER READS. Report-worthy but not a type
+            error; these methods return a value for their tests and for
+            future callers. Scoped to the files that have one today.
+        -->
+        <PossiblyUnusedReturnValue>
+            <errorLevel type="suppress">
+                <file name="lib/AppInfo/OpenRegisterAutoloader.php"/>
+                <file name="lib/Service/NotificationPreferenceService.php"/>
+                <file name="lib/Service/RegisterObjectStore.php"/>
+                <file name="lib/Service/TranscriptionService.php"/>
+            </errorLevel>
+        </PossiblyUnusedReturnValue>
+
+        <!--
+            FALSE "UNUSED" REPORTS CAUSED BY A CLASS PSALM CANNOT RESOLVE.
+            Each property or parameter below is used. Psalm stops analysing
+            the code that uses it because that code names an OpenRegister
+            class that exists only at runtime:
+              - DecidiqToolProvider implements OpenRegister's IMcpToolProvider
+                (MissingDependency), so psalm skips the class body and reports
+                every constructor parameter and both tool properties unused.
+                Loading tests/Stubs/Mcp/IMcpToolProvider.php as a stub was
+                tried and does not change that.
+              - OpenRegisterAutoloader passes $path to OC_App, which is
+                server-private and absent from nextcloud/ocp.
+        -->
+        <MissingDependency>
+            <errorLevel type="suppress">
+                <file name="lib/AppInfo/Registrar/DomainServiceRegistrar.php"/>
+            </errorLevel>
+        </MissingDependency>
+        <PossiblyUnusedParam>
+            <errorLevel type="suppress">
+                <file name="lib/Mcp/DecidiqToolProvider.php"/>
+            </errorLevel>
+        </PossiblyUnusedParam>
+        <UnusedProperty>
+            <errorLevel type="suppress">
+                <file name="lib/Mcp/DecidiqToolProvider.php"/>
+            </errorLevel>
+        </UnusedProperty>
+        <UnusedVariable>
+            <errorLevel type="suppress">
+                <file name="lib/AppInfo/OpenRegisterAutoloader.php"/>
+            </errorLevel>
+        </UnusedVariable>
+
+        <!--
+            registerEventListener() is templated on the event class. Both
+            calls below pass an OpenRegister event class, which psalm cannot
+            resolve, so the template check fails on a class it has never seen.
+        -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <file name="lib/AppInfo/Registrar/IntegrationLeafRegistrar.php"/>
+                <file name="lib/AppInfo/Registrar/PlatformIntegrationRegistrar.php"/>
+            </errorLevel>
+        </InvalidArgument>
+
+        <!--
+            array_values() after array_filter() is NOT redundant in these two
+            files: array_filter() keeps keys, and the result is stored as a
+            JSON list. Psalm infers the input as array<never, never> from an
+            `$x['key'] ?? []` read on array<string, mixed>, and concludes the
+            call does nothing.
+        -->
+        <RedundantFunctionCall>
+            <errorLevel type="suppress">
+                <file name="lib/Service/MotionCoauthorService.php"/>
+                <file name="lib/Service/ProxyDelegationService.php"/>
+            </errorLevel>
+        </RedundantFunctionCall>
+
+        <!--
+            `(int)$e->getCode()` on a caught DomainException. Exception::$code
+            is untyped, and a subclass may set a string code, so the cast is
+            kept on purpose.
+        -->
+        <RedundantCast>
+            <errorLevel type="suppress">
+                <file name="lib/Controller/TranscriptionController.php"/>
+            </errorLevel>
+        </RedundantCast>
+
+        <!--
+            Classes named in docblocks that only exist at runtime.
+        -->
+        <UndefinedDocblockClass>
+            <errorLevel type="suppress">
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <!-- Returned by the deprecated IDBConnection::getDatabasePlatform(). -->
+                <referencedClass name="Doctrine\DBAL\Platforms\AbstractPlatform"/>
+            </errorLevel>
+        </UndefinedDocblockClass>
+
+        <!--
+            Classes referenced in code that only exist at runtime. Narrowed
+            from 74 entries to the 19 that psalm actually reports: the other
+            55 named OCP classes that nextcloud/ocp already defines, or
+            OpenRegister and Guzzle classes this app no longer references.
+        -->
         <UndefinedClass>
             <errorLevel type="suppress">
                 <!-- Nextcloud's legacy bootstrap class. There is no OCP
@@ -84,117 +211,28 @@
                      has to call OC_App::registerAutoloading() directly. It is
                      server-private and therefore absent from nextcloud/ocp. -->
                 <referencedClass name="OC_App"/>
-                <!-- Nextcloud OCP Classes -->
-                <referencedClass name="OCP\AppFramework\App"/>
-                <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>
-                <referencedClass name="OCP\AppFramework\Controller"/>
-                <referencedClass name="OCP\AppFramework\IAppContainer"/>
-                <referencedClass name="OCP\App\IAppManager"/>
-                <referencedClass name="OCP\BackgroundJob\IJobList"/>
-                <referencedClass name="OCP\BackgroundJob\QueuedJob"/>
-                <referencedClass name="OCP\BackgroundJob\TimedJob"/>
-                <referencedClass name="OCP\EventDispatcher\Event"/>
-                <referencedClass name="OCP\EventDispatcher\IEventListener"/>
-                <referencedClass name="OCP\IAppConfig"/>
-                <referencedClass name="OCP\ICacheFactory"/>
-                <referencedClass name="OCP\IConfig"/>
-                <referencedClass name="OCP\IDBConnection"/>
-                <referencedClass name="OCP\IGroupManager"/>
-                <referencedClass name="OCP\IUserManager"/>
-                <referencedClass name="OCP\IUserSession"/>
-                <referencedClass name="OCP\IMemcache"/>
-                <referencedClass name="OCP\IRequest"/>
-                <referencedClass name="OCP\EventDispatcher\IEventDispatcher"/>
-                <referencedClass name="OCP\DB\QueryBuilder\IQueryBuilder"/>
-                <referencedClass name="OCP\AppFramework\Db\QBMapper"/>
-                <referencedClass name="OCP\AppFramework\Db\Entity"/>
-                <referencedClass name="OCP\Files\IRootFolder"/>
-                <referencedClass name="OCP\Files\Node"/>
-                <referencedClass name="OCP\Files\File"/>
-                <referencedClass name="OCP\Files\Folder"/>
-                <referencedClass name="OCP\Files\NotFoundException"/>
-                <referencedClass name="OCP\AppFramework\Http\JSONResponse"/>
-                <referencedClass name="OCP\AppFramework\Http\TemplateResponse"/>
-                <referencedClass name="OCP\AppFramework\Http\DataResponse"/>
-                <referencedClass name="OCP\IL10N"/>
-                <referencedClass name="OCP\IURLGenerator"/>
-                <referencedClass name="OCP\Http\Client\IClient"/>
-                <referencedClass name="OCP\Http\Client\IClientService"/>
-                <referencedClass name="OCP\Notification\IManager"/>
-                <referencedClass name="OCP\Share\IManager"/>
-                <!-- OpenRegister cross-app classes (loaded dynamically) -->
-                <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
+                <!-- OpenRegister cross-app classes (loaded at runtime). -->
+                <referencedClass name="OCA\OpenRegister\AppHost\Listener\GenericDeepLinkRegistrationListener"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrail"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrailMapper"/>
-                <referencedClass name="OCA\OpenRegister\Service\AuditHashService"/>
+                <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <!-- ADR-066 sibling-app leaf registration (RegisterDecisionsLeafListener). -->
                 <referencedClass name="OCA\OpenRegister\Event\RegisterLeafProvidersEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\Integration\LeafDescriptor"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
-                <referencedClass name="OCA\OpenRegister\Service\TaskService"/>
-                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
-                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
-                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
-                <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
-                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericDashboardController"/>
-                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericHealthController"/>
-                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericMetricsController"/>
-                <referencedClass name="OCA\OpenRegister\AppHost\Listener\GenericDeepLinkRegistrationListener"/>
-                <!-- Additional OCP infrastructure types used across the fleet -->
-                <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
-                <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
-                <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
-                <referencedClass name="OCP\DB\Exception"/>
-                <referencedClass name="OCP\IGroup"/>
-                <referencedClass name="OCP\IUser"/>
-                <referencedClass name="OCP\Migration\IRepairStep"/>
-                <!-- Nextcloud server internals -->
-                <referencedClass name="OC"/>
-                <!-- GuzzleHttp (loaded via composer at runtime) -->
-                <referencedClass name="GuzzleHttp\Client"/>
-                <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>
+                <referencedClass name="OCA\OpenRegister\Service\AuditHashService"/>
+                <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\TaskService"/>
             </errorLevel>
         </UndefinedClass>
-        <UndefinedMagicMethod errorLevel="suppress"/>
-        <UnusedClass errorLevel="suppress"/>
-        <PossiblyUnusedMethod errorLevel="suppress"/>
-        <UnusedMethod errorLevel="suppress"/>
-        <UnusedProperty errorLevel="suppress"/>
-        <PossiblyUnusedParam errorLevel="suppress"/>
-        <UnusedDocblockParam errorLevel="suppress"/>
-        <UnusedVariable errorLevel="suppress"/>
-        <PossiblyUnusedReturnValue errorLevel="suppress"/>
-        <RedundantCondition errorLevel="suppress"/>
-        <RedundantFunctionCall errorLevel="suppress"/>
-        <RedundantCast errorLevel="suppress"/>
-        <InvalidDocblock errorLevel="suppress"/>
-        <MoreSpecificImplementedParamType errorLevel="suppress"/>
-        <MissingDependency errorLevel="suppress"/>
-        <UnevaluatedCode errorLevel="suppress"/>
-        <NoValue errorLevel="suppress"/>
-        <TypeDoesNotContainNull errorLevel="suppress"/>
-        <TypeDoesNotContainType errorLevel="suppress"/>
-        <InvalidArrayOffset errorLevel="suppress"/>
-        <InvalidCast errorLevel="suppress"/>
-        <InvalidArgument errorLevel="suppress"/>
-        <InvalidReturnType errorLevel="suppress"/>
-        <InvalidReturnStatement errorLevel="suppress"/>
-        <MismatchingDocblockReturnType errorLevel="suppress"/>
-        <EmptyArrayAccess errorLevel="suppress"/>
-        <ImplementedReturnTypeMismatch errorLevel="suppress"/>
-        <LessSpecificImplementedReturnType errorLevel="suppress"/>
-        <InvalidMethodCall errorLevel="suppress"/>
-        <UndefinedInterfaceMethod errorLevel="suppress"/>
-        <MissingTemplateParam errorLevel="suppress"/>
     </issueHandlers>
     <extraFiles>
         <directory name="vendor/nextcloud/ocp" />

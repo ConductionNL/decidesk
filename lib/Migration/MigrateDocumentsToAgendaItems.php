@@ -241,7 +241,7 @@ class MigrateDocumentsToAgendaItems implements IRepairStep {
 
 				$typeId = $this->types->resolve(
 					objectService: $objectService,
-					name: (string)$mapping['typeName'],
+					name: $mapping['typeName'],
 					bodyReference: $this->bodyReferenceFor(row: $row, mapping: $mapping)
 				);
 				if ($typeId === '') {

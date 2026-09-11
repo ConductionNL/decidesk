@@ -436,7 +436,7 @@ class ConflictOfInterestService {
 		}//end try
 
 		$out = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
 				$row = (array)$row->jsonSerialize();
 			}

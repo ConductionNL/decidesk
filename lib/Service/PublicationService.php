@@ -219,7 +219,7 @@ class PublicationService {
 		$retractionStatus = 'none';
 		$catalogRef = (string)($record['catalogPublication'] ?? '');
 		if ($catalogRef !== '') {
-			$retracted = $this->catalogPublisher->retract((string)($record['targetCatalog'] ?? ''), $catalogRef);
+			$retracted = $this->catalogPublisher->retract($catalogRef);
 			$retractionStatus = 'done';
 			if ($retracted !== true) {
 				// Surface the failure and mark pending — never report success.

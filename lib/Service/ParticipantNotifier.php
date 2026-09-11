@@ -158,6 +158,9 @@ class ParticipantNotifier {
 		}
 
 		$userManager = $this->container->get(\OCP\IUserManager::class);
+		if (($userManager instanceof \OCP\IUserManager) === false) {
+			return null;
+		}
 
 		$email = ($participant['email'] ?? null);
 		if (empty($email) === false) {

@@ -134,7 +134,7 @@ class RepointConflictOfInterestBoardMember implements IRepairStep {
 		$alreadyMigrated = 0;
 		$skipped = 0;
 
-		foreach ((array)$rows as $entity) {
+		foreach ($rows as $entity) {
 			$keys = $this->rowKeys(entity: $entity);
 			if ($keys === null) {
 				$skipped++;

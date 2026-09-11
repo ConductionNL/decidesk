@@ -148,7 +148,7 @@ class MigrateBoardProxyToProxyAuthorization implements IRepairStep {
 		$alreadyMigrated = 0;
 		$skipped = 0;
 
-		foreach ((array)$sourceRows as $entity) {
+		foreach ($sourceRows as $entity) {
 			$resolved = $this->resolveRow(entity: $entity);
 			if ($resolved === null) {
 				$skipped++;
@@ -308,7 +308,7 @@ class MigrateBoardProxyToProxyAuthorization implements IRepairStep {
 		}
 
 		$index = [];
-		foreach ((array)$rows as $entity) {
+		foreach ($rows as $entity) {
 			$row = $this->toArray(entity: $entity);
 			if ($row === null) {
 				continue;

@@ -207,7 +207,7 @@ class QesGuard {
 			]
 		);
 
-		foreach ((array)$minutesRows as $row) {
+		foreach ($minutesRows as $row) {
 			$minutes = $this->toArray(row: $row);
 			if (($minutes['meetingIntegration'] ?? null) !== $meetingId) {
 				continue;

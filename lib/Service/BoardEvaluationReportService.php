@@ -69,7 +69,7 @@ class BoardEvaluationReportService {
 	 *
 	 * @throws MissingObjectException When the evaluation cannot be found
 	 *
-	 * @return array<string, mixed> {path, format, docudesk, note?}
+	 * @return array<string, mixed> Keys: path, format, docudesk, and optionally note.
 	 *
 	 * @spec openspec/specs/board-self-evaluation/spec.md#requirement-req-eval-005-dashboard-report-and-optional-publication-reuse-existing-surfaces
 	 */
