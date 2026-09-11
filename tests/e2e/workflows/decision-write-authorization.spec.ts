@@ -58,6 +58,7 @@ import type {
 } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { randomBytes } from 'node:crypto'
 import { BASE_URL as BASE } from '../base-url.ts'
 
 const ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
@@ -71,7 +72,8 @@ const ADMIN_GROUPS = ['decidiq-administrators', 'decidesk-administrators']
 
 const DECISIONS = `${BASE}/index.php/apps/openregister/api/objects/decidiq/decision`
 
-const RUN_ID = `${Date.now()}-${Math.floor(Math.random() * 1e4)}`
+// From a CSPRNG, not Math.random(): the passwords below are built from it.
+const RUN_ID = `${Date.now()}-${randomBytes(6).toString('hex')}`
 
 /**
  * The two accounts this spec provisions. Run-unique ids, so a leftover from an
