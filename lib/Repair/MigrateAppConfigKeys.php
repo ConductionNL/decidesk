@@ -76,6 +76,10 @@ use Throwable;
 
 /**
  * Copy every stored IAppConfig value from the decidesk namespace to decidiq.
+ *
+ * @spec exclude One-off decidesk->decidiq app-id rename plumbing: it moves
+ *       IAppConfig rows between app-id namespaces and adds no behaviour of
+ *       its own.
  */
 class MigrateAppConfigKeys implements IRepairStep {
 
