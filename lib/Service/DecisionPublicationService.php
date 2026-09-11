@@ -184,10 +184,14 @@ class DecisionPublicationService {
 				uuid: $decisionId
 			);
 
-			$result = $updated;
-			if ($saved instanceof \stdClass === true || is_array($saved) === true) {
-				$result = (array)$saved;
-			}
+			// The response carries what was STORED, not what was sent.
+			// ObjectServiceInterface::saveObject() answers the stored entity,
+			// so anything OpenRegister adds or normalises on write (a version,
+			// an @self block, a defaulted property) reaches the caller. The
+			// branch that used to be here tested for a stdClass or an array,
+			// neither of which that contract can return, so the local payload
+			// was always what came back.
+			$result = (array)$saved->getObject();
 
 			$this->logger->info(
 				'Decidiq: Decision published',
