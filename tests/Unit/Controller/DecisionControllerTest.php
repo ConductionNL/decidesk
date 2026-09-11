@@ -26,7 +26,6 @@ use OCA\Decidiq\Controller\DecisionController;
 use OCA\Decidiq\Service\DecisionLifecycleService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
@@ -312,8 +311,6 @@ class DecisionControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublishSucceedsReturns200(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$this->groupManager->method('isAdmin')->with('admin')->willReturn(true);
 
 		$this->container->method('get')
@@ -332,15 +329,29 @@ class DecisionControllerTest extends TestCase {
 
 		$this->objectService->method('find')->willReturn($entity);
 
-		$savedData = [
-			'id' => 'decision-uuid-004',
-			'isPublished' => 'public',
-			'publishedAt' => '2026-04-14T00:00:00+00:00',
-		];
-
+		// OpenRegister's saveObject() returns the stored ENTITY, never the
+		// payload array this test used to hand back (which the contract refuses).
+		// Capture what is written so the assertions pin the persisted change,
+		// not only the response.
+		$saves = [];
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturn($savedData);
+			->willReturnCallback(
+				function (
+					array $object,
+					?array $extend = [],
+					string|int|null $register = null,
+					string|int|null $schema = null,
+					?string $uuid = null,
+				) use (&$saves): ObjectEntity {
+					$saves[] = ['object' => $object, 'schema' => $schema, 'uuid' => $uuid];
+
+					$saved = $this->createMock(ObjectEntity::class);
+					$saved->method('getObject')->willReturn($object);
+					$saved->method('jsonSerialize')->willReturn($object);
+					return $saved;
+				}
+			);
 
 		$result = $this->controller->publish('decision-uuid-004');
 
@@ -348,6 +359,15 @@ class DecisionControllerTest extends TestCase {
 		self::assertSame(Http::STATUS_OK, $result->getStatus());
 		self::assertArrayHasKey('isPublished', $result->getData());
 		self::assertSame('public', $result->getData()['isPublished']);
+		self::assertArrayHasKey('publishedAt', $result->getData());
+
+		// The write targets the loaded decision by uuid and carries the stamp.
+		self::assertCount(1, $saves);
+		self::assertSame('decision', $saves[0]['schema']);
+		self::assertSame('decision-uuid-004', $saves[0]['uuid']);
+		self::assertSame('public', $saves[0]['object']['isPublished']);
+		self::assertSame('Besluit A', $saves[0]['object']['title'], 'The full object is saved, not a partial payload');
+		self::assertNotEmpty($saves[0]['object']['publishedAt']);
 
 	}//end testPublishSucceedsReturns200()
 
