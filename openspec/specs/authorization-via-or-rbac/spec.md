@@ -126,9 +126,9 @@ SHALL be granted to `authenticated`; `update` and `delete` SHALL NOT be, so that
 neither the object's owner, nor a Nextcloud admin, nor a member of the named administrator group
 cannot rewrite or destroy another user's decidiq object through OpenRegister's own
 `/apps/openregister/api/objects/decidiq/<schema>` API. Schemas that declare their own
-`authorization` block SHALL keep it — OpenRegister resolves the schema block first and falls back to
-the register's only when a schema has none — and those blocks SHALL continue to name read actions
-only. The register version, the configuration version and the app version SHALL all be bumped in the
+`authorization` block SHALL keep it (OpenRegister resolves the schema block first and falls back to
+the register's only when a schema has none), and what such a block declares for the write actions is
+governed by REQ-RBAC-007. The register version, the configuration version and the app version SHALL all be bumped in the
 same change, because the register import skips on a non-newer version with no content fallback and
 the `<post-migration>` repair step that performs the import runs only on `occ upgrade`.
 
@@ -152,3 +152,49 @@ the `<post-migration>` repair step that performs the import runs only on `occ up
   any action a non-empty block omits — an unnamed action would break the app rather than secure it.
 
 @e2e exclude The assertion is a per-user DENIAL by OpenRegister's own permission evaluator against a declaration this repo ships, and the owner bypass is unconditional and SQL-side — so a browser test driven by a single seeded (and therefore owning, usually admin) session cannot observe it at all, and would report success over the exact hole. Pinned by `tests/Unit/RegisterAuthorizationTest.php` on the declaration side; the per-user behaviour needs a two-account probe against a live instance, recorded in the PR as verification owed rather than claimed.
+
+### Requirement: REQ-RBAC-007 A schema block that narrows reads restates the writes the app needs
+OpenRegister uses a schema's own `authorization` block IN PLACE OF the register's, whole, not action
+by action: `PermissionHandler::resolveAuthorizationRaw()` consults the register block only when the
+schema block is empty, and `hasGroupPermission()` denies any action a non-empty block leaves out. A
+schema block added to narrow who may READ therefore also closes `create`, `update` and `delete` to
+everyone except the object owner and a Nextcloud superuser, unless it names them.
+
+A schema block that exists to narrow reads, on a schema the SPA writes through OpenRegister's object
+API, SHALL therefore name `create`, `update` and `delete` with exactly the rule lists the register row
+grants. A schema whose writes are owned by a decidiq service that runs its own per-object guard
+(ProxyAuthorization, ConflictOfInterest, ConsultationReaction, PublicationPayload) SHALL NOT name a
+write action, so that guard cannot be bypassed through the object API. EvaluationResponse SHALL name
+`create` for `authenticated` only. A retired schema SHALL NOT name a write action. Every schema
+`decidiq_mock_register.json` carries SHALL have the same block there as in `decidesk_register.json`,
+and the mock's register row SHALL carry the register row's block, because the demo import is forced
+and writes the mock's schemas over the real ones.
+
+A property-level rule, such as the `update` rule on Decision `isPublished` and `publishedAt`, is
+consulted only after the object-level check has admitted the caller. It SHALL keep refusing a direct
+write to those fields from every group the schema grants `update`. A Nextcloud superuser bypasses
+object and property rules alike and is not constrained by this requirement.
+
+#### Scenario: An administrator group member edits a Decision they did not create
+- **GIVEN** a Decision owned by another account, and an account that is in `decidiq-administrators`
+  and is not a Nextcloud superuser
+- **WHEN** that account writes a changed `title` through OpenRegister's object API
+- **THEN** the write succeeds and the account reads back the new title.
+
+#### Scenario: A direct write to a flow owned publication field is refused
+- **GIVEN** the same account and Decision, after the title edit succeeded
+- **WHEN** that account writes `isPublished: public` through OpenRegister's object API
+- **THEN** OpenRegister refuses it with the property rule's message naming `isPublished`, not with
+  the object-level update refusal
+- **AND** the Decision's `isPublished` is unchanged.
+
+#### Scenario: A member outside the administrator groups cannot edit a Decision they did not create
+- **GIVEN** the same Decision, and an authenticated account in neither administrator group that is
+  not a Nextcloud superuser and does not own it
+- **WHEN** that account writes a changed `title` through OpenRegister's object API
+- **THEN** OpenRegister refuses it at the object level, and the title is unchanged.
+
+#### Scenario: Any member can raise a Decision
+- **GIVEN** an authenticated account in no group at all
+- **WHEN** that account creates a Decision through OpenRegister's object API
+- **THEN** the Decision is created.
