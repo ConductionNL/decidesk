@@ -27,7 +27,6 @@ use OCA\Decidiq\Service\ParticipantResolver;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\CalendarEventService;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\Notification\IManager as INotificationManager;
 use OCP\Notification\INotification;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -211,13 +210,17 @@ class AgendaServiceTest extends TestCase {
 	/**
 	 * advanceBobPhase correctly cycles through the BOB phase sequence.
 	 *
+	 * Each step must be written through patchObject() with a status-only
+	 * payload: a uuid-bearing saveObject() is a full replace that OpenRegister
+	 * validates whole, so a partial save 400s on the required fields it omits
+	 * (#1104). The assertion therefore pins BOTH the next phase and the patch
+	 * path, and saveObject() must never be reached.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/p2-agenda-management/tasks.md#task-9.1
 	 */
 	public function testAdvanceBobPhaseCyclesThroughPhases(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$transitions = [
 			['from' => 'voorstel',        'to' => 'beeldvorming'],
 			['from' => 'beeldvorming',    'to' => 'oordeelsvorming'],
@@ -229,17 +232,20 @@ class AgendaServiceTest extends TestCase {
 			$itemId = 'item-' . $t['from'];
 			$itemData = ['id' => $itemId, 'itemType' => 'decision', 'status' => $t['from']];
 
-			// Use a fresh mock per iteration to prevent expectation accumulation.
+			// A fresh double per iteration so expectations do not accumulate.
 			$objectService = $this->createMock(ObjectServiceInterface::class);
-			$objectService->method('find')->willReturn($itemData);
+			$objectService->method('find')->willReturn($this->entity($itemData));
+			$objectService->expects($this->never())->method('saveObject');
+
+			$patches = [];
 			$objectService
 				->expects($this->once())
-				->method('saveObject')
-				->with(
-					$this->callback(fn ($obj) => ($obj['status'] ?? null) === $t['to']),
-					$this->anything(),
-					$this->anything(),
-					$this->anything(),
+				->method('patchObject')
+				->willReturnCallback(
+					function (string $objectId, array $data) use (&$patches): ObjectEntity {
+						$patches[] = ['id' => $objectId, 'data' => $data];
+						return $this->entity($data);
+					}
 				);
 
 			$freshService = new AgendaService(
@@ -251,7 +257,13 @@ class AgendaServiceTest extends TestCase {
 			);
 
 			$freshService->advanceBobPhase($itemId);
-		}
+
+			$this->assertSame(
+				[['id' => $itemId, 'data' => ['status' => $t['to']]]],
+				$patches,
+				"'{$t['from']}' must advance to '{$t['to']}' with a status-only patch"
+			);
+		}//end foreach
 
 	}//end testAdvanceBobPhaseCyclesThroughPhases()
 
@@ -274,21 +286,20 @@ class AgendaServiceTest extends TestCase {
 	}//end testAdvanceBobPhaseThrowsWhenItemNotFound()
 
 	/**
-	 * advanceBobPhase throws for informational items.
+	 * advanceBobPhase throws for informational items, and writes nothing.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/p2-agenda-management/tasks.md#task-9.1
 	 */
 	public function testAdvanceBobPhaseThrowsForInformationalItem(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$itemId = 'item-info';
 		$itemData = ['id' => $itemId, 'itemType' => 'informational', 'status' => 'beeldvorming'];
 
 		$this->objectService
 			->method('find')
-			->willReturn($itemData);
+			->willReturn($this->entity($itemData));
+		$this->objectService->expects($this->never())->method('patchObject');
 
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessageMatches('/informational/i');
@@ -300,19 +311,22 @@ class AgendaServiceTest extends TestCase {
 	/**
 	 * advanceBobPhase throws when item is already at final phase 'completed'.
 	 *
+	 * `completed` is the English data value the Dutch `afgerond` was renamed to
+	 * (lib/Repair/RenameDutchDecidiqValues.php, `status` map), which is why the
+	 * spec prose still reads `afgerond`.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/p2-agenda-management/tasks.md#task-9.1
 	 */
 	public function testAdvanceBobPhaseThrowsAtFinalPhase(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$itemId = 'item-final';
 		$itemData = ['id' => $itemId, 'itemType' => 'decision', 'status' => 'completed'];
 
 		$this->objectService
 			->method('find')
-			->willReturn($itemData);
+			->willReturn($this->entity($itemData));
+		$this->objectService->expects($this->never())->method('patchObject');
 
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessageMatches('/final phase/i');
@@ -328,13 +342,15 @@ class AgendaServiceTest extends TestCase {
 	/**
 	 * processHamerstukken bulk-updates only items tagged 'hamerstuk'.
 	 *
+	 * The items come back from findAll() as entities, the way OpenRegister
+	 * returns them, and each tagged one must be patched to 'completed'. The
+	 * untagged item-2 must be left alone.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/p2-agenda-management/tasks.md#task-9.1
 	 */
 	public function testProcessHamerstukkenUpdatesTaggedItemsOnly(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$meetingId = 'meeting-uuid-1';
 		$items = [
 			['id' => 'item-1', 'title' => 'Item 1', 'tags' => ['hamerstuk'], 'status' => 'besluitvorming'],
@@ -344,23 +360,20 @@ class AgendaServiceTest extends TestCase {
 
 		$this->objectService
 			->method('findAll')
-			->willReturn($items);
+			->willReturn(array_map(fn (array $item): ObjectEntity => $this->entity($item), $items));
+		$this->objectService->expects($this->never())->method('saveObject');
 
-		// Capture saved objects to verify only hamerstukken are updated.
-		$savedObjects = [];
-		$this->objectService
-			->method('saveObject')
-			->willReturnCallback(function ($object) use (&$savedObjects) {
-				$savedObjects[] = $object;
-				return $object;
-			});
+		$patches = $this->capturePatches();
 
 		$this->service->processHamerstukken($meetingId);
 
-		$this->assertCount(2, $savedObjects);
-		foreach ($savedObjects as $saved) {
-			$this->assertSame('completed', $saved['status']);
-		}
+		$this->assertSame(
+			[
+				['id' => 'item-1', 'data' => ['status' => 'completed']],
+				['id' => 'item-3', 'data' => ['status' => 'completed']],
+			],
+			$patches->getArrayCopy()
+		);
 
 	}//end testProcessHamerstukkenUpdatesTaggedItemsOnly()
 
@@ -376,39 +389,78 @@ class AgendaServiceTest extends TestCase {
 	 * @spec openspec/changes/p2-agenda-management/tasks.md#task-9.1
 	 */
 	public function testReorderItemsAssignsSequentialNumbers(): void {
-		$this->markTestSkipped('See Codeberg issue #90 (pre-migration, not migrated to GitHub) — real ObjectService loads instead of stub.');
-
 		$meetingId = 'meeting-uuid-1';
 		$orderedIds = ['item-c', 'item-a', 'item-b'];
 
 		// Return the meeting's items so all IDs pass the ownership check.
 		$this->objectService
 			->method('findAll')
-			->willReturn([
-				['id' => 'item-a'],
-				['id' => 'item-b'],
-				['id' => 'item-c'],
-			]);
+			->willReturn(
+				[
+					$this->entity(['id' => 'item-a']),
+					$this->entity(['id' => 'item-b']),
+					$this->entity(['id' => 'item-c']),
+				]
+			);
+		$this->objectService->expects($this->never())->method('saveObject');
 
-		$savedObjects = [];
-		$this->objectService
-			->method('saveObject')
-			->willReturnCallback(function ($object) use (&$savedObjects) {
-				$savedObjects[] = $object;
-				return $object;
-			});
+		$patches = $this->capturePatches();
 
 		$this->service->reorderItems($meetingId, $orderedIds);
 
-		$this->assertCount(3, $savedObjects);
-		$this->assertSame(1, $savedObjects[0]['orderNumber']);
-		$this->assertSame(2, $savedObjects[1]['orderNumber']);
-		$this->assertSame(3, $savedObjects[2]['orderNumber']);
-
-		$this->assertSame('item-c', $savedObjects[0]['id']);
-		$this->assertSame('item-a', $savedObjects[1]['id']);
-		$this->assertSame('item-b', $savedObjects[2]['id']);
+		$this->assertSame(
+			[
+				['id' => 'item-c', 'data' => ['orderNumber' => 1]],
+				['id' => 'item-a', 'data' => ['orderNumber' => 2]],
+				['id' => 'item-b', 'data' => ['orderNumber' => 3]],
+			],
+			$patches->getArrayCopy()
+		);
 
 	}//end testReorderItemsAssignsSequentialNumbers()
 
+	// -----------------------------------------------------------------------
+	// helpers
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Record every patchObject() call on the shared object-service double.
+	 *
+	 * @return \ArrayObject<int, array{id: string, data: array<string, mixed>}> The live capture
+	 */
+	private function capturePatches(): \ArrayObject {
+		$patches = new \ArrayObject();
+		$this->objectService
+			->method('patchObject')
+			->willReturnCallback(
+				function (string $objectId, array $data) use ($patches): ObjectEntity {
+					$patches->append(['id' => $objectId, 'data' => $data]);
+					return $this->entity($data);
+				}
+			);
+
+		return $patches;
+
+	}//end capturePatches()
+
+	/**
+	 * Wrap a payload in an ObjectEntity double that serialises to it verbatim.
+	 *
+	 * The same double VotingServiceCastAsTest uses: OpenRegister returns
+	 * entities, never arrays, from find(), findAll() and the write methods.
+	 *
+	 * @param array<string, mixed> $object The payload
+	 *
+	 * @return ObjectEntity
+	 */
+	private function entity(array $object): ObjectEntity {
+		$entity = $this->getMockBuilder(ObjectEntity::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['jsonSerialize', 'getObject'])
+			->getMock();
+		$entity->method('jsonSerialize')->willReturn($object);
+		$entity->method('getObject')->willReturn($object);
+		return $entity;
+
+	}//end entity()
 }//end class
