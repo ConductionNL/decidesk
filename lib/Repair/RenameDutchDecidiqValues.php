@@ -48,6 +48,9 @@ use OCP\Migration\IRepairStep;
 
 /**
  * Migrates stored Dutch enum values to their English spelling.
+ *
+ * @spec exclude Data migration for the Dutch-to-English vocabulary change;
+ *  no canonical spec covers it and it carries no business rule of its own.
  */
 class RenameDutchDecidiqValues implements IRepairStep {
 
@@ -314,6 +317,9 @@ class RenameDutchDecidiqValues implements IRepairStep {
 	 * Step name shown by `occ maintenance:repair`.
 	 *
 	 * @return string
+	 *
+	 * @spec exclude Data migration for the Dutch-to-English vocabulary change;
+	 *  no canonical spec covers it and it carries no business rule of its own.
 	 */
 	public function getName(): string {
 		return 'Translate stored Dutch Decidiq enum values';
