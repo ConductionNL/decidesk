@@ -346,9 +346,14 @@ class DecisionControllerTest extends TestCase {
 				) use (&$saves): ObjectEntity {
 					$saves[] = ['object' => $object, 'schema' => $schema, 'uuid' => $uuid];
 
+					// What OpenRegister STORES is not what it was handed:
+					// it stamps its own fields on write. The response must
+					// carry the stored object, so the double answers one.
+					$stored = ($object + ['version' => '2', 'storedBy' => 'openregister']);
+
 					$saved = $this->createMock(ObjectEntity::class);
-					$saved->method('getObject')->willReturn($object);
-					$saved->method('jsonSerialize')->willReturn($object);
+					$saved->method('getObject')->willReturn($stored);
+					$saved->method('jsonSerialize')->willReturn($stored);
 					return $saved;
 				}
 			);
@@ -360,6 +365,12 @@ class DecisionControllerTest extends TestCase {
 		self::assertArrayHasKey('isPublished', $result->getData());
 		self::assertSame('public', $result->getData()['isPublished']);
 		self::assertArrayHasKey('publishedAt', $result->getData());
+
+		// 🔑 THE RESPONSE IS THE STORED OBJECT. These two fields exist only on
+		// what saveObject() answered, so they cannot come from the payload the
+		// service assembled locally.
+		self::assertSame('2', $result->getData()['version']);
+		self::assertSame('openregister', $result->getData()['storedBy']);
 
 		// The write targets the loaded decision by uuid and carries the stamp.
 		self::assertCount(1, $saves);
