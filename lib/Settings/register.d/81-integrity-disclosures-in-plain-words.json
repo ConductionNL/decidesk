@@ -143,6 +143,17 @@
 							}
 						},
 						"authenticated"
+					],
+					"create": [
+						"authenticated"
+					],
+					"update": [
+						"decidiq-administrators",
+						"decidesk-administrators"
+					],
+					"delete": [
+						"decidiq-administrators",
+						"decidesk-administrators"
 					]
 				},
 				"required": [
@@ -290,6 +301,17 @@
 							}
 						},
 						"authenticated"
+					],
+					"create": [
+						"authenticated"
+					],
+					"update": [
+						"decidiq-administrators",
+						"decidesk-administrators"
+					],
+					"delete": [
+						"decidiq-administrators",
+						"decidesk-administrators"
 					]
 				},
 				"type": "object",

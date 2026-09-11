@@ -134,15 +134,17 @@ class Application extends App implements IBootstrap {
 		// them.
 		// @spec openspec/changes/migrate-comments-to-talk-leaf/tasks.md#task-2.1.
 		// @spec openspec/specs/user-settings/spec.md
+		// Both registrars below carry the bindings described above.
 		(new CrossAppEventRegistrar())->register(context: $context);
 		(new DomainServiceRegistrar())->register(context: $context);
 
+		// @spec openspec/specs/decision-management/spec.md
 		// Board portal Phase 2 services (audit log, conflict of interest,
 		// quorum verification and their controllers) are autowired.
 		// board-meeting-resolutions is archived (openspec/changes/archive/
 		// 2026-06-12-board-meeting-resolutions), so its tasks.md is not a live
-		// target. @spec points at the CANONICAL spec that survived the change.
-		// @spec openspec/specs/decision-management/spec.md
+		// target. The @spec above points at the CANONICAL spec that survived
+		// the change.
 		(new PlatformIntegrationRegistrar())->register(context: $context);
 
 		// Server-side half of the `decidesk-decisions` integration leaf (ADR-066).
@@ -156,9 +158,10 @@ class Application extends App implements IBootstrap {
 		// the prefix and is why the MCP tool ids had to move. Usability is derived
 		// from the descriptor's `requiredApp`, which is Application::APP_ID and so
 		// tracks the rename on its own. The id is also named verbatim in the
-		// REQ-DCDH-008 requirement heading that the @spec anchor below
-		// dereferences, so moving it would break the anchor for no gain.
+		// REQ-DCDH-008 requirement heading that the @spec anchor on the next
+		// line dereferences, so moving it would break the anchor for no gain.
 		// @spec openspec/specs/decidesk-contract-decision-hub/spec.md#requirement-req-dcdh-008-the-decidesk-decisions-leaf-is-declared-on-both-layers
+		// IntegrationLeafRegistrar owns that server-side registration.
 		(new IntegrationLeafRegistrar())->register(context: $context);
 
 	}//end register()

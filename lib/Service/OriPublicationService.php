@@ -134,6 +134,7 @@ class OriPublicationService {
 		// single enforcement seam so the deny-list home stays exercised and the
 		// publish-decisions change extends the same list.
 		// @spec openspec/specs/meeting-transcription/spec.md
+		// The deny-list requirement itself lives in that spec.
 		try {
 			$eligibility = $this->container->get(\OCA\Decidiq\Service\PublicationEligibilityService::class);
 			$eligibility->assertPublishable(schemaSlug: 'voting-round');
