@@ -8,8 +8,6 @@ openspec-changes:
 # Voting System Specification
 
 ## Purpose
-@e2e exclude All voting scenarios require a live meeting in-progress with active voting rounds, quorum calculations, and multi-user ballot state that cannot be deterministically set up via pure UI interactions. The VotingRoundPanel component exists but its scenarios are integration-level (vote casting, real-time tallying, secret ballot, proxy enforcement) requiring backend state that must be tested at the PHP/WebSocket layer.
-
 The voting system is Decidiq's most critical feature. It supports multiple voting methods (open vote, secret ballot, roll call, weighted voting), real-time ballot casting and result calculation, quorum-aware majority thresholds, proxy vote handling, and configurable voting rules per governing body. The system ensures legally compliant voting for associations (ALV), corporate boards (BV/NV), and government councils.
 
 **Standards**: Schema.org (`VoteAction`, `ChooseAction`), Akoma Ntoso (`voting`, `count`), OpenRaadsinformatie (`Stemming`, `Stem`)
@@ -31,6 +29,8 @@ The system MUST support open (public) voting where each participant casts a for,
 
 #### Scenario: Conduct an open vote on an agenda item
 
+@e2e exclude tests/e2e/workflows/voting-quorum-workflow.spec.ts opens, casts and closes rounds over the real API and asserts the exact tally, and VotingServiceTest::testTallyResultsAdopted covers the result; that spec is tagged to meeting-management and decision-management. No test clicks the For, Against and Abstain panel or watches the running tally: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
+
 - GIVEN a meeting with quorum met and an active agenda item of type "decision"
 - WHEN the chair initiates an open vote
 - THEN each eligible member MUST see a voting panel with "For", "Against", and "Abstain" buttons
@@ -40,12 +40,16 @@ The system MUST support open (public) voting where each participant casts a for,
 
 #### Scenario: View individual votes after an open vote
 
+@e2e exclude no test opens a closed open-vote round and checks how each member voted, or reads the result back from the decision audit trail: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
+
 - GIVEN an open vote has been completed
 - WHEN a user views the voting results
 - THEN the system MUST display how each member voted (for/against/abstain)
 - AND the results MUST be recorded in the decision audit trail
 
 #### Scenario: Reject a vote when quorum is lost mid-meeting
+
+@e2e exclude the quorum gate on opening a round is covered by VotingServiceTest::testOpenVotingRoundBlocksOnQuorumFailure and by voting-quorum-workflow.spec.ts, which is tagged to meeting-management. No test lets members leave after quorum was met and then retries: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 - GIVEN a meeting where quorum was initially met but members have since left
 - WHEN the chair attempts to start a new vote
@@ -63,6 +67,8 @@ The system MUST support secret (anonymous) voting where individual votes are not
 
 #### Scenario: Conduct a secret ballot for board election
 
+@e2e exclude no test casts a secret ballot. The masking rules live in the `secret-ballot` spec, and RegisterJsonTest::testVotingRoundSchema pins only the `isSecret` field. Candidate options and the eligible-voter count check are untested: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
+
 - GIVEN a meeting with an agenda item "Board Election — Treasurer"
 - WHEN the chair initiates a secret ballot
 - THEN each eligible member MUST see a voting panel with candidate options
@@ -71,6 +77,8 @@ The system MUST support secret (anonymous) voting where individual votes are not
 - AND the system MUST verify that the total vote count matches the number of eligible voters
 
 #### Scenario: Verify vote count integrity for secret ballot
+
+@e2e exclude no test tallies a secret ballot against its eligible-voter count or checks that a discrepancy is flagged for the chair: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 - GIVEN a secret ballot has been completed with 12 eligible voters
 - WHEN the results are tallied
@@ -239,11 +247,15 @@ A `VotingRound` SHALL be relatable to the `DecisionStage` it resolves, so that a
 
 #### Scenario: A voting round is linked to the stage it resolves
 
+@e2e exclude a data-model rule with no page of its own. VotingRoundCloserStageOutcomeTest::testResultMapsToTheStageOutcome covers the stage outcome deriving from the round result, and ::testARoundWithNoStageWritesNothing covers the unlinked case.
+
 - **GIVEN** a `method=vote` DecisionStage and a `VotingRound` with `result=adopted`
 - **WHEN** the stage references the round via `votingRound`
 - **THEN** the round resolves that stage and the stage outcome derives from `VotingRound.result`
 
 #### Scenario: Secret ballot sub-variant is carried by the round
+
+@e2e exclude a data-model rule with no page of its own. RegisterJsonTest::testVotingRoundSchema pins `isSecret` and `votingMethod` on VotingRound. No test pins that `DecisionStage.method` has no secret-ballot value.
 
 - **GIVEN** a `VotingRound` with `isSecret=true` linked to a `method=vote` stage
 - **WHEN** the ballot is configured
@@ -278,6 +290,8 @@ The voting machinery (tally calculation, atomic tally updates, deadline/phase en
 - **THEN** only `Vote` objects from the `VotingRound` are counted; `CitizenVote` records contribute nothing to the statutory outcome
 
 #### Scenario: Duplicate detection shared with statutory voting
+
+@e2e exclude VotingServiceAdvisoryTest::testDuplicateAdvisoryVoteRejected covers it: a second advisory vote throws and nothing is saved, so the tally is unchanged. The statutory path detects the same repeat but updates the earlier ballot instead (VotingServiceTest::testCastVoteOverwritesDuplicate). No browser test casts a second advisory vote: tracked as e2e debt in ConductionNL/decidiq#1277.
 
 - **GIVEN** a citizen who has already cast an advisory vote on a proposal
 - **WHEN** they attempt to vote again on the same proposal

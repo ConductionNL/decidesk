@@ -1,7 +1,7 @@
 # portal-citizen-create-actions Specification
 
 ## Purpose
-TBD - created by archiving change portal-citizen-create-actions. Update Purpose after archive.
+Lets a citizen react to an open consultation and propose a budget item through portaliq. This app declares the two create actions in its portal manifest. The server stamps every scope and lifecycle field, so a citizen can only create rows in their own name, at the intake state.
 ## Requirements
 ### Requirement: Citizen reacts to an open consultation via a scope-stamped create action (REQ-DKPCA-001)
 
@@ -24,7 +24,7 @@ parent is not open. `minTrust` MUST be `low`.
 - THEN a `ConsultationReaction` is created with `submitterId` stamped from `subjectRef`, `moderationStatus: 'pending'` and `submittedAt` stamped server-side
 - AND a client-supplied `submitterId`, `moderationStatus`, `moderationReason` or `publicatiedatum` is ignored (not in the whitelist)
 - AND a `createReaction` against a consultation whose `status` is not `open` fails closed
-- @e2e exclude e2e added in apply phase - spec-only PR
+- @e2e exclude decidiq only declares this action in its portal manifest; portaliq renders the citizen form, so decidiq has no page to drive. PortalContributionProviderTest::testCreateReactionActionShape pins the whitelist and the stamped set, and PortalCreateOpenParentGuardListenerTest::testReactionOnClosedConsultationRejected pins the fail-closed parent guard. The browser flow is tracked in ConductionNL/decidiq#1277.
 
 ### Requirement: Citizen proposes a budget item into an open participatory budget via a scope-stamped create action (REQ-DKPCA-002)
 
@@ -47,7 +47,7 @@ MUST fail closed otherwise. `minTrust` MUST be `low`.
 - THEN a `BudgetProposal` is created with `submitter` stamped from `subjectRef` and `status: 'submitted'`
 - AND a client-supplied `submitter`, `status`, `votesFor` or `votesAgainst` is ignored (not in the whitelist)
 - AND a `createBudgetProposal` into a participatory budget whose `status` is not `submission` fails closed
-- @e2e exclude e2e added in apply phase - spec-only PR
+- @e2e exclude decidiq only declares this action in its portal manifest; portaliq renders the citizen form, so decidiq has no page to drive. PortalContributionProviderTest::testCreateBudgetProposalActionShape pins the whitelist and the stamped set, and PortalCreateOpenParentGuardListenerTest::testBudgetProposalOnDraftRoundRejected pins the fail-closed parent guard. The browser flow is tracked in ConductionNL/decidiq#1277.
 
 ### Requirement: Scope and lifecycle are server-owned, closing write-IDOR (REQ-DKPCA-003)
 
@@ -67,7 +67,7 @@ MUST appear in either whitelist.
 - WHEN the create is processed
 - THEN the persisted row's scope is stamped from the verified `subjectRef` and its lifecycle field is the server intake state; the forged scope and status are ignored
 - AND no staff-only field is writable through either action's whitelist
-- @e2e exclude e2e added in apply phase - spec-only PR
+- @e2e exclude a manifest property with no decidiq page: PortalContributionProviderTest::testScopeAndStaffFieldsAreNeverClientWhitelisted pins that no scope, lifecycle or staff-only field is client-writable. A forged create sent through portaliq is tracked in ConductionNL/decidiq#1277.
 
 ### Requirement: Creates are account-less (low trust) and the provider declares exactly these two actions (REQ-DKPCA-004)
 
@@ -87,5 +87,5 @@ spam given the low trust gate.
 - WHEN `getContribution($subject)` is called
 - THEN the manifest's `actions` contains exactly `createReaction` and `createBudgetProposal`, both `type: create`, both `minTrust: low`
 - AND the four read/inbox collections keep no write action, and a non-`citizen` audience still returns null
-- @e2e exclude e2e added in apply phase - spec-only PR
+- @e2e exclude a provider contract with no browser surface: PortalContributionProviderTest::testCitizenManifestDeclaresExactlyTheTwoCreateActions and ::testUnknownAudienceYieldsNull pin it. Tracked in ConductionNL/decidiq#1277 with the other portal create actions.
 

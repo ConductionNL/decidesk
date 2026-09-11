@@ -28,7 +28,7 @@ The `BevoegdheidstoedelingDetail` page MUST render a `delegation-chain` widget s
 - WHEN the user opens its detail page
 - THEN the chain widget renders just that toedeling with no ancestor breadcrumb and no child list, not an error or an empty grid gap
 
-@e2e exclude the underlying empty-ancestor/empty-children algorithm cases are covered by tests/vitest/registerDetailWidgets.spec.js ("returns an empty array for a root object with no parent", "returns an empty array when nothing matches"); no e2e test opens a root-with-no-relations toedeling and asserts the Vue widget renders the minimal-chain UI without an error — genuine coverage gap tracked as e2e debt.
+@e2e exclude the underlying empty-ancestor/empty-children algorithm cases are covered by tests/vitest/registerDetailWidgets.spec.js ("returns an empty array for a root object with no parent", "returns an empty array when nothing matches"); no e2e test opens a root-with-no-relations toedeling and asserts the Vue widget renders the minimal-chain UI without an error — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: The chain widget never infinite-loops on malformed data
 - GIVEN a defensive-only scenario where `parentAllocation` references form a cycle (never producible via normal application flows)

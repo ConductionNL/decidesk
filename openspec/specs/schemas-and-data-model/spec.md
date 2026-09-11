@@ -224,7 +224,7 @@ The system SHALL define a `Participant` schema (type `schema:Person`) with requi
 
 The system SHALL define a `DigitalDocument` schema (type `schema:DigitalDocument`) with required properties: `name`, `documentType`.
 
-@e2e exclude schema/register-shape assertion (string-field round-trip at the API layer) — no UI surface; enforced structurally by the schema declaration.
+@e2e exclude register-shape assertion: `DigitalDocument` has no page in `src/manifest.json`. RegisterJsonTest::testAllSchemasExist and ::testSchemaOrgTypeAnnotations pin the schema and its `schema:DigitalDocument` type. No test pins its required fields or the field round-trip, which is OpenRegister's generic object API.
 
 #### Scenario: DigitalDocument created with MIME type
 
@@ -237,7 +237,7 @@ The system SHALL define a `DigitalDocument` schema (type `schema:DigitalDocument
 
 The system SHALL define a `MonetaryAmount` schema (type `schema:MonetaryAmount`) with required properties: `value`, `currency`. The `currency` field SHALL be an ISO 4217 code.
 
-@e2e exclude schema/register-shape assertion (numeric/enum field round-trip at the API layer) — no UI surface of its own; this commercial schema has no dedicated page in `src/manifest.json`, enforced structurally by the schema declaration.
+@e2e exclude register-shape assertion: `MonetaryAmount` has no page in `src/manifest.json`. RegisterJsonTest::testAllSchemasExist and ::testSchemaOrgTypeAnnotations pin the schema and its `schema:MonetaryAmount` type. No test pins its required fields or the field round-trip, which is OpenRegister's generic object API.
 
 #### Scenario: MonetaryAmount stored with currency
 
@@ -250,7 +250,7 @@ The system SHALL define a `MonetaryAmount` schema (type `schema:MonetaryAmount`)
 
 The system SHALL define an `Offer` schema (type `schema:Offer`) with required properties: `name`, `price`, `priceCurrency`.
 
-@e2e exclude schema/register-shape assertion (datetime-field round-trip at the API layer) — this commercial schema has no dedicated page in `src/manifest.json`; no UI surface, enforced structurally by the schema declaration.
+@e2e exclude register-shape assertion: `Offer` has no page in `src/manifest.json`. RegisterJsonTest::testAllSchemasExist and ::testSchemaOrgTypeAnnotations pin the schema and its `schema:Offer` type. No test pins its required fields or the field round-trip, which is OpenRegister's generic object API.
 
 #### Scenario: Offer with validity period
 
@@ -263,7 +263,7 @@ The system SHALL define an `Offer` schema (type `schema:Offer`) with required pr
 
 The system SHALL define an `Order` schema (type `schema:Order`) with required properties: `orderNumber`, `orderDate`, `orderStatus`, `totalPrice`, `currency`.
 
-@e2e exclude schema/register-shape assertion (string-field round-trip at the API layer) — this commercial schema has no dedicated page in `src/manifest.json`; no UI surface, enforced structurally by the schema declaration.
+@e2e exclude register-shape assertion: `Order` has no page in `src/manifest.json`. RegisterJsonTest::testAllSchemasExist and ::testSchemaOrgTypeAnnotations pin the schema and its `schema:Order` type. No test pins its required fields or the field round-trip, which is OpenRegister's generic object API.
 
 #### Scenario: Order created with payment terms
 
@@ -276,7 +276,7 @@ The system SHALL define an `Order` schema (type `schema:Order`) with required pr
 
 The system SHALL define a `Product` schema (type `schema:Product`) with required properties: `name`, `unitPrice`, `currency`.
 
-@e2e exclude schema/register-shape assertion (numeric-field round-trip at the API layer) — this commercial schema has no dedicated page in `src/manifest.json`; no UI surface, enforced structurally by the schema declaration.
+@e2e exclude the `Product` schema is no longer in this register: it moved to pipelinq in #1076, and RegisterJsonTest::testAllSchemasExist pins the 38-schema register without it. This requirement is stale and needs a spec decision, tracked in ConductionNL/decidiq#1277.
 
 #### Scenario: Product with tax rate
 
@@ -289,7 +289,7 @@ The system SHALL define a `Product` schema (type `schema:Product`) with required
 
 The system SHALL define a `Report` schema (type `schema:Report`) with required properties: `name`, `reportType`.
 
-@e2e exclude schema/register-shape assertion (string-field round-trip at the API layer) — this commercial schema has no dedicated page in `src/manifest.json`; no UI surface, enforced structurally by the schema declaration.
+@e2e exclude register-shape assertion: `Report` has no page in `src/manifest.json`. RegisterJsonTest::testAllSchemasExist and ::testSchemaOrgTypeAnnotations pin the schema and its `schema:Report` type. No test pins its required fields or the field round-trip, which is OpenRegister's generic object API.
 
 #### Scenario: Report with period
 
@@ -411,7 +411,7 @@ The `decision` schema SHALL declare optional `meeting` ($ref `Meeting`, `facetab
 
 `GoverningDocument` SHALL declare an optional `currentEffectiveDate` property (nullable `date`, `facetable: true`), mirroring `Regeling.currentEffectiveDate` in shape and the same maintenance caveat (a convenience field, not a live-computed aggregation — see design.md).
 
-@e2e exclude schema-only additive change (a new nullable property on re-import), no retroactive backfill or UI surface of its own — the current-in-force-date index column that consumes this field is tracked separately under `governing-documents-register`'s own REQ-GDR-010 scenario.
+@e2e exclude a schema-only additive property with no page of its own. It is declared in `lib/Settings/register.d/55-governing-documents-register.json`, and no test pins it or checks that older rows read null after a re-import. The index column that shows it is `governing-documents-register` REQ-GDR-010, a gap tracked in ConductionNL/decidiq#1277.
 
 #### Scenario: GoverningDocument gains the property with no value on existing rows
 

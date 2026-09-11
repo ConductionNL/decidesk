@@ -9,7 +9,7 @@ Defines the rendering-correctness contract for decidiq's manifest-driven index p
 
 Every index-page column whose schema property is a reference to another OpenRegister object (`format: "uuid"` with an `x-openregister-ref`/`$ref` target, or a name-hinted reference field such as a governance body, person, or decision) SHALL declare `widget: "fkResolve"` with `widgetProps: {register, schema, labelField}` naming the referenced register/schema/display field. The column SHALL render the referenced object's resolved label for both a UUID-keyed reference and a slug-keyed reference (the seed importer stores some references as raw slugs, not UUIDs — both SHALL resolve). A reference value that does not resolve to any object (including the literal nil UUID `00000000-0000-0000-0000-000000000000` used as an unset placeholder in some seed examples) MAY still render as its raw id — this is a fallback, not a passing case, and SHALL be tracked as residual seed-data debt rather than silently accepted as correct.
 
-@e2e exclude this requirement governs `CnFkResolveCell`/`CnCellRenderer`, rendering primitives owned by `@conduction/nextcloud-vue` (see this capability's own Purpose: "does not own the underlying library rendering primitives"), not decidiq's own UI code; no decidiq e2e test isolates the UUID-vs-slug reference-resolution distinction this scenario names — genuine coverage gap tracked as e2e debt (many index pages incidentally exercise fkResolve columns, e.g. tests/e2e/spec-coverage/facets-organisation-detail.spec.ts, but none asserts this specific UUID/slug equivalence).
+@e2e exclude this requirement governs `CnFkResolveCell`/`CnCellRenderer`, rendering primitives owned by `@conduction/nextcloud-vue` (see this capability's own Purpose: "does not own the underlying library rendering primitives"), not decidiq's own UI code; no decidiq e2e test isolates the UUID-vs-slug reference-resolution distinction this scenario names — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277 (many index pages incidentally exercise fkResolve columns, e.g. tests/e2e/spec-coverage/facets-organisation-detail.spec.ts, but none asserts this specific UUID/slug equivalence).
 
 #### Scenario: A UUID reference column resolves to a name
 - **GIVEN** an index page column bound to a schema property that is a reference to a `governance-body` object, with a valid UUID value
@@ -25,7 +25,7 @@ Every index-page column whose schema property is a reference to another OpenRegi
 
 Any index-page column bound to a schema property that represents a calendar or financial year (e.g. `year`, `boekjaar`) SHALL render as plain digits (`"2026"`), never grouped (`"2,026"`). The column SHALL declare an app-registered `formatter` that renders the raw integer without `Intl.NumberFormat` grouping.
 
-@e2e exclude no current e2e test opens the P&C cycles index and asserts the Year column renders ungrouped digits; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test opens the P&C cycles index and asserts the Year column renders ungrouped digits; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A year column renders without grouping
 - **GIVEN** a P&C cycle object with `year: 2026`
@@ -36,7 +36,7 @@ Any index-page column bound to a schema property that represents a calendar or f
 
 Every index-page column bound to a schema property of type `date`/`date-time` (by schema `format`, or a computed/convenience field with no matching schema property) SHALL render through `CnCellRenderer`'s date path (`NcDateTime`), never as a raw ISO or SQL-style timestamp string. Columns bound to a schema property lacking an explicit `format` SHALL declare a column-level `format` hint so the renderer can still apply date formatting.
 
-@e2e exclude this requirement governs `CnCellRenderer`'s date path (`NcDateTime`), a rendering primitive owned by `@conduction/nextcloud-vue`, not decidiq's own UI code (see this capability's own Purpose); the same untested gap is recorded per-register in `verordeningenregister`'s REQ-VOR-011 and `governing-documents-register`'s REQ-GDR-010 scenarios — genuine coverage gap tracked as e2e debt.
+@e2e exclude this requirement governs `CnCellRenderer`'s date path (`NcDateTime`), a rendering primitive owned by `@conduction/nextcloud-vue`, not decidiq's own UI code (see this capability's own Purpose); the same untested gap is recorded per-register in `verordeningenregister`'s REQ-VOR-011 and `governing-documents-register`'s REQ-GDR-010 scenarios — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A raw-looking timestamp field renders formatted
 - **GIVEN** an index column bound to a datetime-typed field with no schema-level `format` declared
@@ -47,7 +47,7 @@ Every index-page column bound to a schema property of type `date`/`date-time` (b
 
 An index page SHALL, within a bounded time after mount, show either its data table (populated or not) or its empty-state — it SHALL NOT remain on the loading spinner indefinitely regardless of live-update subscription activity. A page whose live-update subscription cannot safely coexist with its initial fetch (per the known `liveUpdatesPlugin` race — see Notes) SHALL opt out via `config.subscribe: false` until the underlying library defect is fixed upstream.
 
-@e2e exclude this requirement governs `liveUpdatesPlugin`'s interaction with `CnIndexPage`'s initial fetch, a rendering-primitive concern owned by `@conduction/nextcloud-vue` (see this capability's own Purpose); many decidiq index-page e2e tests incidentally load past the spinner without asserting the terminal-state guarantee itself — genuine coverage gap tracked as e2e debt.
+@e2e exclude this requirement governs `liveUpdatesPlugin`'s interaction with `CnIndexPage`'s initial fetch, a rendering-primitive concern owned by `@conduction/nextcloud-vue` (see this capability's own Purpose); many decidiq index-page e2e tests incidentally load past the spinner without asserting the terminal-state guarantee itself — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A zero-row index page shows the empty state, not a stuck spinner
 - **GIVEN** an index page bound to a schema with zero objects
@@ -63,7 +63,7 @@ An index page SHALL, within a bounded time after mount, show either its data tab
 
 A quick-filter tab's `label` text SHALL render as one uninterrupted string in both chips and dropdown presentation modes — never split mid-word.
 
-@e2e exclude a CSS/layout wrapping assertion (word-break behaviour at arbitrary viewport widths) — tests/e2e/spec-coverage/urgent-decision-procedure.spec.ts drives a quick-filter but does not assert text-wrapping behaviour at multiple viewport widths; genuine coverage gap tracked as e2e debt.
+@e2e exclude a CSS/layout wrapping assertion (word-break behaviour at arbitrary viewport widths) — tests/e2e/spec-coverage/urgent-decision-procedure.spec.ts drives a quick-filter but does not assert text-wrapping behaviour at multiple viewport widths; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A quick-filter label with a short word renders intact
 - **GIVEN** a quick-filter tab labelled `"All urgent"` in dropdown mode
@@ -74,7 +74,7 @@ A quick-filter tab's `label` text SHALL render as one uninterrupted string in bo
 
 Every step in `manifest.json`'s `walkthrough.tours[]` SHALL target an element/page/nav-item that resolves against the current navigation structure. Copy referencing app structure (cluster names, feature descriptions) SHALL be reviewed after any navigation-restructuring change.
 
-@e2e exclude tests/e2e/global-setup.ts deliberately SUPPRESSES the first-visit walkthrough for the whole e2e suite (sets `cn-walkthrough-seen:decidesk` in localStorage before every test, to avoid the full-viewport dim overlay blocking other assertions), so no e2e test ever renders the walkthrough or exercises `CnWalkthrough.resolveTarget()` — genuine coverage gap tracked as e2e debt; a dedicated test would need to bypass that suite-wide suppression.
+@e2e exclude tests/e2e/global-setup.ts deliberately SUPPRESSES the first-visit walkthrough for the whole e2e suite (sets `cn-walkthrough-seen:decidesk` in localStorage before every test, to avoid the full-viewport dim overlay blocking other assertions), so no e2e test ever renders the walkthrough or exercises `CnWalkthrough.resolveTarget()` — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277; a dedicated test would need to bypass that suite-wide suppression.
 
 #### Scenario: Every walkthrough step target resolves
 - **GIVEN** the `decidesk:getting-started` tour's four steps
@@ -85,7 +85,7 @@ Every step in `manifest.json`'s `walkthrough.tours[]` SHALL target an element/pa
 
 Every object provisioned by `tests/e2e/ci-seed.sh` from a schema's `example` block SHALL populate that schema's title/display field (e.g. `citeertitel`, `title`). An index column bound to that field SHALL NOT render the empty-value dash ("—") for a seed-provisioned object.
 
-@e2e exclude a CI-fixture-quality assertion about `tests/e2e/ci-seed.sh`'s own seed data, not app runtime behaviour — no dedicated test opens the Governing documents index and asserts no seed-provisioned row shows the empty-value dash; genuine coverage gap tracked as e2e debt.
+@e2e exclude a CI-fixture-quality assertion about `tests/e2e/ci-seed.sh`'s own seed data, not app runtime behaviour — no dedicated test opens the Governing documents index and asserts no seed-provisioned row shows the empty-value dash; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A seeded governing document has a non-empty title
 - **GIVEN** the governing-documents-register schema's seed `example` objects
