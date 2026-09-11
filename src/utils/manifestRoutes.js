@@ -32,6 +32,7 @@
  * @param {object} manifest The merged manifest (with `pages[]`).
  * @param {object} component The component every route renders.
  * @return {Array<object>} vue-router 4 routes config.
+ * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-008-a-manifest-permission-gates-the-nav-entry-and-the-route-and-fails-closed
  */
 export function routesFromManifest(manifest, component) {
 	const routes = (manifest.pages ?? []).map((page) => ({
@@ -69,6 +70,7 @@ export function routesFromManifest(manifest, component) {
  * @param {object} to The vue-router target route.
  * @param {Array<string>} permissions The permissions this account holds.
  * @return {boolean|object} `true` to allow, or a redirect location to refuse.
+ * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-008-a-manifest-permission-gates-the-nav-entry-and-the-route-and-fails-closed
  */
 export function permissionGuard(to, permissions) {
 	const required = to?.meta?.permission

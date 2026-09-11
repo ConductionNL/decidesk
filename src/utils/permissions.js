@@ -45,6 +45,7 @@ export const ADMIN_PERMISSION = 'admin'
  *
  * @param {boolean} isAdmin The server's own answer, from initial state.
  * @return {Array<string>} A never-empty list of permission strings.
+ * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-008-a-manifest-permission-gates-the-nav-entry-and-the-route-and-fails-closed
  */
 export function currentPermissions(isAdmin) {
 	const permissions = [BASE_PERMISSION]

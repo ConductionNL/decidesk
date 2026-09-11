@@ -114,6 +114,8 @@ class DashboardController extends Controller {
 	 * half-booted request denies rather than permits.
 	 *
 	 * @return TemplateResponse The rendered Decidiq index template.
+	 *
+	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-008-a-manifest-permission-gates-the-nav-entry-and-the-route-and-fails-closed
 	 */
 	protected function renderIndex(): TemplateResponse {
 		$user = $this->userSession->getUser();
