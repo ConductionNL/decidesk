@@ -69,10 +69,10 @@ class AdminSettings implements IDelegatedSettings {
 		$version = $this->appManager->getAppVersion(appId: Application::APP_ID);
 		$this->initialState->provideInitialState('version', $version);
 
+		// @spec openspec/specs/public-publication/spec.md
 		// Provide the publication configuration (per-body catalog/policy/attendance)
 		// and policy enums to the admin settings page via IInitialState — rendered
 		// by the NC settings framework, NOT added to the in-app vue-router.
-		// @spec openspec/specs/public-publication/spec.md
 		$this->initialState->provideInitialState('publicationConfig', $this->publicationConfig->getAll());
 		$this->initialState->provideInitialState(
 			'publicationPolicies',
@@ -82,11 +82,11 @@ class AdminSettings implements IDelegatedSettings {
 			]
 		);
 
+		// @spec openspec/specs/meeting-transcription/spec.md
 		// Default per-body transcript/recording retention policy
 		// (meeting-transcription-ai-minutes). Bodies inherit these defaults
 		// until a chair/secretary overrides them on the body detail view; the
 		// frontend reads them via loadState (NOT DOM data-attributes).
-		// @spec openspec/specs/meeting-transcription/spec.md
 		$this->initialState->provideInitialState('transcriptRetentionDefaultPolicy', 'delete-both');
 		$this->initialState->provideInitialState('transcriptRetentionDefaultDays', 30);
 

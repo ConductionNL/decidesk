@@ -27,6 +27,9 @@ namespace OCA\Decidiq\Repair;
 
 /**
  * Pure predicates for the stored-enum-value migration.
+ *
+ * @spec exclude Predicates of the Dutch-to-English vocabulary migration; no
+ *  canonical spec covers it.
  */
 class RenameDutchDecidiqValueDecisions {
 

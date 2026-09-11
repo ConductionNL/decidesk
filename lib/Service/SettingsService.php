@@ -75,8 +75,8 @@ class SettingsService {
 		// @spec openspec/specs/admin-settings/spec.md#requirement-req-adm-mode-001-organisatie-modus-tenant-setting
 		// Cosmetic UI hint only — drives no authorization decision.
 		'organisatie_modus',
-		// Citizen-participation instance defaults.
 		// @spec openspec/specs/citizen-participation/spec.md
+		// Citizen-participation instance defaults.
 		'participation_default_moderation_policy',
 		'participation_catalog',
 		'participation_anon_rate_limit',

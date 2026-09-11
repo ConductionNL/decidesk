@@ -30,6 +30,9 @@ use Psr\Log\LoggerInterface;
 
 /**
  * IDBConnection-backed gateway for the stored-value migration.
+ *
+ * @spec exclude Database adapter for the Dutch-to-English vocabulary
+ *  migration; no canonical spec covers it and it carries no business rule.
  */
 class DbValueMigrationGateway implements ValueMigrationGateway {
 
