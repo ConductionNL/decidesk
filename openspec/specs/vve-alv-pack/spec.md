@@ -1,6 +1,6 @@
 # vve-alv-pack Specification
 
-@e2e exclude the spec's own Purpose states this delta is "a schema-declaration record, not a behavioural change to a live consumer" — `vve-alv-pack` remains `Status: planned` and grep confirms `VveDecisionTemplate`, `ModelreglementPreset`, `VveConfiguration` have zero PHP/Vue consumers today, so there is no UI surface for any scenario in this file to exercise. Whole-spec exclusion per this capability's own documented scope.
+@e2e exclude a schema-declaration record with no page of its own: `vve-alv-pack` is still `Status: planned`, and no screen reads `VveDecisionTemplate`, `ModelreglementPreset` or `VveConfiguration`. Their only PHP readers are one-shot migrations under lib/Migration, and those are covered: MigrateLegacyTemplatesToDecisionTemplateTest::testRunMapsVveDecisionTemplateFields for the template port and MigrateVveToBodyConfigurationTest::testRunMapsEveryFactOntoItsGenericName for the configuration. No test pins the seed values.
 
 ## Purpose
 Delta for the unified-decision-templates change: records that
@@ -23,7 +23,7 @@ schema-declaration record, not a behavioural change to a live consumer.
 `VveDecisionTemplate` and `ModelreglementPreset` (defined by REQ-VVE-001)
 SHALL be marked superseded: `x-openregister.active` SHALL be set to `false`
 via the `process-configuration` capability's
-`67-unified-decision-templates.json` fragment, with each schema's
+`68-unified-decision-templates.json` fragment, with each schema's
 `description` naming `decision-template` (`context=association`) as the
 successor. The six `VveDecisionTemplate` built-in seeds (`decharge-bestuur`,
 `vaststelling-jaarrekening`, `dotatie-reservefonds`, `vaststelling-mjop`,
@@ -45,7 +45,7 @@ objects remain readable, matching the non-destructive posture of the
 
 #### Scenario: The six built-in VvE templates exist as DecisionTemplate objects
 
-- **GIVEN** the `67-unified-decision-templates.json` fragment is loaded
+- **GIVEN** the `68-unified-decision-templates.json` fragment is loaded
 - **WHEN** the `decision-template` schema's built-in objects are listed for
   `context=association`
 - **THEN** six objects exist with `decisionType=resolution` and

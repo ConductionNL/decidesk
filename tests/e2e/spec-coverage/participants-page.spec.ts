@@ -9,8 +9,7 @@
  * route (still app-scoped — never via the global header) and asserts
  * the real index surface + create form.
  *
- * @e2e openspec/specs/participant-management/spec.md#view-the-participants-list
- * @e2e openspec/specs/participant-management/spec.md#add-a-participant
+ * @e2e openspec/specs/participant-crud/spec.md#participant-list-view
  */
 import type { Page } from '@playwright/test'
 
@@ -26,7 +25,7 @@ async function dismissSupportDialog(page: Page): Promise<void> {
 	}
 }
 
-// @e2e openspec/specs/participant-management/spec.md#view-the-participants-list
+// @e2e openspec/specs/participant-crud/spec.md#participant-list-view
 test('Participants: index renders heading, object-list table and Add CTA', async ({
 	page,
 }) => {
@@ -42,7 +41,9 @@ test('Participants: index renders heading, object-list table and Add CTA', async
 	await expect(page.getByRole('button', { name: 'Add Participant' })).toBeVisible()
 })
 
-// @e2e openspec/specs/participant-management/spec.md#add-a-participant
+// No e2e citation on purpose. This dialog creates a flat Participant, and
+// participant-crud's "Create a participant" requirement deprecates that path
+// in favour of Person + Membership. The gap is tracked in decidiq#1277.
 test('Participants: Add Participant opens a real create form dialog', async ({
 	page,
 }) => {
@@ -62,7 +63,7 @@ test('Participants: Add Participant opens a real create form dialog', async ({
 	await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5_000 })
 })
 
-// @e2e openspec/specs/participant-management/spec.md#view-the-participants-list
+// @e2e openspec/specs/participant-crud/spec.md#participant-list-view
 test('Participants: no decidiq-origin console error or 500 on load', async ({
 	page,
 }) => {

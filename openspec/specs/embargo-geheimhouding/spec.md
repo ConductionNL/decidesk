@@ -21,20 +21,20 @@ The `GeheimhoudingDetail` page MUST render a `confidentiality-status-timeline` w
 - WHEN the user views the timeline
 - THEN the bekrachtiging stage shows the ratification date and a link to the ratification Decision
 
-@e2e exclude the underlying stage-computation (ratification stage `populated: true` once `ratificationDate`/`ratificationDecision` are set) is covered by tests/vitest/registerDetailWidgets.spec.js::"never flags overdue once the record has moved past imposed..."; no e2e test seeds a ratified geheimhouding and asserts the timeline renders a working link to the ratification Decision — genuine coverage gap tracked as e2e debt.
+@e2e exclude the underlying stage-computation (ratification stage `populated: true` once `ratificationDate`/`ratificationDecision` are set) is covered by tests/vitest/registerDetailWidgets.spec.js::"never flags overdue once the record has moved past imposed..."; no e2e test seeds a ratified geheimhouding and asserts the timeline renders a working link to the ratification Decision — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Overdue bekrachtiging is visually distinguished
 - GIVEN a `geheimhouding` with `lifecycle: "imposed"` and `ratificationDeadline` in the past
 - WHEN the user views the timeline
 - THEN the bekrachtiging stage renders an overdue indicator distinct from a not-yet-due pending stage
 
-@e2e exclude the underlying overdue-flagging logic is covered by tests/vitest/registerDetailWidgets.spec.js::"flags the ratification stage overdue when the deadline has passed and lifecycle is still imposed" / "does not flag overdue when the deadline is still in the future"; no e2e test seeds an overdue geheimhouding and asserts the visual indicator renders — genuine coverage gap tracked as e2e debt.
+@e2e exclude the underlying overdue-flagging logic is covered by tests/vitest/registerDetailWidgets.spec.js::"flags the ratification stage overdue when the deadline has passed and lifecycle is still imposed" / "does not flag overdue when the deadline is still in the future"; no e2e test seeds an overdue geheimhouding and asserts the visual indicator renders — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: REQ-EMB-011 Confidentiality ground resolves with legacy citation on GeheimhoudingDetail
 
 `GeheimhoudingDetail` MUST resolve the record's `ground` reference to its `GeheimhoudingGrond` object and display its citation, and its `legacyCitation` when set (pre-2023 Gemeentewet article numbering), alongside the current citation rather than only the raw ground identifier.
 
-@e2e exclude tests/e2e/spec-coverage/register-detail-widgets.spec.ts asserts the ground resolves to its citation text ("Geheimhouding raadsstukken") via `confidentiality-ground`, but the seeded fixture it uses is not confirmed to carry a `legacyCitation`, so the "both citations render together" half of this scenario is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/register-detail-widgets.spec.ts asserts the ground resolves to its citation text ("Geheimhouding raadsstukken") via `confidentiality-ground`, but the seeded fixture it uses is not confirmed to carry a `legacyCitation`, so the "both citations render together" half of this scenario is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Ground with a legacy citation shows both citations
 - GIVEN a `geheimhouding` whose resolved `ground` has both `citation` and `legacyCitation` set
@@ -45,7 +45,7 @@ The `GeheimhoudingDetail` page MUST render a `confidentiality-status-timeline` w
 
 `GeheimhoudingDetail` MUST resolve whichever of `targetDocument`, `targetAgendaItem`, or `targetDecision` is set on the record to a link to that object's own detail page, labelled with its object type, rather than showing a bare UUID.
 
-@e2e exclude no current e2e or unit test asserts the polymorphic target-reference resolution (`targetDocument`/`targetAgendaItem`/`targetDecision`) on GeheimhoudingDetail; the shared `resolveObjectLabel` mechanism this widget likely reuses is generically covered by tests/vitest/registerDetailWidgets.spec.js, but not this requirement's specific type-labelled-link behaviour — genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e or unit test asserts the polymorphic target-reference resolution (`targetDocument`/`targetAgendaItem`/`targetDecision`) on GeheimhoudingDetail; the shared `resolveObjectLabel` mechanism this widget likely reuses is generically covered by tests/vitest/registerDetailWidgets.spec.js, but not this requirement's specific type-labelled-link behaviour — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Document-targeted geheimhouding links to the document
 - GIVEN a `geheimhouding` with `targetDocument` set and the other two target fields empty
@@ -56,7 +56,7 @@ The `GeheimhoudingDetail` page MUST render a `confidentiality-status-timeline` w
 
 The `Geheimhoudingen` index's bekrachtiging-deadline column MUST be keyed on the `Geheimhouding` schema's actual `ratificationDeadline` property (not a non-existent `bekrachtigingDeadline` key), so the column renders real data through the schema's declared `format: "date"` instead of rendering blank.
 
-@e2e exclude a manifest-column-key correctness fix — checkable directly by inspecting the `Geheimhoudingen` index column definition against the `Geheimhouding` schema's property names; no e2e test opens the index and asserts the deadline column is non-blank for a seeded row — genuine coverage gap tracked as e2e debt.
+@e2e exclude a manifest-column-key correctness fix — checkable directly by inspecting the `Geheimhoudingen` index column definition against the `Geheimhouding` schema's property names; no e2e test opens the index and asserts the deadline column is non-blank for a seeded row — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Index shows the real ratification deadline
 - GIVEN a `geheimhouding` with `ratificationDeadline` set
