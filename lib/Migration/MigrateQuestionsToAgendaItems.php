@@ -241,7 +241,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 
 				$typeId = $this->types->resolve(
 					objectService: $objectService,
-					name: (string)$mapping['typeName'],
+					name: $mapping['typeName'],
 					bodyReference: (string)($source['governanceBody'] ?? '')
 				);
 				if ($typeId === '') {
@@ -267,7 +267,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 							meeting: $this->resolveReference(
 								objectService: $objectService,
 								schema: 'meeting',
-								reference: (string)($source[(string)$mapping['meetingField']] ?? '')
+								reference: (string)($source[$mapping['meetingField']] ?? '')
 							)
 						),
 					);
@@ -371,7 +371,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 	): array {
 		$subject = trim((string)($source['subject'] ?? ''));
 		if ($subject === '') {
-			$subject = trim((string)(($source['questionNumber'] ?? $source['requestNumber']) ?? ''));
+			$subject = trim((string)($source['questionNumber'] ?? $source['requestNumber'] ?? ''));
 		}
 
 		// `title` is required by the schema, so a row that named neither a
@@ -474,7 +474,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 			foreach (self::SOURCES as $mapping) {
 				$typeId = $this->types->find(
 					objectService: $objectService,
-					name: (string)$mapping['typeName'],
+					name: $mapping['typeName'],
 					body: $body
 				);
 				if ($typeId === '') {
@@ -483,7 +483,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 
 				$patch = $this->configurationPatch(
 					config: $config,
-					withThreshold: ((string)$mapping['typeName'] === self::SOURCES['interpellatieverzoek']['typeName'])
+					withThreshold: ($mapping['typeName'] === self::SOURCES['interpellatieverzoek']['typeName'])
 				);
 				if ($patch === []) {
 					continue;
@@ -503,7 +503,7 @@ class MigrateQuestionsToAgendaItems implements IRepairStep {
 					$objectService->saveObject(
 						register: self::REGISTER,
 						schema: self::TYPE_SCHEMA,
-						object: ($patch + ['name' => (string)$mapping['typeName']]),
+						object: ($patch + ['name' => $mapping['typeName']]),
 						uuid: $typeId,
 					);
 					$applied++;

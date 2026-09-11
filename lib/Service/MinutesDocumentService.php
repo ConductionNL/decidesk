@@ -106,7 +106,7 @@ class MinutesDocumentService {
 	 * @throws InvalidArgumentException When the format is not supported
 	 * @throws RuntimeException When OpenRegister or Files is unavailable
 	 *
-	 * @return array<string,mixed> { path, format, docudesk, note? }
+	 * @return array<string,mixed> Keys: path, format, docudesk, and optionally note.
 	 *
 	 * @spec openspec/specs/resolution-minutes/spec.md
 	 */

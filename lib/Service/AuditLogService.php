@@ -606,7 +606,7 @@ class AuditLogService {
 
 		$objectUids = ($changed['objectUids'] ?? null);
 		if (is_array($objectUids) === false || $objectUids === []) {
-			$objectUids = array_values(array_filter([(string)($entry->getObjectUuid() ?? '')]));
+			$objectUids = array_filter([(string)($entry->getObjectUuid() ?? '')]);
 		}
 
 		$timestamp = '';

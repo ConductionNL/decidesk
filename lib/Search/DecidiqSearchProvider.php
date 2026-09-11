@@ -110,7 +110,7 @@ class DecidiqSearchProvider implements IProvider {
 	 * Section order: top inside the app, late in the global list.
 	 *
 	 * @param string $route The current route
-	 * @param array<string, mixed> $routeParameters The current route parameters
+	 * @param array<array-key, mixed> $routeParameters The current route parameters
 	 *
 	 * @spec openspec/specs/nextcloud-integration/spec.md
 	 *

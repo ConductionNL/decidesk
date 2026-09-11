@@ -197,14 +197,19 @@ class Application extends App implements IBootstrap {
 		// case) without the full decidiq app bundle being present.
 		Util::addInitScript(self::APP_ID, 'decidiq-integration-init');
 
-		$serverContainer = $context->getServerContainer();
-
 		// Object-lifecycle subscriptions MUST be made from boot(), never from
 		// register(): OpenRegister's classes are only autoloadable to apps
 		// registered after it, so the registrar's class_exists() guard would
 		// resolve differently purely by app load order during register().
-		$serverContainer->get(ObjectListenerRegistrar::class)->register(
-			dispatcher: $serverContainer->get(IEventDispatcher::class)
+		//
+		// injectFn() rather than getServerContainer()->get(): IServerContainer
+		// and IAppContainer are both deprecated since NC 20, and injectFn() is
+		// the boot-time API that resolves the parameters from this app's
+		// container (which falls back to the server for OCP services).
+		$context->injectFn(
+			static function (ObjectListenerRegistrar $registrar, IEventDispatcher $dispatcher): void {
+				$registrar->register(dispatcher: $dispatcher);
+			}
 		);
 
 	}//end boot()

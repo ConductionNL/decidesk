@@ -323,7 +323,7 @@ TEMPLATE;
 				(string)($meeting['location'] ?? ''),
 				(string)$presentCount,
 				(string)$memberCount,
-				(string)$quorumStatus,
+				$quorumStatus,
 				trim($agendaText),
 				'[Resoluties met stemming in aparte tabel]',
 				'[Secretaris naam]',

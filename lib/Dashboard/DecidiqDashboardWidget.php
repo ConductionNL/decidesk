@@ -163,7 +163,7 @@ class DecidiqDashboardWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
-	 * @return WidgetButton[] The widget buttons
+	 * @return list<WidgetButton> The widget buttons
 	 */
 	public function getWidgetButtons(string $userId): array {
 		return [

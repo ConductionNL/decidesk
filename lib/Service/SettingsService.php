@@ -127,7 +127,7 @@ class SettingsService {
 	 * @return bool
 	 */
 	public function isOpenRegisterAvailable(): bool {
-		return $this->appManager->isInstalled('openregister');
+		return $this->appManager->isEnabledForAnyone('openregister');
 	}//end isOpenRegisterAvailable()
 
 	/**

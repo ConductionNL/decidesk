@@ -125,8 +125,6 @@ class LiveMeetingController extends Controller {
 			return $denied;
 		}
 
-		$user = $this->userSession->getUser();
-
 		try {
 			$title = $this->request->getParam('title');
 			$text = $this->request->getParam('text');
@@ -148,8 +146,7 @@ class LiveMeetingController extends Controller {
 
 			$decisionSlug = $this->liveDecisionService->recordDecision(
 				$meetingId,
-				$decisionData,
-				$user->getUID()
+				$decisionData
 			);
 
 			return new JSONResponse(

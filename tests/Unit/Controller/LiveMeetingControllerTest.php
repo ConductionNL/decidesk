@@ -279,8 +279,7 @@ class LiveMeetingControllerTest extends TestCase {
 					'text' => 'De raad besluit de begroting vast te stellen.',
 					'outcome' => 'adopted',
 					'legalBasis' => 'Gemeentewet art. 189',
-				],
-				'voorzitter'
+				]
 			)
 			->willReturn('besluit-2026-014');
 

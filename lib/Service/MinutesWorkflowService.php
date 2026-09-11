@@ -107,7 +107,6 @@ class MinutesWorkflowService {
 	 * Move draft Minutes into review and notify the approvers.
 	 *
 	 * @param string $minutesId The Minutes ID
-	 * @param string $actorId The Nextcloud UID submitting for approval
 	 *
 	 * @return array{lifecycle:string,notified:int} The new lifecycle and notification count
 	 *
@@ -116,7 +115,7 @@ class MinutesWorkflowService {
 	 *
 	 * @spec openspec/changes/p2-minutes-and-decisions-core-t3/tasks.md#task-6.2
 	 */
-	public function submitForApproval(string $minutesId, string $actorId): array {
+	public function submitForApproval(string $minutesId): array {
 		$minutes = $this->requireMinutes(minutesId: $minutesId);
 
 		if (($minutes['lifecycle'] ?? null) !== 'draft') {
@@ -130,10 +129,7 @@ class MinutesWorkflowService {
 			object: $minutes
 		);
 
-		$notified = $this->minutesService->notifyApproversOnSubmit(
-			minutesId: $minutesId,
-			actorId: $actorId
-		);
+		$notified = $this->minutesService->notifyApproversOnSubmit(minutesId: $minutesId);
 
 		return [
 			'lifecycle' => 'review',

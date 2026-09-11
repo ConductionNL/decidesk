@@ -3,8 +3,8 @@
 /**
  * Decidiq PreferencesController.
  *
- * Generic per-user key/value preferences, backed by Nextcloud IConfig
- * user values. Used by shared @conduction/nextcloud-vue widgets (e.g.
+ * Generic per-user key/value preferences, backed by Nextcloud's per-user
+ * config store (IUserConfig). Used by shared @conduction/nextcloud-vue widgets (e.g.
  * CnSupportDialog's "seen" flag) that need to persist a small per-user
  * UI flag cross-device without a bespoke endpoint per feature.
  *
@@ -28,7 +28,7 @@ use OCA\Decidiq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IConfig;
+use OCP\Config\IUserConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -42,12 +42,12 @@ class PreferencesController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param IConfig $config The Nextcloud config (user values).
+	 * @param IUserConfig $userConfig The Nextcloud per-user config store.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly IConfig $config,
+		private readonly IUserConfig $userConfig,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -77,9 +77,9 @@ class PreferencesController extends Controller {
 			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
 		}
 
-		$value = $this->config->getUserValue(
+		$value = $this->userConfig->getValueString(
 			userId: $user->getUID(),
-			appName: Application::APP_ID,
+			app: Application::APP_ID,
 			key: 'pref_' . $safeKey,
 			default: ''
 		);
@@ -118,18 +118,18 @@ class PreferencesController extends Controller {
 
 		// An empty value clears the preference rather than storing a blank one.
 		if ($value === '') {
-			$this->config->deleteUserValue(
+			$this->userConfig->deleteUserConfig(
 				userId: $user->getUID(),
-				appName: Application::APP_ID,
+				app: Application::APP_ID,
 				key: 'pref_' . $safeKey
 			);
 
 			return new JSONResponse(data: ['value' => null]);
 		}
 
-		$this->config->setUserValue(
+		$this->userConfig->setValueString(
 			userId: $user->getUID(),
-			appName: Application::APP_ID,
+			app: Application::APP_ID,
 			key: 'pref_' . $safeKey,
 			value: $value
 		);
@@ -139,7 +139,7 @@ class PreferencesController extends Controller {
 
 	/**
 	 * Restrict keys to a safe charset so callers cannot reach arbitrary
-	 * IConfig user values outside the `pref_` namespace.
+	 * per-user config values outside the `pref_` namespace.
 	 *
 	 * @param string $key The raw key.
 	 *

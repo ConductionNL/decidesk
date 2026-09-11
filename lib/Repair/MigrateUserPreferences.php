@@ -7,7 +7,7 @@
  * `decidesk` -> `decidiq` app-id rename.
  *
  * WHY THIS EXISTS SEPARATELY FROM MigrateAppConfigKeys. `IAppConfig` and
- * `IConfig`'s user values are different stores: the former is `oc_appconfig`,
+ * per-user config (`IUserConfig`) are different stores: the former is `oc_appconfig`,
  * the latter `oc_preferences`. Both are namespaced by app id, so both are cut
  * off by the rename, but copying one does nothing for the other.
  *
@@ -21,8 +21,8 @@
  * turns missing data into wrong behaviour rather than into an error**, which is
  * exactly why this is a migration and not a release note.
  *
- * WHY IT ENUMERATES BY USER-THEN-KEY, AND NEVER BY VALUE. `IConfig` offers
- * `getUsersForUserValue(app, key, value)`, which requires the caller to know
+ * WHY IT ENUMERATES BY USER-THEN-KEY, AND NEVER BY VALUE. `IUserConfig` offers
+ * `searchUsersByValueString(app, key, value)`, which requires the caller to know
  * BOTH the key and the value up front. Neither is knowable here:
  *
  *   - The values are open-ended. Preferences hold delegation dates, delegate
@@ -34,7 +34,7 @@
  *     silently migrate an incomplete subset here while reporting success.
  *
  * This step therefore walks the users (`IUserManager::callForSeenUsers()`) and
- * asks `IConfig::getUserKeys()` for each one's actual stored keys under the old
+ * asks `IUserConfig::getKeys()` for each one's actual stored keys under the old
  * app id. That is exhaustive by construction and cannot drift as new
  * preferences are added. `callForSeenUsers()` is the right walk rather than
  * `callForAllUsers()`: a user who has never logged in cannot have set a
@@ -74,7 +74,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Repair;
 
 use OCA\Decidiq\AppInfo\Application;
-use OCP\IConfig;
+use OCP\Config\IUserConfig;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Migration\IOutput;
@@ -105,14 +105,14 @@ class MigrateUserPreferences implements IRepairStep {
 	/**
 	 * Constructor for MigrateUserPreferences.
 	 *
-	 * @param IConfig $config The user-value store to read and write.
+	 * @param IUserConfig $userConfig The per-user config store to read and write.
 	 * @param IUserManager $userManager The user enumeration used to walk seen users.
 	 * @param LoggerInterface $logger Logger for preferences that fail to copy.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly IConfig $config,
+		private readonly IUserConfig $userConfig,
 		private readonly IUserManager $userManager,
 		private readonly LoggerInterface $logger,
 	) {
@@ -158,18 +158,18 @@ class MigrateUserPreferences implements IRepairStep {
 					 * the app enabling entirely, taking every route with it.
 					 */
 					try {
-						$old = $this->config->getUserValue($userId, self::OLD_APP_ID, $key, '');
+						$old = $this->userConfig->getValueString($userId, self::OLD_APP_ID, $key, '');
 						if ($old === '') {
 							continue;
 						}
 
-						$existing = $this->config->getUserValue($userId, Application::APP_ID, $key, '');
+						$existing = $this->userConfig->getValueString($userId, Application::APP_ID, $key, '');
 						if ($existing !== '') {
 							$alreadyPresent++;
 							continue;
 						}
 
-						$this->config->setUserValue($userId, Application::APP_ID, $key, $old);
+						$this->userConfig->setValueString($userId, Application::APP_ID, $key, $old);
 						$migrated++;
 					} catch (Throwable $e) {
 						$this->logger->warning(
@@ -222,7 +222,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 */
 	private function oldKeysFor(string $userId): array {
 		try {
-			return $this->config->getUserKeys($userId, self::OLD_APP_ID);
+			return $this->userConfig->getKeys($userId, self::OLD_APP_ID);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Decidiq: could not enumerate decidesk preference keys for one user; skipping that user',

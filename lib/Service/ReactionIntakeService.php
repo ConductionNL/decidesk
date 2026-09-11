@@ -331,7 +331,7 @@ class ReactionIntakeService {
 			return $ncUid;
 		}
 
-		return $this->pseudonymousId(consultationId: $consultationId, seed: (string)($clientSeed ?? ''));
+		return $this->pseudonymousId(consultationId: $consultationId, seed: ($clientSeed ?? ''));
 	}//end resolveSubmitterId()
 
 	/**

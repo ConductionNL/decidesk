@@ -392,10 +392,9 @@ class ParticipationPublicationService {
 	 * @param string|null $governanceBodyId The owning governance body, for catalog targeting.
 	 * @param array<string, mixed>|null $sourceObject The already-loaded source object (optional; loaded if null).
 	 *
-	 * @return array<string, mixed> {
-	 *                              summary: array, publishedPredicateSet: bool, anonVisibilityVerified: bool,
-	 *                              openCatalogiInstalled: bool, openCatalogiRouted: bool, warning: ?string
-	 *                              }
+	 * @return array<string, mixed> Keys: summary (array), publishedPredicateSet,
+	 *                              anonVisibilityVerified, openCatalogiInstalled,
+	 *                              openCatalogiRouted (bool), warning (string|null).
 	 *
 	 * @spec openspec/specs/citizen-participation/spec.md
 	 */
@@ -533,7 +532,7 @@ class ParticipationPublicationService {
 	 */
 	public function isOpenCatalogiInstalled(): bool {
 		try {
-			return $this->appManager->isInstalled('opencatalogi');
+			return $this->appManager->isEnabledForAnyone('opencatalogi');
 		} catch (\Throwable $e) {
 			$this->logger->debug('Decidiq participation: OpenCatalogi presence check failed', ['error' => $e->getMessage()]);
 			return false;

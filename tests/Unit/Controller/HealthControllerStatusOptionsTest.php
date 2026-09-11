@@ -22,6 +22,7 @@ namespace OCA\Decidiq\Tests\Unit\Controller;
 
 use OCA\Decidiq\Controller\HealthController;
 use OCP\AppFramework\Http;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -48,6 +49,13 @@ class HealthControllerStatusOptionsTest extends TestCase {
 	private IConfig&MockObject $config;
 
 	/**
+	 * Mock IAppConfig.
+	 *
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig&MockObject $appConfig;
+
+	/**
 	 * The controller under test.
 	 *
 	 * @var HealthController
@@ -62,12 +70,14 @@ class HealthControllerStatusOptionsTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->config = $this->createMock(IConfig::class);
+		$this->config    = $this->createMock(IConfig::class);
+		$this->appConfig = $this->createMock(IAppConfig::class);
 
 		$this->controller = new HealthController(
 			$this->createMock(IRequest::class),
 			$this->config,
 			$this->createMock(ContainerInterface::class),
+			$this->appConfig,
 		);
 
 	}//end setUp()
@@ -129,5 +139,29 @@ class HealthControllerStatusOptionsTest extends TestCase {
 		self::assertSame('*', $this->controllerHeaders($response)['Access-Control-Allow-Origin']);
 
 	}//end testStatusOptionsFallsBackToWildcardOrigin()
+
+	/**
+	 * Without the AppHost engine the body is `degraded`, and its version is
+	 * the installed version read from the app config store.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.5
+	 */
+	public function testDegradedBodyReportsTheInstalledVersion(): void {
+		$this->config->method('getSystemValueString')->willReturn('');
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with('decidiq', 'installed_version', '')
+			->willReturn('1.2.4');
+
+		$response = $this->controller->index();
+
+		self::assertSame(Http::STATUS_OK, $response->getStatus());
+		self::assertSame('degraded', $response->getData()['status']);
+		self::assertSame('1.2.4', $response->getData()['version']);
+		self::assertSame('unavailable', $response->getData()['openregister']);
+
+	}//end testDegradedBodyReportsTheInstalledVersion()
 
 }//end class

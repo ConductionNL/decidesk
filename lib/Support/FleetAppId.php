@@ -95,7 +95,7 @@ final class FleetAppId
     {
         foreach ((self::CANDIDATES[$canonical] ?? [$canonical]) as $candidate) {
             try {
-                if ($appManager->isInstalled($candidate) === true) {
+                if ($appManager->isEnabledForAnyone($candidate) === true) {
                     return $candidate;
                 }
             } catch (Throwable $e) {

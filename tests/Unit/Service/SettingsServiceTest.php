@@ -121,7 +121,7 @@ class SettingsServiceTest extends TestCase {
 	 */
 	public function testIsOpenRegisterAvailableReturnsTrue(): void {
 		$this->appManager->expects($this->once())
-			->method('isInstalled')
+			->method('isEnabledForAnyone')
 			->with('openregister')
 			->willReturn(true);
 
@@ -136,7 +136,7 @@ class SettingsServiceTest extends TestCase {
 	 */
 	public function testIsOpenRegisterAvailableReturnsFalse(): void {
 		$this->appManager->expects($this->once())
-			->method('isInstalled')
+			->method('isEnabledForAnyone')
 			->with('openregister')
 			->willReturn(false);
 
@@ -161,7 +161,7 @@ class SettingsServiceTest extends TestCase {
 		$this->appConfig->method('getValueString')
 			->willReturn('some-register-id');
 
-		$this->appManager->method('isInstalled')
+		$this->appManager->method('isEnabledForAnyone')
 			->willReturn(true);
 
 		$settings = $this->service->getSettings();
@@ -189,7 +189,7 @@ class SettingsServiceTest extends TestCase {
 		$this->appConfig->method('getValueString')
 			->willReturn('');
 
-		$this->appManager->method('isInstalled')
+		$this->appManager->method('isEnabledForAnyone')
 			->willReturn(false);
 
 		$settings = $this->service->getSettings();
@@ -217,7 +217,7 @@ class SettingsServiceTest extends TestCase {
 		$this->appConfig->method('getValueString')
 			->willReturn('new-register-id');
 
-		$this->appManager->method('isInstalled')
+		$this->appManager->method('isEnabledForAnyone')
 			->willReturn(true);
 
 		$result = $this->service->updateSettings(['register' => 'new-register-id']);
@@ -232,7 +232,7 @@ class SettingsServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testLoadConfigurationFailsWithoutOpenRegister(): void {
-		$this->appManager->method('isInstalled')
+		$this->appManager->method('isEnabledForAnyone')
 			->with('openregister')
 			->willReturn(false);
 
@@ -252,7 +252,7 @@ class SettingsServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testLoadConfigurationHandlesException(): void {
-		$this->appManager->method('isInstalled')
+		$this->appManager->method('isEnabledForAnyone')
 			->with('openregister')
 			->willReturn(true);
 

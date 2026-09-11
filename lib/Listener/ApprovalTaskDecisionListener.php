@@ -97,8 +97,8 @@ class ApprovalTaskDecisionListener implements IEventListener {
 			return;
 		}
 
-		$subject = (string)$this->read(object: $task, getter: 'getObjectUuid');
-		$actor = (string)$this->read(object: $task, getter: 'getCompletedBy');
+		$subject = $this->read(object: $task, getter: 'getObjectUuid');
+		$actor = $this->read(object: $task, getter: 'getCompletedBy');
 		if ($subject === '' || $actor === '') {
 			return;
 		}
@@ -151,11 +151,11 @@ class ApprovalTaskDecisionListener implements IEventListener {
 			return null;
 		}
 
-		if ((string)$this->read(object: $task, getter: 'getTemplateId') !== ApprovalStageTaskProjector::TEMPLATE_ID) {
+		if ($this->read(object: $task, getter: 'getTemplateId') !== ApprovalStageTaskProjector::TEMPLATE_ID) {
 			return null;
 		}
 
-		if ((string)$this->read(object: $task, getter: 'getState') !== 'completed') {
+		if ($this->read(object: $task, getter: 'getState') !== 'completed') {
 			return null;
 		}
 
@@ -179,9 +179,9 @@ class ApprovalTaskDecisionListener implements IEventListener {
 	 * @return array<string, mixed>|null The action, or null when no stage awaits.
 	 */
 	private function actionFrom(object $task, string $subject, string $actor): ?array {
-		$outcome = strtolower(trim((string)$this->read(object: $task, getter: 'getOutcome')));
-		$comment = (string)$this->read(object: $task, getter: 'getComment');
-		$onBehalfOf = (string)$this->read(object: $task, getter: 'getOnBehalfOf');
+		$outcome = strtolower(trim($this->read(object: $task, getter: 'getOutcome')));
+		$comment = $this->read(object: $task, getter: 'getComment');
+		$onBehalfOf = $this->read(object: $task, getter: 'getOnBehalfOf');
 
 		$action = [
 			'subject' => $subject,
@@ -192,7 +192,7 @@ class ApprovalTaskDecisionListener implements IEventListener {
 		if ($onBehalfOf !== '') {
 			$action['actorType'] = 'delegate';
 			$action['onBehalfOf'] = $onBehalfOf;
-			$action['mandate'] = (string)$this->read(object: $task, getter: 'getMandate');
+			$action['mandate'] = $this->read(object: $task, getter: 'getMandate');
 		}
 
 		if (in_array($outcome, self::REJECTING_OUTCOMES, true) === true) {
@@ -204,14 +204,14 @@ class ApprovalTaskDecisionListener implements IEventListener {
 			return $action;
 		}
 
-		$verb = $this->completingVerbFor(subject: $subject, taskUuid: (string)$this->read(object: $task, getter: 'getUuid'));
+		$verb = $this->completingVerbFor(subject: $subject, taskUuid: $this->read(object: $task, getter: 'getUuid'));
 		if ($verb === '') {
 			return null;
 		}
 
 		$action['action'] = $verb;
-		if ($verb === 'advised' && trim((string)$this->read(object: $task, getter: 'getResultText')) !== '') {
-			$action['advice'] = (string)$this->read(object: $task, getter: 'getResultText');
+		if ($verb === 'advised' && trim($this->read(object: $task, getter: 'getResultText')) !== '') {
+			$action['advice'] = $this->read(object: $task, getter: 'getResultText');
 		}
 
 		if ($verb === 'advised' && isset($action['advice']) === false) {

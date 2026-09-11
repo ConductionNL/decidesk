@@ -158,6 +158,9 @@ class ParticipantNotifier {
 		}
 
 		$userManager = $this->container->get(\OCP\IUserManager::class);
+		if (($userManager instanceof \OCP\IUserManager) === false) {
+			return null;
+		}
 
 		$email = ($participant['email'] ?? null);
 		if (empty($email) === false) {
@@ -169,7 +172,7 @@ class ParticipantNotifier {
 
 		$displayName = ($participant['displayName'] ?? null);
 		if (empty($displayName) === false) {
-			$users = $userManager->search(pattern: (string)$displayName, limit: 1);
+			$users = $userManager->searchDisplayName(pattern: (string)$displayName, limit: 1);
 			if (empty($users) === false) {
 				return array_values($users)[0]->getUID();
 			}

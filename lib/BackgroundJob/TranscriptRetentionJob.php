@@ -270,12 +270,12 @@ class TranscriptRetentionJob extends TimedJob {
 			$body = $this->fetchObject(objectService: $objectService, id: (string)$bodyId, schema: 'governance-body');
 		}
 
-		$policy = (string)(($body['transcriptRetentionPolicy'] ?? null) ?? self::DEFAULT_POLICY);
+		$policy = (string)($body['transcriptRetentionPolicy'] ?? self::DEFAULT_POLICY);
 		if (in_array($policy, self::POLICIES, true) === false) {
 			$policy = self::DEFAULT_POLICY;
 		}
 
-		$days = (int)(($body['transcriptRetentionDays'] ?? null) ?? self::DEFAULT_DAYS);
+		$days = (int)($body['transcriptRetentionDays'] ?? self::DEFAULT_DAYS);
 		if ($days < 0) {
 			$days = self::DEFAULT_DAYS;
 		}
@@ -501,7 +501,7 @@ class TranscriptRetentionJob extends TimedJob {
 	 * @spec openspec/specs/meeting-transcription/spec.md
 	 */
 	private function objectId(array $object): ?string {
-		$id = (string)(($object['id'] ?? ($object['@self']['id'] ?? null)) ?? '');
+		$id = (string)($object['id'] ?? $object['@self']['id'] ?? '');
 		if ($id === '') {
 			return null;
 		}
