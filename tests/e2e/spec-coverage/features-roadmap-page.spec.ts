@@ -15,7 +15,7 @@
  * roadmap surface: the "Features" heading and the "Show roadmap" /
  * "Suggest feature" CTAs.
  *
- * @e2e openspec/specs/dashboard/spec.md#view-the-features-and-roadmap-page
+ * @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
  */
 import type { Page } from '@playwright/test'
 
@@ -57,7 +57,7 @@ async function appNavClick(
 	await dismissSupportDialog(page)
 }
 
-// @e2e openspec/specs/dashboard/spec.md#view-the-features-and-roadmap-page
+// @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
 test('Features & roadmap: app-scoped nav lands on the roadmap surface', async ({
 	page,
 }) => {
@@ -82,7 +82,7 @@ test('Features & roadmap: app-scoped nav lands on the roadmap surface', async ({
 	await expect(suggest).toHaveAttribute('href', /github\.com\/.*\/issues\/new/)
 })
 
-// @e2e openspec/specs/dashboard/spec.md#view-the-features-and-roadmap-page
+// @e2e openspec/specs/app-navigation/spec.md#a-removed-entrys-page-remains-routable
 test('Features & roadmap: no decidiq-origin console error or 500 on load', async ({
 	page,
 }) => {
