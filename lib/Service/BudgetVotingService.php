@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Service;
 
 use InvalidArgumentException;
+use OCA\Decidiq\Exception\ParticipationValidationException;
+use OCA\Decidiq\Exception\ParticipationWindowClosedException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use RuntimeException;
 
@@ -107,10 +109,13 @@ class BudgetVotingService {
 	 *
 	 * @return array<string, mixed> The created BudgetProposal object.
 	 *
-	 * @throws RuntimeException When the round is missing or not accepting proposals.
-	 * @throws InvalidArgumentException When the amount is invalid.
+	 * @throws RuntimeException When the round is missing.
+	 * @throws ParticipationWindowClosedException When the round is not accepting proposals (HTTP 400).
+	 * @throws ParticipationValidationException When the amount is not positive or exceeds the round (HTTP 422).
+	 * @throws InvalidArgumentException When the title is empty.
 	 *
 	 * @spec openspec/specs/citizen-participation/spec.md
+	 * @spec openspec/specs/p3-citizen-participation/spec.md
 	 */
 	public function submitProposal(
 		string $budgetId,
@@ -134,16 +139,16 @@ class BudgetVotingService {
 		$round = $roundEntity->jsonSerialize();
 
 		if ($this->lifecycleService->budgetAcceptsProposals(round: $round) === false) {
-			throw new RuntimeException('This budget round is not open for proposal submission');
+			throw new ParticipationWindowClosedException('This budget round is not open for proposal submission');
 		}
 
 		if ($requested <= 0) {
-			throw new InvalidArgumentException('requestedAmount must be a positive number');
+			throw new ParticipationValidationException('requestedAmount must be a positive number');
 		}
 
 		$total = (float)($round['totalAmount'] ?? 0);
 		if ($total > 0 && $requested > $total) {
-			throw new InvalidArgumentException('requestedAmount exceeds the round total amount');
+			throw new ParticipationValidationException('requestedAmount exceeds the round total amount');
 		}
 
 		$proposal = [
@@ -154,6 +159,12 @@ class BudgetVotingService {
 			'status' => 'submitted',
 			'votesFor' => 0,
 			'votesAgainst' => 0,
+			// The schema's own reference to the round. `relations` below is not a
+			// BudgetProposal property: OpenRegister keeps it only until the next
+			// save, and validateProposal() saves the proposal again. Without this
+			// field castAdvisoryVote() could not find the round after validation
+			// and refused every vote as "voting is closed".
+			'participatoryBudget' => $budgetId,
 			'relations' => [
 				['register' => 'decidiq', 'schema' => 'participatory-budget', 'id' => $budgetId],
 			],
@@ -221,7 +232,8 @@ class BudgetVotingService {
 	 *
 	 * @return array<string, mixed> ['vote' => ..., 'votesFor' => int, 'votesAgainst' => int].
 	 *
-	 * @throws RuntimeException When the proposal/round is missing, closed, or not validated.
+	 * @throws RuntimeException When the proposal is missing or not validated.
+	 * @throws ParticipationWindowClosedException When the round cannot be established or is not in its voting window (HTTP 400).
 	 * @throws InvalidArgumentException When the value is invalid.
 	 *
 	 * @spec openspec/specs/citizen-participation/spec.md
@@ -250,17 +262,17 @@ class BudgetVotingService {
 		// established" is not "the round is open".
 		$budgetId = $this->resolveBudgetId(proposal: $proposal);
 		if ($budgetId === null) {
-			throw new RuntimeException('Voting is closed for this budget round');
+			throw new ParticipationWindowClosedException('Voting is closed for this budget round');
 		}
 
 		$roundEntity = $objectService->find(id: $budgetId, register: 'decidiq', schema: 'participatory-budget');
 		if ($roundEntity === null) {
-			throw new RuntimeException('Voting is closed for this budget round');
+			throw new ParticipationWindowClosedException('Voting is closed for this budget round');
 		}
 
 		$round = $roundEntity->jsonSerialize();
 		if ($this->lifecycleService->budgetAcceptsVotes(round: $round) === false) {
-			throw new RuntimeException('Voting is closed for this budget round');
+			throw new ParticipationWindowClosedException('Voting is closed for this budget round');
 		}
 
 		return $this->advisoryVoteService->applyAdvisoryTally(proposalId: $proposalId, voterId: $voterId, value: $value);

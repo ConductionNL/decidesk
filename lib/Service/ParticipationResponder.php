@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Service;
 
+use OCA\Decidiq\Exception\ParticipationValidationException;
+use OCA\Decidiq\Exception\ParticipationWindowClosedException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 
@@ -170,14 +172,25 @@ class ParticipationResponder {
 	/**
 	 * Map a service exception to an HTTP status code.
 	 *
+	 * The two participation exceptions are checked first because each extends
+	 * one of the generic classes below it: a value that fails validation is 422
+	 * and an action outside its window is 400, as the p3-citizen-participation
+	 * scenarios state. Every other \InvalidArgumentException stays 400 and
+	 * everything else stays 409.
+	 *
 	 * @param \Throwable $e The thrown exception.
 	 *
 	 * @return int The HTTP status.
 	 *
 	 * @spec openspec/specs/citizen-participation/spec.md
+	 * @spec openspec/specs/p3-citizen-participation/spec.md
 	 */
 	private function statusForException(\Throwable $e): int {
-		if ($e instanceof \InvalidArgumentException) {
+		if ($e instanceof ParticipationValidationException) {
+			return Http::STATUS_UNPROCESSABLE_ENTITY;
+		}
+
+		if ($e instanceof ParticipationWindowClosedException || $e instanceof \InvalidArgumentException) {
 			return Http::STATUS_BAD_REQUEST;
 		}
 

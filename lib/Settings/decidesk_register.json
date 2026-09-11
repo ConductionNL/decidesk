@@ -4409,45 +4409,72 @@
         },
         "x-openregister-lifecycle": {
           "field": "status",
-          "transitions": {
-            "draft": [
-              "open",
-              "published",
-              "proposals-open",
-              "closed"
-            ],
-            "open": [
-              "closed"
-            ],
-            "proposals-open": [
-              "voting",
-              "closed"
-            ],
-            "voting": [
-              "closed"
-            ],
-            "published": [
-              "questions",
-              "submission",
-              "evaluation"
-            ],
-            "questions": [
-              "submission"
-            ],
-            "submission": [
-              "evaluation"
-            ],
-            "evaluation": [
-              "awarded"
-            ],
-            "closed": [
-              "results-published",
-              "report-published"
-            ],
-            "results-published": [],
-            "report-published": [],
-            "awarded": []
-          }
+          "transitions": [
+            {
+              "from": "draft",
+              "to": "open"
+            },
+            {
+              "from": "draft",
+              "to": "published"
+            },
+            {
+              "from": "draft",
+              "to": "proposals-open"
+            },
+            {
+              "from": "draft",
+              "to": "closed"
+            },
+            {
+              "from": "open",
+              "to": "closed"
+            },
+            {
+              "from": "proposals-open",
+              "to": "voting"
+            },
+            {
+              "from": "proposals-open",
+              "to": "closed"
+            },
+            {
+              "from": "voting",
+              "to": "closed"
+            },
+            {
+              "from": "published",
+              "to": "questions"
+            },
+            {
+              "from": "published",
+              "to": "submission"
+            },
+            {
+              "from": "published",
+              "to": "evaluation"
+            },
+            {
+              "from": "questions",
+              "to": "submission"
+            },
+            {
+              "from": "submission",
+              "to": "evaluation"
+            },
+            {
+              "from": "evaluation",
+              "to": "awarded"
+            },
+            {
+              "from": "closed",
+              "to": "results-published"
+            },
+            {
+              "from": "closed",
+              "to": "report-published"
+            }
+          ]
         }
       },
       "ConsultationReaction": {

@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Tests\Unit\Service;
 
+use OCA\Decidiq\Exception\ParticipationWindowClosedException;
 use OCA\Decidiq\Service\ParticipationLifecycleService;
 use OCA\Decidiq\Service\ReactionIntakeService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -212,7 +213,7 @@ class ReactionIntakeServiceTest extends TestCase {
 	public function testSubmissionAfterDeadlineRejected(): void {
 		$past = (new \DateTimeImmutable('-1 hour'))->format(\DateTimeInterface::ATOM);
 		$this->objectService->method('find')->willReturn($this->entity($this->openConsultation(['submissionDeadline' => $past])));
-		$this->expectException(\RuntimeException::class);
+		$this->expectException(ParticipationWindowClosedException::class);
 		$this->service->submitReaction(consultationId: 'c1', body: 'Late', ncUid: 'alice');
 
 	}//end testSubmissionAfterDeadlineRejected()

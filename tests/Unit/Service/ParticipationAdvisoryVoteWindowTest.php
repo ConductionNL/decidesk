@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Tests\Unit\Service;
 
+use OCA\Decidiq\Exception\ParticipationWindowClosedException;
 use OCA\Decidiq\Service\AdvisoryVoteService;
 use OCA\Decidiq\Service\BudgetVotingService;
 use OCA\Decidiq\Service\ParticipationLifecycleService;
@@ -29,7 +30,6 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 /**
  * `BudgetVotingService::castAdvisoryVote()` refuses when the round cannot be
@@ -148,7 +148,7 @@ class ParticipationAdvisoryVoteWindowTest extends TestCase {
 		$this->stubFind(['id' => 'p-1', 'status' => 'validated'], null);
 		$this->advisoryVoteService->expects($this->never())->method('applyAdvisoryTally');
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(ParticipationWindowClosedException::class);
 		$this->expectExceptionMessage('Voting is closed for this budget round');
 
 		$this->service->castAdvisoryVote(proposalId: 'p-1', voterId: 'alice', value: 'voor');
@@ -169,7 +169,7 @@ class ParticipationAdvisoryVoteWindowTest extends TestCase {
 		);
 		$this->advisoryVoteService->expects($this->never())->method('applyAdvisoryTally');
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(ParticipationWindowClosedException::class);
 		$this->expectExceptionMessage('Voting is closed for this budget round');
 
 		$this->service->castAdvisoryVote(proposalId: 'p-1', voterId: 'alice', value: 'voor');
@@ -193,7 +193,7 @@ class ParticipationAdvisoryVoteWindowTest extends TestCase {
 		);
 		$this->advisoryVoteService->expects($this->never())->method('applyAdvisoryTally');
 
-		$this->expectException(RuntimeException::class);
+		$this->expectException(ParticipationWindowClosedException::class);
 		$this->expectExceptionMessage('Voting is closed for this budget round');
 
 		$this->service->castAdvisoryVote(proposalId: 'p-1', voterId: 'alice', value: 'voor');

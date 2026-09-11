@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Tests\Unit\Controller;
 
 use OCA\Decidiq\Controller\ParticipationController;
+use OCA\Decidiq\Exception\ParticipationWindowClosedException;
 use OCA\Decidiq\Service\ParticipationLifecycleService;
 use OCA\Decidiq\Service\ParticipationPublicationService;
 use OCA\Decidiq\Service\ParticipationResponder;
@@ -224,6 +225,31 @@ class ParticipationAnonymousReactionTest extends TestCase {
 		self::assertSame(Http::STATUS_CONFLICT, $response->getStatus());
 
 	}//end testAnonymousReactionOnUnavailableConsultationIs409()
+
+	/**
+	 * A closed consultation stays 409 on THIS endpoint even though the
+	 * authenticated endpoints now answer it with 400. The closed-window
+	 * exception is a \RuntimeException subclass precisely so the anonymous
+	 * handler's \Throwable branch keeps it coarse: someone probing without an
+	 * account cannot tell a closed consultation from a missing one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/citizen-participation/spec.md
+	 * @spec openspec/specs/p3-citizen-participation/spec.md
+	 */
+	public function testAnonymousReactionOnClosedConsultationStaysCoarse(): void {
+		$this->intakeService->method('submitReaction')
+			->willThrowException(new ParticipationWindowClosedException('This consultation is not open for submissions'));
+
+		$response = $this->controller->submitAnonymousReaction(
+			consultationId: 'closed',
+			body: 'Reactie.'
+		);
+
+		self::assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+
+	}//end testAnonymousReactionOnClosedConsultationStaysCoarse()
 
 	/**
 	 * The `body` parameter defaults to an empty string, so a request that omits
