@@ -43,12 +43,16 @@
  * are NOT duplicated here — they have no distinct UI flow and are unit/gate
  * covered.
  *
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#a-signatory-may-initiate-signing
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#a-non-signatory-is-denied-by-openregister
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#only-the-chair-may-run-a-chair-only-transition
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#domain-policy-still-forbids-a-disallowed-transition-regardless-of-actor
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#a-non-admin-is-denied-on-every-previously-admin-gated-surface
- * @e2e openspec/changes/consume-or-rbac-authorization/specs/authorization-via-or-rbac/spec.md#an-admin-is-allowed
+ * Anchors name the CANONICAL spec. They used to name
+ * `openspec/changes/consume-or-rbac-authorization/...`, a path that stopped
+ * existing when that change was archived, so none of them resolved. Only the
+ * two admin-gating scenarios are anchored, because only that test runs. The
+ * three skipped tests carry no anchor: their scenarios are excluded in the
+ * canonical spec with the reason above, rather than counted as covered by a
+ * test that never executes.
+ *
+ * @e2e openspec/specs/authorization-via-or-rbac/spec.md#a-non-admin-is-denied-on-every-previously-admin-gated-surface
+ * @e2e openspec/specs/authorization-via-or-rbac/spec.md#an-admin-is-allowed
  */
 import { expect, test } from '@playwright/test'
 import { BASE } from './governance-fixture.ts'
