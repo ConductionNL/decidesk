@@ -532,7 +532,7 @@ class ParticipationPublicationService {
 	 */
 	public function isOpenCatalogiInstalled(): bool {
 		try {
-			return $this->appManager->isInstalled('opencatalogi');
+			return $this->appManager->isEnabledForAnyone('opencatalogi');
 		} catch (\Throwable $e) {
 			$this->logger->debug('Decidiq participation: OpenCatalogi presence check failed', ['error' => $e->getMessage()]);
 			return false;

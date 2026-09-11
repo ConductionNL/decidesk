@@ -192,8 +192,6 @@
         <UndefinedDocblockClass>
             <errorLevel type="suppress">
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
-                <!-- Returned by the deprecated IDBConnection::getDatabasePlatform(). -->
-                <referencedClass name="Doctrine\DBAL\Platforms\AbstractPlatform"/>
             </errorLevel>
         </UndefinedDocblockClass>
 

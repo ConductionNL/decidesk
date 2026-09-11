@@ -47,6 +47,7 @@ use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
@@ -91,6 +92,7 @@ class HealthController extends Controller {
 	 * @param IRequest $request The request object.
 	 * @param IConfig $config The Nextcloud config service (baseUrl).
 	 * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
+	 * @param IAppConfig $appConfig App config store (installed version on the degraded path).
 	 *
 	 * @return void
 	 */
@@ -98,6 +100,7 @@ class HealthController extends Controller {
 		IRequest $request,
 		private readonly IConfig $config,
 		private readonly ContainerInterface $container,
+		private readonly IAppConfig $appConfig,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -134,7 +137,7 @@ class HealthController extends Controller {
 		if ($body === null) {
 			$body = [
 				'status' => 'degraded',
-				'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
+				'version' => $this->appConfig->getValueString(Application::APP_ID, 'installed_version', ''),
 				'openregister' => 'unavailable',
 				'httpStatus' => Http::STATUS_OK,
 			];

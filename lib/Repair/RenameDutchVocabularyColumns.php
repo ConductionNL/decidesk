@@ -259,10 +259,12 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 	 *
 	 * @param IDBConnection $db Database connection.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SqlIdentifierQuoter $quoter Identifier quoting for the active database.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,
 		private readonly LoggerInterface $logger,
+		private readonly SqlIdentifierQuoter $quoter = new SqlIdentifierQuoter(),
 	) {
 	}//end __construct()
 
@@ -372,7 +374,7 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
 			);
 			$stmt->bindValue('pattern', '%openregister\_table\_%');
-			$stmt->execute();
+			$result = $stmt->execute();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RenameDutchVocabularyColumns: could not list tables; skipping.',
@@ -384,12 +386,14 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 		$marker = 'openregister_table_' . ((int)$registerId) . '_';
 
 		$tables = [];
-		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+		while (($row = $result->fetch(\PDO::FETCH_ASSOC)) !== false) {
 			$name = (string)($row['table_name'] ?? '');
 			if ($this->isShardOfRegister(table: $name, marker: $marker) === true) {
 				$tables[] = $name;
 			}
 		}
+
+		$result->closeCursor();
 
 		return $tables;
 	}//end decideskShardTables()
@@ -430,7 +434,7 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 				'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
 			);
 			$stmt->bindValue('table', $table);
-			$stmt->execute();
+			$result = $stmt->execute();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RenameDutchVocabularyColumns: could not read columns; skipping table.',
@@ -440,12 +444,14 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 		}
 
 		$columns = [];
-		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+		while (($row = $result->fetch(\PDO::FETCH_ASSOC)) !== false) {
 			$name = (string)($row['column_name'] ?? '');
 			if ($name !== '') {
 				$columns[] = $name;
 			}
 		}
+
+		$result->closeCursor();
 
 		return $columns;
 	}//end columnsOf()
@@ -482,6 +488,6 @@ class RenameDutchVocabularyColumns implements IRepairStep {
 	 * @return string
 	 */
 	private function quote(string $identifier): string {
-		return $this->db->getDatabasePlatform()->quoteSingleIdentifier($identifier);
+		return $this->quoter->quote(provider: $this->db->getDatabaseProvider(), identifier: $identifier);
 	}//end quote()
 }//end class

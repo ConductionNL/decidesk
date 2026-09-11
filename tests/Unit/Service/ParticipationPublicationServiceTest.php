@@ -98,7 +98,7 @@ class ParticipationPublicationServiceTest extends TestCase {
 	 * @return ParticipationPublicationService
 	 */
 	private function makeService(bool $openCatalogi): ParticipationPublicationService {
-		$this->appManager->method('isInstalled')->willReturn($openCatalogi);
+		$this->appManager->method('isEnabledForAnyone')->willReturn($openCatalogi);
 		return new ParticipationPublicationService(
 			container: $this->container,
 			logger: $this->createMock(LoggerInterface::class),

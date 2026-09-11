@@ -70,7 +70,7 @@ class OpenCatalogiPublisher {
 	 * @return string The catalog publication reference, or '' on failure/degrade.
 	 */
 	public function publish(string $catalogId, string $payloadId, array $payload): string {
-		if ($this->appManager->isInstalled('opencatalogi') === false) {
+		if ($this->appManager->isEnabledForAnyone('opencatalogi') === false) {
 			return '';
 		}
 
@@ -151,7 +151,7 @@ class OpenCatalogiPublisher {
 			return true;
 		}
 
-		if ($this->appManager->isInstalled('opencatalogi') === false) {
+		if ($this->appManager->isEnabledForAnyone('opencatalogi') === false) {
 			return false;
 		}
 

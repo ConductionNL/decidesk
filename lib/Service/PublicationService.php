@@ -405,7 +405,7 @@ class PublicationService {
 	 * @return bool
 	 */
 	private function isOpenCatalogiAvailable(): bool {
-		return $this->appManager->isInstalled('opencatalogi');
+		return $this->appManager->isEnabledForAnyone('opencatalogi');
 	}//end isOpenCatalogiAvailable()
 
 	/**

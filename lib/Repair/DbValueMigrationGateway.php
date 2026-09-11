@@ -42,11 +42,13 @@ class DbValueMigrationGateway implements ValueMigrationGateway {
 	 * @param IDBConnection $db Database connection.
 	 * @param LoggerInterface $logger Logger.
 	 * @param RenameDutchDecidiqValueDecisions $decisions Pure predicates.
+	 * @param SqlIdentifierQuoter $quoter Identifier quoting for the active database.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,
 		private readonly LoggerInterface $logger,
 		private readonly RenameDutchDecidiqValueDecisions $decisions = new RenameDutchDecidiqValueDecisions(),
+		private readonly SqlIdentifierQuoter $quoter = new SqlIdentifierQuoter(),
 	) {
 	}//end __construct()
 
@@ -64,8 +66,9 @@ class DbValueMigrationGateway implements ValueMigrationGateway {
 				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
 			);
 			$stmt->bindValue('pattern', '%openregister\_table\_%');
-			$stmt->execute();
-			$rows = $stmt->fetchAll();
+			$result = $stmt->execute();
+			$rows = $result->fetchAll();
+			$result->closeCursor();
 		} catch (\Throwable $e) {
 			$this->logger->warning('DbValueMigrationGateway: could not list tables.', ['exception' => $e->getMessage()]);
 			return [];
@@ -90,8 +93,9 @@ class DbValueMigrationGateway implements ValueMigrationGateway {
 				'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
 			);
 			$stmt->bindValue('table', $table);
-			$stmt->execute();
-			$rows = $stmt->fetchAll();
+			$result = $stmt->execute();
+			$rows = $result->fetchAll();
+			$result->closeCursor();
 		} catch (\Throwable $e) {
 			$this->logger->warning('DbValueMigrationGateway: could not read columns.', ['table' => $table, 'exception' => $e->getMessage()]);
 			return [];
@@ -114,7 +118,8 @@ class DbValueMigrationGateway implements ValueMigrationGateway {
 	 *  migration; no canonical spec covers it and it holds no business rule.
 	 */
 	public function rewrite(string $table, string $column, string $old, string $new): int {
-		$quote = fn (string $identifier): string => $this->db->getDatabasePlatform()->quoteSingleIdentifier($identifier);
+		$provider = $this->db->getDatabaseProvider();
+		$quote = fn (string $identifier): string => $this->quoter->quote(provider: $provider, identifier: $identifier);
 		$sql = 'UPDATE ' . $quote($table) . ' SET ' . $quote($column) . ' = ? WHERE ' . $quote($column) . ' = ?';
 
 		try {
