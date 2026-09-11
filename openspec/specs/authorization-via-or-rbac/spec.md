@@ -206,3 +206,44 @@ object and property rules alike and is not constrained by this requirement.
 - **GIVEN** an authenticated account in no group at all
 - **WHEN** that account creates a Decision through OpenRegister's object API
 - **THEN** the Decision is created.
+
+### Requirement: REQ-RBAC-008 A manifest `permission` gates the nav entry and the route, and fails closed
+A `permission` declared on a manifest menu entry or page SHALL restrict both halves of the SPA: the
+nav entry SHALL NOT render, and direct navigation to the page's route SHALL NOT render it, for an
+account that does not hold that permission. The permission list SHALL come from the server: the
+dashboard page SHALL publish `isAdmin` into initial state from Nextcloud's own admin test on the
+acting user, defaulting to `false` when there is no session. The frontend SHALL build a list that is
+never empty (`user`, plus `admin` only when initial state is exactly `true`), because the library's
+nav filter reads an empty list as "the app did not say" and renders the entry.
+
+The route guard SHALL fail closed: a page that declares a permission SHALL be refused when the list
+is absent, empty or not an array, and a refused navigation SHALL redirect to the app root. This is
+presentation only. It stops a page rendering in the SPA; every endpoint that page calls SHALL still
+enforce its own access server-side, and nothing SHALL depend on the guard for authorization.
+
+#### Scenario: The server tells the SPA whether the account is an administrator
+- **GIVEN** a Nextcloud administrator and an account in no group at all
+- **WHEN** each opens the decidiq dashboard
+- **THEN** initial state `isAdmin` is `true` for the administrator and `false` for the other account
+
+#### Scenario: A page that declares a permission is refused on direct navigation
+- **GIVEN** a manifest page that declares `permission: "admin"`
+- **WHEN** an account without `admin` navigates straight to that page's route
+- **THEN** the page does not render and the router redirects to the app root
+- **AND** the page's nav entry is not rendered for that account
+
+@e2e exclude No page or menu entry in decidiq's shipped manifests declares a `permission` today, and the manifest is bundled at build time (`require.context` in `src/main.js`), so a browser test has no gated page to navigate to and cannot add one. The behaviour is driven through both halves, the router guard and CnAppNav's filter, for a gated manifest page by `tests/vitest/navPermissions.spec.js` ("a manifest page, end to end through both halves"). Add a Playwright test here in the same change that first gates a real page.
+
+#### Scenario: A gated route is refused when the permission list is missing
+- **GIVEN** a manifest page that declares a permission
+- **WHEN** the route guard receives no permission list, an empty list, or a value that is not an array
+- **THEN** the navigation is refused
+
+@e2e exclude These inputs cannot occur in a browser: `currentPermissions()` always hands the guard a non-empty array, so a page load can never deliver an empty or malformed list to it. The fail-closed contract is pinned on the guard function itself by `tests/vitest/navPermissions.spec.js` ("fails CLOSED on an empty or malformed list, unlike CnAppNav").
+
+#### Scenario: The permission list is never empty and grants admin only on a real boolean true
+- **GIVEN** initial state `isAdmin` of boolean `true`, boolean `false`, absent, or the string `"false"`
+- **WHEN** the frontend builds the permission list
+- **THEN** the list is `["user", "admin"]` for boolean `true` and `["user"]` for every other value, never empty
+
+@e2e exclude The server only ever publishes a real boolean (see the scenario above, which a Playwright test covers), so the absent and string values this scenario guards against cannot be produced by a page load, and the list itself is a module-local value no browser test can read. Pinned by `tests/vitest/navPermissions.spec.js` ("never returns an empty list" and "grants admin only for a real boolean true").
