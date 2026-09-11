@@ -26,10 +26,10 @@ The system MUST support submitting motions with a title, body text, proposer,
 co-signers, and rationale. Motions MUST follow the governing body's rules for
 submission: a configurable minimum number of co-signers (app config
 `decidiq`/`motion_min_cosigners`, default 0 = disabled) MUST be enforced before a
-motion may leave `submitted`, and when the linked meeting carries a
+motion may leave `proposed` for `deliberating`, and when the linked meeting carries a
 `submissionDeadline`, motions and amendments submitted after that deadline MUST be
-rejected server-side. Motions MUST be stored as OpenRegister objects in the
-`decidesk` register using the `motion` schema.
+rejected server-side. Motions MUST be stored as OpenRegister `decision` objects in the
+`decidiq` register, with `decisionType: motion` (ADR-005).
 
 **Feature tier**: V1
 
@@ -37,15 +37,15 @@ rejected server-side. Motions MUST be stored as OpenRegister objects in the
 
 - GIVEN a member of a governing body with an active meeting
 - WHEN they submit a motion with title "Sustainability Policy", body text with the proposal, 3 co-signers, and a rationale
-- THEN the system MUST create an OpenRegister object with the `motion` schema
-- AND the motion status MUST be set to `submitted`
+- THEN the system MUST create a `decision` object with `decisionType: motion`
+- AND the motion `lifecycle` MUST be set to `proposed`
 - AND the chair MUST be notified of the new motion
 - AND the motion MUST appear on the agenda for consideration
 
 #### Scenario: Reject motion below minimum co-signer threshold
 
 - GIVEN a governing body requiring 2 co-signers for motions (`motion_min_cosigners` = 2)
-- WHEN the chair attempts to move a motion with only 1 co-signer from `submitted` to `debating`
+- WHEN the chair attempts to move a motion with only 1 co-signer from `proposed` to `deliberating`
 - THEN the system MUST reject the transition with a message naming the minimum co-signer requirement, the current count, and the shortfall
 - AND the member MUST be able to add more co-signers and resubmit
 
@@ -82,7 +82,7 @@ in red, never colour-only). Multiple amendments to the same motion MUST be suppo
 - WHEN a member submits an amendment that modifies paragraph 2
 - THEN the system MUST store the amendment with a reference to the original motion
 - AND a diff view MUST show the original text and proposed changes (additions in green, removals in red)
-- AND the amendment MUST have its own status lifecycle (submitted, under consideration, voted, adopted/rejected)
+- AND the amendment MUST have its own lifecycle (`draft`, `proposed`, `deliberating`, `voting`, then `decided` with an `adopted` or `rejected` outcome)
 
 #### Scenario: View the amendment diff against the parent motion
 
@@ -105,7 +105,7 @@ in red, never colour-only). Multiple amendments to the same motion MUST be suppo
 
 The system MUST enforce the parliamentary rule that amendments are voted on before
 the main motion: opening a voting round on a motion MUST be rejected while any of its
-amendments is still in lifecycle `submitted`, `debating`, or `voting`. When multiple
+amendments is still in lifecycle `draft`, `proposed`, `deliberating` or `voting`. When multiple
 amendments exist, the most far-reaching amendment MUST be voted on first: the chair
 MUST be able to set the voting order (`votingOrder`), the system MUST suggest an
 order based on scope (most far-reaching first), and opening a round on an amendment
@@ -140,15 +140,15 @@ out of the configured order MUST be rejected server-side.
 
 ### Requirement: Motion Withdrawal and Status
 
-The system MUST support motion withdrawal by the proposer before voting. Motions MUST follow a status lifecycle: `draft`, `submitted`, `under_consideration`, `voting`, `adopted`, `rejected`, `withdrawn`.
+The system MUST support motion withdrawal by the proposer before voting. Motions MUST follow the decision lifecycle: `draft`, `proposed`, `deliberating`, `voting`, `decided` (with an `adopted` or `rejected` outcome), `enacted` and `archived`, plus the terminal `withdrawn`.
 
 **Feature tier**: V1
 
 #### Scenario: Withdraw a motion before voting
 
-- GIVEN a motion in `submitted` or `under_consideration` status
+- GIVEN a motion in lifecycle `proposed` or `deliberating`
 - WHEN the proposer requests to withdraw the motion
-- THEN the status MUST change to `withdrawn`
+- THEN the lifecycle MUST change to `withdrawn`
 - AND the withdrawal MUST be recorded in the audit trail
 - AND the motion MUST remain visible in the meeting record but marked as withdrawn
 

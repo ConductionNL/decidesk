@@ -66,19 +66,19 @@ integrity register.
 - **WHEN** the governance body detail page loads
 - **THEN** a `CnDetailCard` section lists the Meetings linked to this GovernanceBody via OpenRegister relations
 
-@e2e exclude no current e2e test asserts the "Meetings" section on GovernanceBodyDetail lists linked meetings; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Meetings" section on GovernanceBodyDetail lists linked meetings; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Related Participants shown in detail
 - **WHEN** the governance body detail page loads
 - **THEN** a `CnDetailCard` section lists the Participants linked to this GovernanceBody, showing displayName and role
 
-@e2e exclude no current e2e test asserts the "Participants" section on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Participants" section on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: CnObjectSidebar is available
 - **WHEN** the user is on the governance body detail page
 - **THEN** `CnObjectSidebar` is rendered with Files, Notes, Tags, Tasks, and Audit Trail tabs
 
-@e2e exclude no current e2e test opens the GovernanceBodyDetail sidebar and asserts its tab set; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test opens the GovernanceBodyDetail sidebar and asserts its tab set; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Retirement schedule shown on the body detail page
 - **GIVEN** a GovernanceBody with a generated `rooster-van-aftreden` (`body` = the body's object id)
@@ -86,14 +86,14 @@ integrity register.
 - **THEN** a "Retirement schedule" widget lists the body's `rooster-van-aftreden` object(s)
 - **AND** clicking a row navigates to `RoosterDetail`, which shows the ordered term entries
 
-@e2e exclude no current e2e test asserts the "Retirement schedule" widget's populated state on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Retirement schedule" widget's populated state on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: No retirement schedule yet
 - **GIVEN** a GovernanceBody with no `rooster-van-aftreden` object
 - **WHEN** the user views the GovernanceBody detail page
 - **THEN** the "Retirement schedule" widget shows its empty state, not an error
 
-@e2e exclude no current e2e test asserts the "Retirement schedule" widget's empty state on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Retirement schedule" widget's empty state on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Term rule shown read-only on the body detail page
 - **GIVEN** a GovernanceBody with one or more `termijn-regeling` objects (`body` = the body's object id)
@@ -101,7 +101,7 @@ integrity register.
 - **THEN** a "Term rules" widget lists the body's `termijn-regeling` object(s) with no inline create or edit action
 - **AND** clicking a row navigates to `TermijnRegelingDetail`, where the rule is editable
 
-@e2e exclude no current e2e test asserts the "Term rules" widget on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Term rules" widget on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Integrity declarations shown on the body detail page
 - **GIVEN** a GovernanceBody with `nevenfunctie` and `geschenk` objects scoped to it (`governanceBody` = the body's object id)
@@ -109,7 +109,7 @@ integrity register.
 - **THEN** an "Other positions" widget lists the body's `nevenfunctie` objects and a "Gifts" widget lists the body's `geschenk` objects
 - **AND** clicking a row in either navigates to that object's own detail page (`NevenfunctieDetail` / `GeschenkDetail`)
 
-@e2e exclude no current e2e test asserts the "Other positions"/"Gifts" widgets on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Other positions"/"Gifts" widgets on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Shared-body participation shown on the body detail page
 - **GIVEN** a GovernanceBody with `bodyType=shared-body` and `body-participation` objects referencing it (`sharedBody` = the body's object id)
@@ -117,14 +117,14 @@ integrity register.
 - **THEN** a "Participating organisations" widget lists the participating `body-participation` objects
 - **AND** a "Zienswijze rounds" widget lists the body's `zienswijzeronde` objects (`sharedBody` = the body's object id)
 
-@e2e exclude no current e2e test asserts the "Participating organisations"/"Zienswijze rounds" widgets on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Participating organisations"/"Zienswijze rounds" widgets on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A body's own participations in shared bodies are shown
 - **GIVEN** a GovernanceBody that itself participates in one or more shared bodies (`body-participation.participant` = the body's object id)
 - **WHEN** the user views the GovernanceBody detail page
 - **THEN** a "Shared-body participations" widget lists those `body-participation` objects
 
-@e2e exclude no current e2e test asserts the "Shared-body participations" widget on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test asserts the "Shared-body participations" widget on GovernanceBodyDetail; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Factions shown on a body's detail page
 - **GIVEN** one or more `GovernanceBody` objects with `bodyType=faction` and `parentBody` set to this body's object id
@@ -139,12 +139,12 @@ integrity register.
 - **WHEN** the user views the GovernanceBody detail page
 - **THEN** every added facet widget renders its own empty state and the page does not error
 
-@e2e exclude no current e2e test opens a GovernanceBodyDetail page with zero facet data and asserts every widget renders its empty state without erroring; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test opens a GovernanceBodyDetail page with zero facet data and asserts every widget renders its empty state without erroring; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: Edit a governance body
 The app SHALL allow users to edit an existing GovernanceBody object.
 
-@e2e exclude no current e2e test opens the Edit dialog on a GovernanceBody or asserts a persisted change; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test opens the Edit dialog on a GovernanceBody or asserts a persisted change; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: User edits a governance body
 - **WHEN** the user clicks the Edit button on the governance body detail page
@@ -157,7 +157,7 @@ The app SHALL allow users to edit an existing GovernanceBody object.
 ### Requirement: Delete a governance body
 The app SHALL allow users to delete a GovernanceBody object with confirmation.
 
-@e2e exclude no current e2e test drives the delete (or delete-cancel) flow for a GovernanceBody; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test drives the delete (or delete-cancel) flow for a GovernanceBody; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: User deletes a governance body
 - **WHEN** the user clicks Delete and confirms in `CnDeleteDialog`

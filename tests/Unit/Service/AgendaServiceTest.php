@@ -312,8 +312,7 @@ class AgendaServiceTest extends TestCase {
 	 * advanceBobPhase throws when item is already at final phase 'completed'.
 	 *
 	 * `completed` is the English data value the Dutch `afgerond` was renamed to
-	 * (lib/Repair/RenameDutchDecidiqValues.php, `status` map), which is why the
-	 * spec prose still reads `afgerond`.
+	 * (lib/Repair/RenameDutchDecidiqValues.php, `status` map).
 	 *
 	 * @return void
 	 *

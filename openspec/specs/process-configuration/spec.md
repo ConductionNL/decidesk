@@ -165,7 +165,7 @@ default voting rule for its context.
 
 The system SHALL declare a `DecisionTemplate` schema in the `decidesk`
 register (slug `decision-template`) via a
-`lib/Settings/register.d/67-unified-decision-templates.json` fragment
+`lib/Settings/register.d/68-unified-decision-templates.json` fragment
 (ADR-037 — additive, never editing `decidesk_register.json` or the legacy
 fragments in place). The schema SHALL carry every property `ProcessTemplate`
 carries today (`name`, `description`, `context`, `builtIn`, `initialState`,
@@ -194,11 +194,11 @@ creates no new consumer — resolution against a `GovernanceBody` or a
 `Decision.decisionType` is unchanged and continues to use `ProcessTemplate`
 until the consumer-rewrite change lands.
 
-@e2e exclude schema/register-shape assertions (fragment declares the schema additively; a ported built-in's field values) — no UI surface, since "no consumer yet" is explicit in this requirement's own text (resolution still goes through `ProcessTemplate` until a future change); checkable directly by inspecting `lib/Settings/register.d/67-unified-decision-templates.json`.
+@e2e exclude register-shape assertions with no browser flow of their own. MigrateLegacyTemplatesToDecisionTemplateTest covers the port: ::testRunMigratesProcessTemplateFieldsVerbatim for a generic default and ::testRunMapsVveDecisionTemplateFields for a VvE template. The schema lives in `lib/Settings/register.d/68-unified-decision-templates.json`. The `/decision-templates` pages added since are only opened by every-index-route-resolves.spec.ts; nothing checks the schema's properties in a browser.
 
 #### Scenario: Fragment adds DecisionTemplate without touching existing schemas
 
-- **GIVEN** the register fragment `67-unified-decision-templates.json` is loaded
+- **GIVEN** the register fragment `68-unified-decision-templates.json` is loaded
 - **WHEN** the decidesk register imports
 - **THEN** the `decision-template` schema exists with `decisionType`,
   `context`, `templateCategory`, `stateMachine`, `votingRule`,
@@ -242,7 +242,7 @@ every existing built-in. This requirement declares the checklist
 checklist-progress record (which items are ticked, by whom) is out of scope
 for this capability delta — see the proposal's Out of Scope.
 
-@e2e exclude schema-shape assertion — the first scenario explicitly describes "a future consumer-rewrite editor" that does not exist yet in this change (no UI ships here to add checklist items); the second is a ported-template byte-for-byte-parity assertion, also schema-level. No UI surface exists for either yet.
+@e2e exclude the checklist is a schema definition with no editor of its own. The generic `/decision-templates` pages now exist, but no test adds checklist items through them, so the first scenario is a genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277. The second is covered by MigrateLegacyTemplatesToDecisionTemplateTest::testRunMigratesProcessTemplateFieldsVerbatim, which asserts a ported template's checklist is empty.
 
 #### Scenario: A template declares an ordered checklist
 
@@ -267,7 +267,7 @@ for this capability delta — see the proposal's Out of Scope.
 
 `ProcessTemplate` SHALL be marked superseded by `DecisionTemplate`:
 `x-openregister.active` SHALL be set to `false` via the
-`67-unified-decision-templates.json` fragment's deep-merge (ADR-037), with a
+`68-unified-decision-templates.json` fragment's deep-merge (ADR-037), with a
 schema `description` note naming `decision-template` as the successor. The
 existing `process-template` objects, the `ProcessTemplateService`,
 `ProcessTemplatePolicyResolver`, `DecisionTransitionGuard`,
@@ -282,7 +282,7 @@ requirement.
 
 #### Scenario: ProcessTemplate is marked inactive but remains fully functional
 
-- **GIVEN** the `67-unified-decision-templates.json` fragment is loaded
+- **GIVEN** the `68-unified-decision-templates.json` fragment is loaded
 - **WHEN** the `process-template` schema is inspected
 - **THEN** `x-openregister.active` is `false` and the description names
   `decision-template` as the successor
@@ -292,7 +292,7 @@ requirement.
 
 #### Scenario: Rollback restores ProcessTemplate to active
 
-- **GIVEN** the `67-unified-decision-templates.json` fragment is removed
+- **GIVEN** the `68-unified-decision-templates.json` fragment is removed
   (rollback)
 - **WHEN** the register reloads
 - **THEN** `process-template.x-openregister.active` reverts to `true`
@@ -301,7 +301,7 @@ requirement.
 ### Requirement: Live legacy template objects are repaired into DecisionTemplate objects
 
 Because OpenRegister seed import is create-only (new seeds in
-`67-unified-decision-templates.json` never touch objects an existing install
+`68-unified-decision-templates.json` never touch objects an existing install
 already created from `43-process-config-v1.json` / `57-vve-alv-pack.json`),
 the system SHALL provide an idempotent repair migration that reads every
 live `process-template` and `vve-decision-template` object and creates the

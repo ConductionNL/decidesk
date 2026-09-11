@@ -246,7 +246,7 @@ The `decision` schema SHALL carry a required `decisionType` enum discriminator w
 
 #### Scenario: A typed nav filter is the same store
 
-@e2e exclude store-sourcing invariant — covered by the unified-store filter test; not browser-observable beyond the list already exercised
+@e2e exclude the "Moties" nav entry this scenario opens is retired (app-navigation REQ-RMN-001). /motions is now the manifest page `Motions`, a `decisionType: motion` filter over the `decision` schema, and motion-amendment.spec.ts proves its create dialog is the Decision form. No test seeds mixed types and checks the filter: genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 - **GIVEN** decisions exist with `decisionType` values `motion` and `resolution`
 - **WHEN** the user opens the "Moties" nav entry
 - **THEN** the decision register list is shown pre-filtered to `decisionType=motion`, sourced from the same `decision` store as all other decisions
@@ -320,7 +320,7 @@ A `decisionType = contract` decision SHALL be able to carry `offer`, `order`, an
 
 #### Scenario: Procurement schemas are not orphaned nav items
 
-@e2e exclude navigation-structure invariant — verified by manifest/nav assertion, not a distinct UI flow
+@e2e exclude a navigation-structure rule with no page of its own. No page in `src/manifest.json` or `src/manifest.d` uses the offer, order or product schema today, and Product has left this register for pipelinq (#1076). navCeilingGate.spec.js fails any new top-level entry that menu-layout.json does not place, but no test names these three schemas.
 - **GIVEN** the decidiq navigation
 - **WHEN** the nav is rendered
 - **THEN** `offer`, `order`, and `product` do not appear as standalone top-level stores; they are reached through contract decisions
@@ -506,7 +506,7 @@ that made the nomination). These fields replace the retired `Voordracht` schema'
 `body`/`post`/`targetRole`/`kandidaten`/`nominatingParty` fields one-for-one
 (ADR-005, ADR-006 — one schema per concept, discriminator over parallel entity).
 
-@e2e exclude no current e2e test opens the decision form with `decisionType = appointment` and asserts field disclosure/validation; the sibling motion field-disclosure pattern is covered elsewhere but appointment-specific disclosure and the candidates-required-before-propose guard are untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test opens the decision form with `decisionType = appointment` and asserts field disclosure/validation; the sibling motion field-disclosure pattern is covered elsewhere but appointment-specific disclosure and the candidates-required-before-propose guard are untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Appointment fields appear only for an appointment decision
 
@@ -594,7 +594,7 @@ shared `Decision` lifecycle (`submitted→proposed`, `handled→deliberating`,
 **not** part of this requirement — they reference `Membership`, never
 `Voordracht`, and are unaffected.
 
-@e2e exclude schema/register-shape and manifest-shape assertions (schema removal, re-authored seeds, nav-entry removal) — checkable by inspecting `lib/Settings/register.d/61-appointments-and-terms.json` and `src/manifest.d/appointments-and-terms.json` directly; no dedicated PHPUnit or e2e test exists yet for this specific removal, and no UI surface distinct from existing decision e2e coverage exercises it — genuine coverage gap tracked as e2e debt.
+@e2e exclude schema/register-shape and manifest-shape assertions (schema removal, re-authored seeds, nav-entry removal) — checkable by inspecting `lib/Settings/register.d/61-appointments-and-terms.json` and `src/manifest.d/appointments-and-terms.json` directly; no dedicated PHPUnit or e2e test exists yet for this specific removal, and no UI surface distinct from existing decision e2e coverage exercises it — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Voordracht is absent from the register after this change
 
@@ -743,7 +743,7 @@ The Decision Detail page MUST render three declarative `object-list` widgets, ea
 - THEN the "Public consultations" widget lists that consultation
 - AND clicking the row navigates to `ConsultationDetail` for that consultation
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No public consultations reference this decision yet."); this scenario's populated-list assertion (a real PublicConsultation linked and its row navigating to ConsultationDetail) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No public consultations reference this decision yet."); this scenario's populated-list assertion (a real PublicConsultation linked and its row navigating to ConsultationDetail) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A decision with no member consultations
 
@@ -760,7 +760,7 @@ The Decision Detail page MUST render three declarative `object-list` widgets, ea
 - THEN the "Works council (WOR)" widget lists that request
 - AND clicking the row navigates to `WorksCouncilConsultationDetail` for that request
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No works-council consultation requests reference this decision yet."); this scenario's populated-list assertion (a real ConsultationRequest linked and its row navigating to WorksCouncilConsultationDetail) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No works-council consultation requests reference this decision yet."); this scenario's populated-list assertion (a real ConsultationRequest linked and its row navigating to WorksCouncilConsultationDetail) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: Decision detail surfaces advisory-opinion requests (REQ-DFC-002)
 
@@ -773,7 +773,7 @@ The Decision Detail page MUST render a declarative `object-list` widget listing 
 - THEN the "Advisory opinions" widget lists that request with its subject and lifecycle status
 - AND clicking the row navigates to `AdviesaanvraagDetail`
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No advisory-opinion requests reference this decision yet."); this scenario's populated-list assertion (a real Adviesaanvraag linked and its row navigating to AdviesaanvraagDetail) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No advisory-opinion requests reference this decision yet."); this scenario's populated-list assertion (a real Adviesaanvraag linked and its row navigating to AdviesaanvraagDetail) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: Decision detail surfaces zienswijzerondes and zienswijzen (REQ-DFC-003)
 
@@ -785,7 +785,7 @@ The Decision Detail page MUST render two declarative `object-list` widgets: one 
 - WHEN a user opens Decision D's detail page
 - THEN the "Zienswijzerondes" widget lists that ronde
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("This decision is not a shared body's vaststellingsbesluit for any zienswijzeronde."); this scenario's populated-list assertion (a real Zienswijzeronde linked) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("This decision is not a shared body's vaststellingsbesluit for any zienswijzeronde."); this scenario's populated-list assertion (a real Zienswijzeronde linked) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A decision is a participant council's raadsbesluit adopting a zienswijze
 
@@ -794,7 +794,7 @@ The Decision Detail page MUST render two declarative `object-list` widgets: one 
 - THEN the "Zienswijzen" widget lists that zienswijze
 - AND clicking the row navigates to `ZienswijzerondeDetail` for its parent ronde
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No zienswijzen adopted this decision as their raadsbesluit yet."); this scenario's populated-list assertion (a real Zienswijze linked and its row navigating to ZienswijzerondeDetail) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("No zienswijzen adopted this decision as their raadsbesluit yet."); this scenario's populated-list assertion (a real Zienswijze linked and its row navigating to ZienswijzerondeDetail) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: Decision detail surfaces commitments (REQ-DFC-004)
 
@@ -819,7 +819,7 @@ The Decision Detail page MUST render a read-only declarative `object-list` widge
 - THEN the "Confidentiality" widget shows one row with the geheimhouding's ground, lifecycle state, and ratification deadline
 - AND the widget offers no add action
 
-@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("This decision has no confidentiality restriction."); this scenario's populated-list assertion (a real opgelegd Geheimhouding linked, showing ground/lifecycle/deadline, no add action) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-decision-detail.spec.ts only exercises this widget's EMPTY state ("This decision has no confidentiality restriction."); this scenario's populated-list assertion (a real opgelegd Geheimhouding linked, showing ground/lifecycle/deadline, no add action) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: A decision with no confidentiality restriction
 
