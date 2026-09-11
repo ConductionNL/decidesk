@@ -49,11 +49,15 @@ decidiq OpenRegister objects SHALL remain.
 - **WHEN** the user initiates QES signing
 - **THEN** OpenRegister authorizes the signing-request write and the signing flow starts.
 
+@e2e exclude needs a second account acting through a CSRF-bearing session plus a governance body whose role scopes the projector has populated, and tests/e2e/workflows/rbac-authorization-workflow.spec.ts skips it for that reason rather than pretending to cover it. Unit-proven in EIDASSignatureControllerTest (signatory allowed) and GovernanceScopeGuardTest.
+
 #### Scenario: A non-signatory is denied by OpenRegister
 - **GIVEN** a Minutes record on a body and a user NOT in that body's `signatory` scope
 - **WHEN** the user attempts to initiate QES signing
 - **THEN** OpenRegister denies the signing-request write (403)
 - **AND** no app-local authorization service is consulted.
+
+@e2e exclude needs a second account acting through a CSRF-bearing session plus a governance body whose role scopes the projector has populated, and tests/e2e/workflows/rbac-authorization-workflow.spec.ts skips it for that reason rather than pretending to cover it. Unit-proven in EIDASSignatureControllerTest (non-signatory denied) and GovernanceScopeGuardTest.
 
 #### Scenario: The anti-pattern gate is clean
 - **GIVEN** the decidiq worktree after this change
@@ -79,11 +83,15 @@ data state, not actor authorization.
 - **AND WHEN** the body's chair attempts the same transition
 - **THEN** OpenRegister authorizes it and the lifecycle advances.
 
+@e2e exclude needs a second account acting through a CSRF-bearing session plus a governance body whose role scopes the projector has populated, and tests/e2e/workflows/rbac-authorization-workflow.spec.ts skips it for that reason rather than pretending to cover it. Unit-proven in MeetingServiceTest (chair allowed, non-chair denied, fail-closed on an unresolvable body).
+
 #### Scenario: Domain policy still forbids a disallowed transition regardless of actor
 - **GIVEN** a domain whose workflow sets `allowPause: false`
 - **WHEN** the body's chair attempts `opened → paused`
 - **THEN** the transition is refused by the workflow policy (not permitted in this domain)
 - **AND** the refusal is independent of the actor's scope membership.
+
+@e2e exclude needs a second account acting through a CSRF-bearing session plus a governance body whose role scopes the projector has populated, and tests/e2e/workflows/rbac-authorization-workflow.spec.ts skips it for that reason rather than pretending to cover it. Unit-proven in MeetingServiceTest testDomainDisallowedTransitionReturnsFailure.
 
 ### Requirement: REQ-RBAC-004 The duplicated admin guards consume OpenRegister's admin determination
 decidiq SHALL replace the four per-controller `requireAdmin()` copies

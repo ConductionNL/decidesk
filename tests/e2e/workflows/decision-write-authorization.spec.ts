@@ -48,6 +48,8 @@
  * @e2e openspec/specs/authorization-via-or-rbac/spec.md#a-direct-write-to-a-flow-owned-publication-field-is-refused
  * @e2e openspec/specs/authorization-via-or-rbac/spec.md#a-member-outside-the-administrator-groups-cannot-edit-a-decision-they-did-not-create
  * @e2e openspec/specs/authorization-via-or-rbac/spec.md#any-member-can-raise-a-decision
+ * @e2e openspec/specs/authorization-via-or-rbac/spec.md#a-non-owner-cannot-rewrite-another-users-object
+ * @e2e openspec/specs/authorization-via-or-rbac/spec.md#reads-and-creates-are-unchanged
  */
 import type { APIRequestContext, APIResponse, PlaywrightWorkerArgs } from '@playwright/test'
 
@@ -122,7 +124,7 @@ const OCS = { Accept: 'application/json', 'OCS-APIRequest': 'true' }
  * @param resp The response to describe.
  * @return A short printable description.
  */
-async function describe(resp: APIResponse): Promise<string> {
+async function summarise(resp: APIResponse): Promise<string> {
 	const text = await resp.text().catch(() => '<unreadable body>')
 	return `HTTP ${resp.status()} ${text.slice(0, 400)}`
 }
@@ -146,7 +148,7 @@ async function provisionUser(
 		data: { groups, password: pass, userid: uid },
 		headers: OCS,
 	})
-	expect(created.ok(), `creating account ${uid}: ${await describe(created)}`).toBe(true)
+	expect(created.ok(), `creating account ${uid}: ${await summarise(created)}`).toBe(true)
 }
 
 /**
@@ -160,7 +162,7 @@ async function groupsOf(admin: APIRequestContext, uid: string): Promise<string[]
 	const resp = await admin.get(`${BASE}/ocs/v2.php/cloud/users/${uid}/groups?format=json`, {
 		headers: OCS,
 	})
-	expect(resp.ok(), `reading the groups of ${uid}: ${await describe(resp)}`).toBe(true)
+	expect(resp.ok(), `reading the groups of ${uid}: ${await summarise(resp)}`).toBe(true)
 	const body = await resp.json()
 	return body?.ocs?.data?.groups ?? []
 }
@@ -216,7 +218,7 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 				data: { groupid: ADMIN_GROUP },
 				headers: OCS,
 			})
-			expect([200, 400], `ensuring group ${ADMIN_GROUP}: ${await describe(group)}`)
+			expect([200, 400], `ensuring group ${ADMIN_GROUP}: ${await summarise(group)}`)
 				.toContain(group.status())
 
 			await provisionUser(admin, GRIFFIE.uid, GRIFFIE.password, [ADMIN_GROUP])
@@ -252,7 +254,7 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 		}
 	})
 
-	test('an administrator group member edits a Decision, but not its publication state; an ordinary member edits neither', async ({
+	test('an administrator group member edits a Decision but not its publication state; an ordinary member edits only its own', async ({
 		playwright,
 	}) => {
 		const admin = await actingAs(playwright, ADMIN_USER, ADMIN_PASS)
@@ -296,7 +298,7 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 				},
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 			})
-			expect(seeded.ok(), `${ADMIN_USER} seeding the fixture Decision: ${await describe(seeded)}`)
+			expect(seeded.ok(), `${ADMIN_USER} seeding the fixture Decision: ${await summarise(seeded)}`)
 				.toBe(true)
 			const fixture = await seeded.json()
 			const id = uuidOf(fixture)
@@ -316,14 +318,14 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 			const readByGriffie = await readDecision(griffie, id)
 			expect(
 				readByGriffie.ok(),
-				`${GRIFFIE.uid} (${ADMIN_GROUP}) reading the Decision: ${await describe(readByGriffie)}`,
+				`${GRIFFIE.uid} (${ADMIN_GROUP}) reading the Decision: ${await summarise(readByGriffie)}`,
 			).toBe(true)
 			const asRead = await readByGriffie.json()
 
 			const edited = await writeDecision(griffie, id, { ...asRead, title: `${title}-edited` })
 			expect(
 				edited.status(),
-				`${GRIFFIE.uid} (${ADMIN_GROUP}, not the owner) updating the title must succeed: ${await describe(edited)}`,
+				`${GRIFFIE.uid} (${ADMIN_GROUP}, not the owner) updating the title must succeed: ${await summarise(edited)}`,
 			).toBe(200)
 
 			// Verified in the same request context that made the write.
@@ -336,7 +338,7 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 			// object-level check admits this account, so the message is what
 			// proves which rule refused it.
 			const published = await writeDecision(griffie, id, { ...afterEdit, isPublished: 'public' })
-			const publishedBody = await describe(published)
+			const publishedBody = await summarise(published)
 			expect(
 				published.status(),
 				`${GRIFFIE.uid} (${ADMIN_GROUP}) writing isPublished directly must be refused: ${publishedBody}`,
@@ -358,13 +360,13 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 			const readByMember = await readDecision(member, id)
 			expect(
 				readByMember.ok(),
-				`${MEMBER.uid} (no groups) reading the Decision: ${await describe(readByMember)}`,
+				`${MEMBER.uid} (no groups) reading the Decision: ${await summarise(readByMember)}`,
 			).toBe(true)
 			const memberEdit = await writeDecision(member, id, {
 				...(await readByMember.json()),
 				title: `${title}-by-a-member`,
 			})
-			const memberBody = await describe(memberEdit)
+			const memberBody = await summarise(memberEdit)
 			expect(
 				memberEdit.status(),
 				`${MEMBER.uid} (no groups, not the owner) updating the Decision must be refused: ${memberBody}`,
@@ -374,9 +376,31 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 				`${MEMBER.uid}: the refusal must be the object-level update check`,
 			).toContain("permission to 'update' objects in schema 'Decision'")
 
-			const afterMember = await (await readDecision(griffie, id)).json()
-			expect(afterMember.title, `${MEMBER.uid}'s refused write must leave the title unchanged`)
+			const memberDelete = await member.delete(`${DECISIONS}/${id}`, {
+				headers: { Accept: 'application/json' },
+			})
+			const memberDeleteBody = await summarise(memberDelete)
+			expect(
+				memberDelete.status(),
+				`${MEMBER.uid} (no groups, not the owner) deleting the Decision must be refused: ${memberDeleteBody}`,
+			).toBe(403)
+			expect(
+				memberDeleteBody,
+				`${MEMBER.uid}: the delete refusal must be the object-level delete check`,
+			).toContain("permission to 'delete' objects in schema 'Decision'")
+
+			const afterMember = await readDecision(griffie, id)
+			expect(afterMember.ok(), `${MEMBER.uid}'s refused delete must leave the Decision in place`)
+				.toBe(true)
+			expect((await afterMember.json()).title, `${MEMBER.uid}'s refused write must leave the title unchanged`)
 				.toBe(`${title}-edited`)
+
+			// Reads and lists stay open to every authenticated account.
+			const listed = await member.get(`${DECISIONS}?_limit=5`, {
+				headers: { Accept: 'application/json' },
+			})
+			expect(listed.ok(), `${MEMBER.uid} (no groups) listing Decisions: ${await summarise(listed)}`)
+				.toBe(true)
 
 			// ── Step 4: the ordinary member raises a Decision of their own ──────
 			// `create` is granted to every authenticated account, as the register
@@ -389,14 +413,33 @@ test.describe('decidiq#1269: who may write a Decision through the object API', (
 				},
 				headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 			})
-			const raisedBody = await describe(raised)
+			const raisedBody = await summarise(raised)
+			const own = raised.ok() ? await raised.json() : {}
 			if (raised.ok()) {
-				createdDecisions.push(uuidOf(await raised.json()))
+				createdDecisions.push(uuidOf(own))
 			}
 			expect(
 				raised.status(),
 				`${MEMBER.uid} (no groups) creating a Decision must succeed: ${raisedBody}`,
 			).toBe(201)
+
+			// ── Step 5: and edits it, as its owner ────────────────────────────
+			// The same account refused in step 3 may rewrite a Decision it owns:
+			// OpenRegister admits the owner before any rule is read. This is the
+			// other half of "a non-owner cannot rewrite another user's object".
+			const ownId = uuidOf(own)
+			const ownEdit = await writeDecision(member, ownId, {
+				...(await (await readDecision(member, ownId)).json()),
+				title: `${title}-raised-and-edited`,
+			})
+			expect(
+				ownEdit.status(),
+				`${MEMBER.uid} (no groups) editing the Decision it owns must succeed: ${await summarise(ownEdit)}`,
+			).toBe(200)
+			expect(
+				(await (await readDecision(member, ownId)).json()).title,
+				`${MEMBER.uid} must read back the title it wrote on its own Decision`,
+			).toBe(`${title}-raised-and-edited`)
 		} finally {
 			await Promise.all([admin.dispose(), griffie.dispose(), member.dispose()])
 		}
