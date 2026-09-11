@@ -113,23 +113,34 @@ async function isAdminStateOf(page: Page, account: string): Promise<unknown> {
 		`${account}: the dashboard must publish initial state decidiq/isAdmin`,
 	).toHaveCount(1, { timeout: 30_000 })
 	const raw = await input.getAttribute('value')
-	expect(raw, `${account}: initial state decidiq/isAdmin has no value`).not.toBeNull()
+	expect(
+		raw,
+		`${account}: initial state decidiq/isAdmin has no value`,
+	).not.toBeNull()
 	return JSON.parse(Buffer.from(raw as string, 'base64').toString('utf8'))
 }
 
 test.describe('decidiq#1267: the server tells the SPA whether the account is an administrator', () => {
 	test.beforeAll(async ({ playwright }) => {
 		const admin = await playwright.request.newContext({
-			httpCredentials: { password: ADMIN_PASS, send: 'always', username: ADMIN_USER },
+			httpCredentials: {
+				password: ADMIN_PASS,
+				send: 'always',
+				username: ADMIN_USER,
+			},
 			storageState: { cookies: [], origins: [] },
 		})
-		const created = await admin.post(`${BASE}/ocs/v2.php/cloud/users?format=json`, {
-			data: { password: MEMBER.password, userid: MEMBER.uid },
-			headers: OCS,
-		})
-		expect(created.ok(), `creating account ${MEMBER.uid}: ${await summarise(created)}`).toBe(
-			true,
+		const created = await admin.post(
+			`${BASE}/ocs/v2.php/cloud/users?format=json`,
+			{
+				data: { password: MEMBER.password, userid: MEMBER.uid },
+				headers: OCS,
+			},
 		)
+		expect(
+			created.ok(),
+			`creating account ${MEMBER.uid}: ${await summarise(created)}`,
+		).toBe(true)
 
 		// The whole point of this account is that it holds nothing. Prove it
 		// before relying on it, so a stray default group cannot make the
@@ -138,9 +149,10 @@ test.describe('decidiq#1267: the server tells the SPA whether the account is an 
 			`${BASE}/ocs/v2.php/cloud/users/${MEMBER.uid}/groups?format=json`,
 			{ headers: OCS },
 		)
-		expect(groups.ok(), `reading the groups of ${MEMBER.uid}: ${await summarise(groups)}`).toBe(
-			true,
-		)
+		expect(
+			groups.ok(),
+			`reading the groups of ${MEMBER.uid}: ${await summarise(groups)}`,
+		).toBe(true)
 		const body = await groups.json()
 		expect(
 			body?.ocs?.data?.groups ?? [],
@@ -151,12 +163,19 @@ test.describe('decidiq#1267: the server tells the SPA whether the account is an 
 
 	test.afterAll(async ({ playwright }) => {
 		const admin = await playwright.request.newContext({
-			httpCredentials: { password: ADMIN_PASS, send: 'always', username: ADMIN_USER },
+			httpCredentials: {
+				password: ADMIN_PASS,
+				send: 'always',
+				username: ADMIN_USER,
+			},
 			storageState: { cookies: [], origins: [] },
 		})
-		await admin.delete(`${BASE}/ocs/v2.php/cloud/users/${MEMBER.uid}?format=json`, {
-			headers: OCS,
-		})
+		await admin.delete(
+			`${BASE}/ocs/v2.php/cloud/users/${MEMBER.uid}?format=json`,
+			{
+				headers: OCS,
+			},
+		)
 		await admin.dispose()
 	})
 
@@ -172,7 +191,9 @@ test.describe('decidiq#1267: the server tells the SPA whether the account is an 
 		}
 	})
 
-	test('an account in no group receives isAdmin false, not nothing', async ({ browser }) => {
+	test('an account in no group receives isAdmin false, not nothing', async ({
+		browser,
+	}) => {
 		const page = await openDashboardAs(browser, MEMBER.uid, MEMBER.password)
 		try {
 			// toBe(false), not toBeFalsy(): an absent value is exactly the
