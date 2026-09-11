@@ -30,24 +30,13 @@ parameters:
         # for real rather than suppressing it.
         - tests/Stubs/Mcp/IMcpToolProvider.php
 
-    ignoreErrors:
-        # NC Talk's room/conversation manager is an external app class not available during
-        # analysis; it is resolved dynamically at runtime and guarded with method_exists(),
-        # so phpstan infers stdClass and cannot see the real named-parameter signatures.
-        - '#Unknown parameter \$(objectType|objectId|type|name) in call to method stdClass::(getRoomForObject|createConversationFromObject)\(\)#'
-
-        # `LogTranslationAdapter::resolveOpenConnector()` probes
-        # OPENCONNECTOR_CANDIDATES with class_exists() before asking the
-        # container for them. OpenConnector is a SEPARATE app: its classes exist
-        # only when it is installed, so phpstan — which never sees them — is
-        # right that the call "will always evaluate to false" in ITS world and
-        # wrong about the runtime.
-        #
-        # The probe is the feature. Deleting it to satisfy the analyser would
-        # remove the only thing making the integration optional. Scoped to these
-        # two class names rather than the rule, so a genuinely impossible
-        # class_exists() elsewhere still fails.
-        -
-            identifier: function.impossibleType
-            message: '#Call to function class_exists\(\) with .*OpenConnector.* will always evaluate to false#'
-            path: lib/Service/LogTranslationAdapter.php
+    # ignoreErrors: none app-local. Removed 2026-09-11 after
+    # `reportUnmatchedIgnoredErrors: true` showed both matched nothing:
+    #   - NC Talk `stdClass::getRoomForObject()` named parameters: the calls in
+    #     MigrateCommentsToTalkLeaf are guarded by method_exists() and phpstan
+    #     no longer infers stdClass for the manager there.
+    #   - `class_exists()` on OpenConnector in LogTranslationAdapter: #1222
+    #     replaced the probe with FleetAppId::getService(), so there is no
+    #     class_exists() call left for the pattern to match.
+    # The 36 other unmatched patterns come from the shared phpstan-base.neon
+    # and are left to that file.

@@ -84,6 +84,11 @@ use Throwable;
 
 /**
  * Copy per-user preferences from the decidesk app id to decidiq.
+ *
+ * @spec exclude One-off decidesk->decidiq app-id rename plumbing: it moves
+ *       oc_preferences rows between app-id namespaces and adds no behaviour
+ *       of its own. The preferences it preserves are specified where they
+ *       are read, in openspec/specs/user-settings/spec.md.
  */
 class MigrateUserPreferences implements IRepairStep {
 

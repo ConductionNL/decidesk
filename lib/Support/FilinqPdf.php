@@ -90,6 +90,9 @@ class FilinqPdf
      * @param string $context What was being rendered, for the log line.
      *
      * @return string|null The PDF bytes, or null when filinq cannot supply one.
+     *
+     * @spec exclude infrastructure utility with no feature requirement of its
+     *       own; the documents it renders are specified by their callers.
      */
     public function fromHtml(string $html, string $title, string $context): ?string {
         try {

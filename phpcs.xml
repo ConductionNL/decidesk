@@ -10,4 +10,29 @@
     <file>lib</file>
 
     <rule ref="vendor/conduction/hydra-gates/quality-config/phpcs.xml"/>
+
+    <!--
+        Squiz.Commenting.InlineComment.InvalidEndChar is switched off here, and
+        only here, because in this tree it fires on exactly one kind of line:
+
+            // SPDX-License-Identifier: EUPL-1.2
+
+        That value is a machine-parsed SPDX expression. `EUPL-1.2.` is not a
+        valid SPDX identifier, so "fixing" the warning with a full stop would
+        break REUSE compliance. The fleet ruleset already records the conflict
+        and downgrades the code to a warning; here it was still 105 of the
+        121 warnings in every run, which buried the ones worth reading.
+
+        PHPCS cannot exclude a sniff by line content, only by file or by code,
+        so the code goes. Measured on development 9229a7ff: 113 findings of
+        this code, 105 on SPDX lines and 8 on inline `// @spec` comments. The
+        8 were restructured in the same change so no comment was silenced by
+        this exclusion. 168 other files already carry the SPDX lines inside
+        the file docblock instead, where the sniff never looks.
+
+        Every other Squiz.Commenting.InlineComment code stays active.
+    -->
+    <rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+        <severity>0</severity>
+    </rule>
 </ruleset>
