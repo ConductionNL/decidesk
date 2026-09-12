@@ -98,6 +98,31 @@ export default {
 			type: Object,
 			default: null,
 		},
+
+		/**
+		 * The permission strings this account holds, built by
+		 * `utils/permissions.js` from the server's own `isAdmin` answer and
+		 * forwarded to `CnAppNav`'s filter.
+		 *
+		 * 🔴 THIS USED TO BE A COMPUTED READING `window`, AND THAT WAS THE BUG:
+		 *
+		 *     window.OC?.currentUser?.permissions ?? []
+		 *
+		 * `OC.currentUser` is the uid STRING, so `.permissions` is `undefined`
+		 * and that expression is always `[]` — and `CnAppNav.passesPermission`
+		 * reads an empty list as "the app did not say" and renders the entry
+		 * anyway. The filter therefore failed OPEN for every gated entry.
+		 *
+		 * `required: false` with a DENYING default rather than `required: true`:
+		 * a mount that forgets this prop should hide the gated entries, not
+		 * throw a dev-only warning in production and show them. The default is
+		 * `['user']` rather than `[]` because an EMPTY list is exactly the
+		 * input that trips the library's escape.
+		 */
+		permissions: {
+			type: Array,
+			default: () => ['user'],
+		},
 	},
 
 	data() {
@@ -130,11 +155,6 @@ export default {
 	},
 
 	computed: {
-		/** @spec exclude trivial framework-state passthrough of window.OC currentUser permissions */
-		permissions() {
-			return window.OC?.currentUser?.permissions ?? []
-		},
-
 		/**
 		 * Active organisatie_modus from the settings store.
 		 * Defaults to DEFAULT_MODE ('gov') when not yet configured.

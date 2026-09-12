@@ -72,7 +72,7 @@ The system SHALL display lifecycle action buttons in the `CnDetailPage` `#header
 | paused | Open (resume), Adjourn, Cancel |
 | adjourned | Open (reconvene), Close, Cancel |
 
-@e2e exclude no current e2e test drives a MeetingDetail lifecycle action button (Schedule/Open/Pause/Adjourn/Close/Cancel) and asserts the badge + button-set update; genuine coverage gap from tonight's archival sync, tracked as e2e debt (writing/verifying a new Playwright test is out of scope for this gate-closing pass).
+@e2e exclude no current e2e test drives a MeetingDetail lifecycle action button (Schedule/Open/Pause/Adjourn/Close/Cancel) and asserts the badge + button-set update; genuine coverage gap from tonight's archival sync, tracked as e2e debt in ConductionNL/decidiq#1277 (writing/verifying a new Playwright test is out of scope for this gate-closing pass).
 
 #### Scenario: REQ-MDV-003-S1 — Draft meeting shows Schedule and Cancel
 - **GIVEN** a meeting is in "draft" state
@@ -95,7 +95,7 @@ The system SHALL display lifecycle action buttons in the `CnDetailPage` `#header
 
 The system SHALL display `CnObjectSidebar` on the meeting detail page with the following tabs: Files (agenda documents), Notes, Audit Trail (change history), Tags.
 
-@e2e exclude no current e2e test opens the meeting detail CnObjectSidebar's Files or Audit Trail tab and asserts their content; genuine coverage gap from tonight's archival sync, tracked as e2e debt.
+@e2e exclude no current e2e test opens the meeting detail CnObjectSidebar's Files or Audit Trail tab and asserts their content; genuine coverage gap from tonight's archival sync, tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: REQ-MDV-004-S1 — Sidebar with files tab
 - **GIVEN** a meeting has 2 attached agenda documents (PDF)
@@ -111,7 +111,7 @@ The system SHALL display `CnObjectSidebar` on the meeting detail page with the f
 
 The system SHALL provide a Delete button (trash icon) on the meeting detail page. Clicking it SHALL open `CnDeleteDialog` for confirmation before calling DELETE `/api/meetings/{id}`.
 
-@e2e exclude the confirm-and-delete path is exercised by tests/e2e/workflows/crud-persistence.spec.ts ("Meeting: create persists, appears in list, detail shows values, delete removes it") but that test is tagged to the meeting-management spec; the delete-cancelled path (S2) has no e2e assertion at all — genuine coverage gap tracked as e2e debt.
+@e2e exclude the confirm-and-delete path is exercised by tests/e2e/workflows/crud-persistence.spec.ts ("Meeting: create persists, appears in list, detail shows values, delete removes it") but that test is tagged to the meeting-management spec; the delete-cancelled path (S2) has no e2e assertion at all — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: REQ-MDV-005-S1 — Delete with confirmation
 - **GIVEN** the user is viewing a meeting in "draft" state
@@ -128,7 +128,7 @@ The system SHALL provide a Delete button (trash icon) on the meeting detail page
 
 The system SHALL provide "Add attendee" and "Remove attendee" controls in the Attendees `CnDetailCard` `#header-actions` slot. Adding an attendee SHALL open a dialog to select a Person and assign a role. Removing SHALL remove the ATTENDEE from the VEVENT.
 
-@e2e exclude no current e2e test drives the "Add attendee" dialog on MeetingDetail; genuine coverage gap from tonight's archival sync, tracked as e2e debt.
+@e2e exclude no current e2e test drives the "Add attendee" dialog on MeetingDetail; genuine coverage gap from tonight's archival sync, tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: REQ-MDV-006-S1 — Add attendee from detail view
 - **GIVEN** the user is viewing a meeting with 39 attendees
@@ -194,7 +194,7 @@ from that facet with `targetMeeting` pre-filled to the current meeting.
 - THEN the new `mondelinge-vraag` object is created with `targetMeeting`
   set to the current meeting without the user having to select it
 
-@e2e exclude no current e2e test drives the create-from-facet flow (only the read/list path is exercised, by facets-meeting-detail.spec.ts); genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test drives the create-from-facet flow (only the read/list path is exercised, by facets-meeting-detail.spec.ts); genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: REQ-MDV-010 — Interpellations facet
 The Meeting detail page SHALL show a facet listing the
@@ -225,7 +225,7 @@ let the user register a new proxy authorization from that facet with
 - THEN the proxy-authorizations facet lists both, showing each one's
   signature and countersign status
 
-@e2e exclude tests/e2e/spec-coverage/facets-meeting-detail.spec.ts only exercises this facet's EMPTY state (zero proxy authorizations); this scenario's populated-list assertion (two entries with signature/countersign status) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-meeting-detail.spec.ts only exercises this facet's EMPTY state (zero proxy authorizations); this scenario's populated-list assertion (two entries with signature/countersign status) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Registering a proxy authorization in context
 - GIVEN the user is on a meeting's detail page
@@ -233,7 +233,7 @@ let the user register a new proxy authorization from that facet with
 - THEN the new `proxyAuthorization` object is created with `meeting` set
   to the current meeting without the user having to select it
 
-@e2e exclude no current e2e test drives the create-from-facet flow; genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test drives the create-from-facet flow; genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: REQ-MDV-012 — Audit statements facet (assoc mode only)
 The Meeting detail page SHALL show a facet listing `audit-statement`
@@ -254,7 +254,7 @@ Dutch wording is a mode label, not a schema name.
 - WHEN the user opens the meeting's detail page
 - THEN the audit statement facet renders and lists that statement
 
-@e2e exclude no current e2e test switches the tenant to `assoc` mode and asserts the audit statement facet renders; only the hidden-in-gov-mode half is exercised (see the sibling scenario below), which is a genuine coverage gap tracked as e2e debt.
+@e2e exclude no current e2e test switches the tenant to `assoc` mode and asserts the audit statement facet renders; only the hidden-in-gov-mode half is exercised (see the sibling scenario below), which is a genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Audit statement facet hidden outside association mode
 - GIVEN the tenant's `organisatie_modus` is `gov`
@@ -285,4 +285,4 @@ affordance.
 - AND the unrouted incoming document does not appear
 - AND no create button is offered on this facet
 
-@e2e exclude tests/e2e/spec-coverage/facets-meeting-detail.spec.ts only exercises this facet's EMPTY state ("No incoming documents routed to this meeting yet."); this scenario's populated-list assertion (two routed documents, one unrouted excluded, no create button) is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/facets-meeting-detail.spec.ts only exercises this facet's EMPTY state ("No incoming documents routed to this meeting yet."); this scenario's populated-list assertion (two routed documents, one unrouted excluded, no create button) is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.

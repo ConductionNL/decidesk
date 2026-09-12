@@ -28,6 +28,21 @@
          them means refactoring unrelated lifecycle branches, tracked as
          follow-up work rather than blocking the ADR-005 completion.
 
+         CURRENT SET. Re-measured 2026-09-11 on development 9229a7ff by
+         running the fleet ruleset
+         (vendor/conduction/hydra-gates/quality-config/phpmd.xml) over lib/.
+         Six classes sit at or above the default of 50, all below 55:
+
+           DecisionLifecycleService (Service)                   54
+           ApprovalRouteService (Service)                       53
+           VotingRoundCloser (Service)                          53
+           MigrateLegacyTemplatesToDecisionTemplate (Migration) 53
+           AuditLogService (Service)                            51
+           MigrateConsultationsToOneSchema (Migration)          50
+
+         Re-measure with the same command before trusting this list; it is a
+         snapshot, and a class that leaves it should come off it.
+
          Precedent for an app-level threshold with a written rationale:
          CouplingBetweenObjects below, docudesk (ShortVariable),
          launchpad (ExcessiveClassLength).
@@ -45,10 +60,11 @@
          so the default of 13 actually permits 12 dependencies and refuses 13.
          Raising it to 14 permits exactly 13 and still refuses 14.
 
-         MEASURED, not assumed. Running the fleet ruleset over the pre-ADR-083
-         revision of the seven classes below (`git show 5d20c2e8^:lib/Service/...`)
-         reports ZERO coupling violations; running it over the current revision
-         reports all seven at exactly 13. The delta is the refactor itself:
+         MEASURED, not assumed. When this threshold was raised, running the
+         fleet ruleset over the pre-ADR-083 revision of the then-affected
+         classes (`git show 5d20c2e8^:lib/Service/...`) reported ZERO coupling
+         violations, and over the post-ADR-083 revision reported each at
+         exactly 13. The delta is the refactor itself:
 
            ADR-083 stopped resolving OpenRegister through the DI container
            (`$this->container->get('OCA\OpenRegister\Service\ObjectService')`)
@@ -67,9 +83,25 @@
          weakening type hints to shed a name, both of which make the code worse
          to satisfy a metric calibrated before the mandate existed.
 
-         The seven classes sitting at 13 (all `lib/Service/`): MeetingService,
-         MinutesDocumentService, MotionService, ParticipationPublicationService,
-         TranscriptionService, VoteCastingService, VotingRoundCloser.
+         CURRENT SET. Re-measured 2026-09-11 on development 9229a7ff with the
+         fleet ruleset over lib/: nine classes sit at exactly 13, none higher.
+
+           lib/AppInfo/Application
+           lib/Service/DecisionLifecycleService
+           lib/Service/MeetingService
+           lib/Service/MotionService
+           lib/Service/ParticipationPublicationService
+           lib/Service/ReactionIntakeService
+           lib/Service/TranscriptionService
+           lib/Service/VoteCastingService
+           lib/Service/VotingRoundCloser
+
+         The earlier list named seven. MinutesDocumentService has since dropped
+         below 13 (#1243 moved its filinq lookup into Support\FilinqPdf).
+         Application, DecisionLifecycleService and ReactionIntakeService reached
+         13 later and were never added. Application is the composition root, so
+         its coupling is its job. The other two type-hint ObjectServiceInterface,
+         which is the one-unit ADR-083/084 cost described above.
 
          14 is a ceiling, not an amnesty: it buys exactly the one unit ADR-084
          costs and nothing more. A class that reaches 14 still fails this gate.

@@ -11,6 +11,7 @@ import {
 	registerLeafIntegrations,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
 	translatePlural as n,
@@ -29,6 +30,8 @@ import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { initializeStores } from './store/store.js'
+import { permissionGuard, routesFromManifest } from './utils/manifestRoutes.js'
+import { currentPermissions } from './utils/permissions.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -98,15 +101,6 @@ function tryLoadTranslations() {
 	}
 }
 
-/**
- * Build the vue-router config from the manifest. Each manifest page becomes
- * one route; the route's `name` IS `page.id` (per the lib's manifest contract).
- * `LiveMeeting` carries `:id`, so we pass `props: true` for any route whose
- * path declares a `:` parameter — generic, schema-agnostic.
- *
- * @param {object} manifest The bundled manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
- */
 // Shallow-clone CnPageRenderer because the lib's barrel exports are
 // non-extensible (webpack ESM module records). Vue 2's `Vue.extend()`
 // adds an internal `_Ctor` cache to the component definition; mutating
@@ -131,24 +125,14 @@ const fragments = fragmentCtx
 	.map((key) => fragmentCtx(key))
 const mergedManifest = buildManifest(bundledManifest, fragments, menuLayout)
 
-/**
- * Build the vue-router routes array from the merged manifest's pages.
- *
- * @param {object} manifest The merged manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
- */
-function routesFromManifest(manifest) {
-	const routes = manifest.pages.map((page) => ({
-		name: page.id,
-		path: page.route,
-		component: RoutePageRenderer,
-		props: page.route.includes(':'),
-	}))
-	// Catch-all redirect to dashboard, preserving prior router behaviour.
-	// vue-router 4 syntax: the bare '*' catch-all became a named param matcher.
-	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
-	return routes
-}
+// The permissions this account holds, from the server's own answer rather than
+// from `window`. `DashboardController` pushes `isAdmin` into initial state and
+// `loadState`'s fallback is `false`, so an instance that has not deployed the
+// key yet denies rather than permits. ONE list, read by BOTH surfaces: the nav
+// filter (via App.vue's `permissions` prop) and the route guard below. They
+// used to disagree because the nav's list was `window.OC?.currentUser?.
+// permissions ?? []`, which is always `[]`, and the routes had no guard at all.
+const permissions = currentPermissions(loadState('decidiq', 'isAdmin', false))
 
 /**
  * The router base for THIS page load.
@@ -179,8 +163,14 @@ function routerBase() {
 
 const router = createRouter({
 	history: createWebHistory(routerBase()),
-	routes: routesFromManifest(mergedManifest),
+	routes: routesFromManifest(mergedManifest, RoutePageRenderer),
 })
+
+// The route half of `permission`. Without it, hiding the nav entry is the whole
+// gate and a typed URL walks straight past it. No page in the shipped manifests
+// declares a `permission` today, so this refuses nothing yet — it is here so the
+// first page that declares one is gated on arrival rather than silently not.
+router.beforeEach((to) => permissionGuard(to, permissions))
 
 /**
  * User-settings spec — "Set default landing page": when the user lands on the
@@ -303,6 +293,7 @@ setActivePinia(pinia)
 		manifest: mergedManifest,
 		registry: registryProp,
 		pageTypes: pageTypesProp,
+		permissions,
 	})
 
 	// Surface any render/lifecycle error that Vue would otherwise swallow into a

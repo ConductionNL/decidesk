@@ -210,7 +210,7 @@ class MinutesWorkflowServiceTest extends TestCase {
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionCode(409);
 
-		$this->service->submitForApproval(minutesId: 'minutes-001', actorId: 'testuser');
+		$this->service->submitForApproval(minutesId: 'minutes-001');
 
 	}//end testSubmitForApprovalRefusesNonDraftMinutes()
 
@@ -242,7 +242,7 @@ class MinutesWorkflowServiceTest extends TestCase {
 			->method('notifyApproversOnSubmit')
 			->willReturn(2);
 
-		$result = $this->service->submitForApproval(minutesId: 'minutes-001', actorId: 'testuser');
+		$result = $this->service->submitForApproval(minutesId: 'minutes-001');
 
 		self::assertSame('review', $saved['lifecycle']);
 		self::assertSame('review', $result['lifecycle']);

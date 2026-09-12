@@ -117,7 +117,7 @@ class LiveDecisionServiceTest extends TestCase {
 			'outcome' => 'adopted',
 		];
 
-		$result = $this->makeService($mockObjectService)->recordDecision('meeting-1', $decisionData, 'user-1');
+		$result = $this->makeService($mockObjectService)->recordDecision('meeting-1', $decisionData);
 
 		$this->assertEquals('council-decision-1', $result);
 	}
@@ -154,7 +154,7 @@ class LiveDecisionServiceTest extends TestCase {
 		$this->expectException(\Exception::class);
 		$this->expectExceptionCode(409);
 
-		$this->makeService($mockObjectService)->recordDecision('meeting-1', $decisionData, 'user-1');
+		$this->makeService($mockObjectService)->recordDecision('meeting-1', $decisionData);
 	}
 
 }

@@ -8,7 +8,7 @@ openspec-changes:
 
 ## Purpose
 
-@e2e exclude Configuration-only spec — declares `x-openregister-notifications` annotations on schemas in `lib/Settings/decidesk_register.json` in the verified OpenRegister notification-engine dialect, covering meeting scheduled + reminder, action item assigned + overdue, motion submitted, decision recorded, and participation deadlines. No data-model, API, or UI surface; coverage is the register JSON's validity against OpenRegister's register schema.
+@e2e exclude configuration-only spec: it declares `x-openregister-notifications` rules on schemas in `lib/Settings/decidesk_register.json` and has no page of its own. RegisterJsonTest::testNotificationTriggersUseCanonicalVocabulary pins every trigger in that file to OpenRegister's vocabulary, and gate-18 (notification-dialect) rejects the legacy dialect. Whether a rule actually fires is up to OpenRegister's notification engine, which no test in this repo drives.
 
 ## Requirements
 

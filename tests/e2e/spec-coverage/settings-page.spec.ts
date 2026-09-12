@@ -25,7 +25,7 @@
  *    same reason. This one can.
  *
  * @e2e openspec/specs/admin-settings/spec.md#configure-organization-defaults
- * @e2e openspec/specs/openregister-integration/spec.md#configure-register-mapping
+ * @e2e openspec/specs/app-foundation/spec.md#settings-page-for-administrators
  */
 import type { Page } from '@playwright/test'
 
@@ -174,7 +174,7 @@ test('Admin settings: organisation mode saves, reaches the SPA and relabels the 
 	expect(restore.status(), 'restoring organisatie_modus=gov').toBeLessThan(300)
 })
 
-// @e2e openspec/specs/openregister-integration/spec.md#configure-register-mapping
+// @e2e openspec/specs/app-foundation/spec.md#settings-page-for-administrators
 test('Admin settings: register mapping exposes its configuration actions', async ({
 	page,
 }) => {

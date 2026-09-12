@@ -81,6 +81,89 @@ class RegisterAuthorizationTest extends TestCase {
 	private const CANONICAL_ACTIONS = ['read', 'create', 'update', 'delete', 'list'];
 
 	/**
+	 * Schema blocks that read-narrow a schema the SPA writes through the object API.
+	 *
+	 * OpenRegister uses a schema's block INSTEAD of the register's, whole, and
+	 * denies any action a non-empty block omits. So each of these blocks, added
+	 * to narrow who may READ, also closed create, update and delete to everyone
+	 * but the object owner and a Nextcloud superuser (decidiq#1269). None of them
+	 * has a decidiq controller or service that writes it: the SPA's generic
+	 * index and detail pages write straight to
+	 * `/apps/openregister/api/objects/decidiq/<schema>`. The block must
+	 * therefore restate the register's write grants itself.
+	 *
+	 * @var array<int,string>
+	 */
+	private const RESTATES_THE_BASELINE_WRITES = [
+		'Decision',
+		'ParticipatoryBudget',
+		'PublicConsultation',
+		'BoardEvaluation',
+		'GoverningDocument',
+		'AncillaryPosition',
+		'DeclaredGift',
+		'ConfidentialityRestriction',
+		'ConfidentialityGround',
+		'Commitment',
+		'PlannedAgendaItem',
+		'AuthorityDelegation',
+		'MemberOnboarding',
+		'MemberOffboarding',
+	];
+
+	/**
+	 * Schemas whose writes are owned by a decidiq service, which keeps the object API closed ON PURPOSE.
+	 *
+	 * Each is written only through a decidiq service that runs its own
+	 * per-object guard and then saves with `_rbac: false` (or runs only for a
+	 * superuser). Opening a write verb here would let any member go around that
+	 * guard through OpenRegister's object API:
+	 *
+	 *  - ProxyAuthorization: ProxyVoteService (REQ-BPV-001/002). An open create
+	 *    would let a member register a proxy in someone else's name.
+	 *  - ConflictOfInterest: ConflictOfInterestService (declarant or
+	 *    chair/secretary only). Both service docblocks say they rely on this.
+	 *  - ConsultationReaction: ReactionIntakeService decides pending versus
+	 *    approved. An open create would let a member self-approve a reaction
+	 *    into its publicly readable state.
+	 *  - PublicationPayload: the public payload the superuser-only publish flow
+	 *    writes. An open write would publish content outside that flow.
+	 *
+	 * @var array<string,string>
+	 */
+	private const SERVICE_OWNED_WRITES_STAY_CLOSED = [
+		'ProxyAuthorization'   => 'ProxyVoteService',
+		'ConflictOfInterest'   => 'ConflictOfInterestService',
+		'ConsultationReaction' => 'ReactionIntakeService',
+		'PublicationPayload'   => 'the publish flow',
+	];
+
+	/**
+	 * Retired schemas. A later fragment deactivates each one, and nothing may write a new row into them.
+	 *
+	 * @var array<int,string>
+	 */
+	private const RETIRED_READ_ONLY = [
+		'Toezegging',
+		'TermijnagendaItem',
+		'Raadsinformatiebrief',
+		'TechnischeVraag',
+		'Regeling',
+		'RegelingVersie',
+		'Bevoegdheidstoedeling',
+		'WooCategorieMapping',
+		'WooBestuursorgaan',
+		'Adviesaanvraag',
+		'Advies',
+		'RoosterVanAftreden',
+		'RoosterRegel',
+		'Nevenfunctie',
+		'Geschenk',
+		'GeheimhoudingGrond',
+		'Geheimhouding',
+	];
+
+	/**
 	 * The decoded main register file.
 	 *
 	 * @var array<string,mixed>
@@ -365,27 +448,17 @@ class RegisterAuthorizationTest extends TestCase {
 	}//end testTheAppVersionMovedSoTheRepairStepRuns()
 
 	/**
-	 * The 24 schemas that already declare their own block are untouched.
+	 * Every schema-level authorization block in the main register and its fragments, by schema name.
 	 *
-	 * `PermissionHandler::resolveAuthorization()` uses a schema's own block when it
-	 * has one and falls back to the register's only when it does not. That cascade
-	 * is the entire reason this baseline could be applied in one place, and it is
-	 * also the thing that would silently break the public-read rules if a schema
-	 * block were "helpfully" removed later. Those blocks grant `read` to the
-	 * `public` group under a publication-date match; they name no write action, so
-	 * they already fail closed on writes.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-006-the-register-declares-an-authorization-baseline-so-an-absent-block-cannot-grant-writes
+	 * @return array<string,array{block: array<string,mixed>, file: string}> The blocks.
 	 */
-	public function testSchemasWithTheirOwnBlockStillDeclareOnlyReads(): void {
+	private function schemaBlocks(): array {
 		$files = array_merge(
 			[__DIR__ . '/../../lib/Settings/decidesk_register.json'],
 			glob(__DIR__ . '/../../lib/Settings/register.d/*.json') ?: []
 		);
 
-		$withBlock = 0;
+		$blocks = [];
 		foreach ($files as $file) {
 			$decoded = json_decode((string)file_get_contents($file), true);
 			foreach (($decoded['components']['schemas'] ?? []) as $name => $schema) {
@@ -393,94 +466,178 @@ class RegisterAuthorizationTest extends TestCase {
 					continue;
 				}
 
-				$withBlock++;
-				foreach (self::WRITE_ACTIONS as $action) {
-					// EvaluationResponse is the ONE deliberate exception, and it
-					// exists because omitting the write would break the feature.
-					//
-					// Its block closes `read` so the raw anonymous board
-					// self-evaluation answers stop being readable by every
-					// authenticated account — that openness defeated the
-					// suppression threshold BoardEvaluation applies to its
-					// aggregate. But a block SHADOWS the baseline entirely, so a
-					// block with no `create` would close submission to everyone
-					// but admins: a member could no longer answer at all. That is
-					// the same shape as the read-only block that closed
-					// create/update once before and was caught by NOTHING except
-					// the Newman collection.
-					//
-					// `create` only. `update` stays closed, which still permits a
-					// resubmission because the author OWNS their own response
-					// (the upsert is keyed on the opaque responseToken slug), and
-					// `delete` stays closed outright.
-					if ($name === 'EvaluationResponse' && $action === 'create') {
-						$this->assertSame(
-							['authenticated'],
-							$schema['authorization']['create'] ?? null,
-							'EvaluationResponse may open `create` to authenticated members and NOTHING wider.'
-						);
-						continue;
-					}
+				$this->assertArrayNotHasKey(
+					$name,
+					$blocks,
+					sprintf('Schema `%s` declares an authorization block in two files; which one wins is not obvious.', $name)
+				);
+				$blocks[$name] = ['block' => $schema['authorization'], 'file' => basename($file)];
+			}
+		}
 
-					$this->assertArrayNotHasKey(
-						$action,
-						$schema['authorization'],
-						sprintf(
-							'Schema `%s` (%s) declares its own authorization block, which SHADOWS the '
-								. 'register baseline entirely. Adding a write action here opts that schema '
-								. 'out of the baseline — do it deliberately and update this test, never by '
-								. 'accident.',
-							$name,
-							basename($file)
-						)
-					);
+		return $blocks;
+	}//end schemaBlocks()
+
+	/**
+	 * The schemas some fragment deactivates (`x-openregister.active: false`).
+	 *
+	 * @return array<int,string> Schema names.
+	 */
+	private function deactivatedSchemas(): array {
+		$names = [];
+		foreach (glob(__DIR__ . '/../../lib/Settings/register.d/*.json') ?: [] as $file) {
+			$decoded = json_decode((string)file_get_contents($file), true);
+			foreach (($decoded['components']['schemas'] ?? []) as $name => $schema) {
+				if (is_array($schema) === true && (($schema['x-openregister']['active'] ?? null) === false)) {
+					$names[] = $name;
 				}
 			}
 		}
 
-		// The count is the positive control: without it this loop passes vacuously
-		// if the schemas move, are renamed, or stop being found at all.
-		$this->assertSame(
-			36,
-			$withBlock,
-			'Expected 36 schema-level authorization blocks. member-onboarding-in-plain-words added the '
-				. 'latest TWO, and unlike every rename before them these are NEW, not carried: '
-				. 'OnboardingTraject and OffboardingTraject declared no block of their own, so a '
-				. 'person\'s name, account id, installation date and reason for leaving — including '
-				. 'death and relocation — were read AND list open to anonymous visitors through the '
-				. 'register baseline. MemberOnboarding and MemberOffboarding declare `read` for '
-				. '`authenticated` only; `list` is deliberately NOT declared, because the register '
-				. 'IMPORTER rejects a schema that declares it and the schema then never exists at '
-				. 'all. evaluation-response gained one that closes '
-				. '`read` (its raw anonymous board self-evaluation answers were readable by every '
-				. 'authenticated account, defeating the suppression threshold BoardEvaluation applies to '
-				. 'the aggregate) while keeping `create` open so members can still submit. '
-				. 'conflict-of-interest-authorization-guard added '
-				. 'ConflictOfInterest\'s own read/list-only block, since it previously fell back to the '
-				. 'register baseline\'s public read for sensitive personal data; '
-				. 'signature-and-outcome-authorization-guard added Decision\'s, narrowing anonymous read/list '
-				. 'to isPublished === "public" (IntegrationController::getOutcome() had documented an '
-				. 'OpenRegister RBAC guarantee that did not exist, precisely because this block was absent). '
-				. 'the-last-two-dutch-names added the last TWO, renaming TermijnagendaItem to '
-				. 'PlannedAgendaItem and Bevoegdheidstoedeling to AuthorityDelegation. '
-				. 'commitment-in-plain-words added one before them, renaming Toezegging to Commitment: a '
-				. 'rename adds exactly one block, because the retirement stub declares none of its own '
-				. 'while the source keeps the block it always had. '
-				. 'confidentiality-in-plain-words added two the same way, renaming Geheimhouding '
-				. 'to ConfidentialityRestriction and GeheimhoudingGrond to ConfidentialityGround. '
-				. 'integrity-disclosures-in-plain-words added two before them, and they are COPIES: renaming '
-				. 'Nevenfunctie to AncillaryPosition and Geschenk to DeclaredGift carried each schema\'s own '
-				. 'read-only block across unchanged, which is the point rather than a side effect. A rename '
-				. 'that DROPPED the block would fall back to the register baseline\'s public read, publishing '
-				. 'a member\'s declared gifts and outside roles to anonymous visitors whatever their '
-				. 'publication date said. '
-				. 'A different number means schemas gained or lost their own block, which changes which ones '
-				. 'the register baseline governs.'
-		);
-	}//end testSchemasWithTheirOwnBlockStillDeclareOnlyReads()
+		return $names;
+	}//end deactivatedSchemas()
 
 	/**
-	 * A renamed schema keeps the authorization of the one it replaces.
+	 * Every schema-level block states its write posture on purpose, and the posture matches its class.
+	 *
+	 * This replaces `testSchemasWithTheirOwnBlockStillDeclareOnlyReads`, which
+	 * pinned the defect in decidiq#1269. That test was right about the mechanism
+	 * (a schema block SHADOWS the register baseline entirely) and asserted that
+	 * every block should therefore name `read` only, reasoning that the blocks
+	 * "already fail closed on writes". For a schema the SPA writes through the
+	 * object API, failing closed on writes is not a security posture, it is the
+	 * outage: a `decidiq-administrators` member got 403 on every Decision update,
+	 * and nobody but a Nextcloud superuser could create one.
+	 *
+	 * What it protected is kept: no block may gain a write by accident, and the
+	 * 36-block count still catches schemas that gain or lose a block. The
+	 * difference is that each block now belongs to exactly one named class, and
+	 * the class decides what it may declare:
+	 *
+	 *   - RESTATES_THE_BASELINE_WRITES: create, update and delete exactly as the
+	 *     register row grants them.
+	 *   - SERVICE_OWNED_WRITES_STAY_CLOSED: no write verb, because a decidiq
+	 *     service owns the write and its guard must not be bypassable.
+	 *   - EvaluationResponse: `create` for authenticated only (anonymity of the
+	 *     raw answers, see its _authorizationNote).
+	 *   - RETIRED_READ_ONLY: no write verb.
+	 *
+	 * An unclassified block fails, so a new block forces the decision rather
+	 * than inheriting one silently.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-007-a-schema-block-that-narrows-reads-restates-the-writes-the-app-needs
+	 */
+	public function testEverySchemaBlockDeclaresItsWritesOnPurpose(): void {
+		$baseline = $this->registerRow()['authorization'];
+		$blocks   = $this->schemaBlocks();
+
+		foreach ($blocks as $name => $entry) {
+			$block = $entry['block'];
+			$where = sprintf('Schema `%s` (%s)', $name, $entry['file']);
+
+			if (in_array($name, self::RESTATES_THE_BASELINE_WRITES, true) === true) {
+				foreach (self::WRITE_ACTIONS as $action) {
+					$this->assertArrayHasKey(
+						$action,
+						$block,
+						sprintf(
+							'%s must declare `%s`. Its block replaces the register block whole, so an omitted '
+								. 'write is DENIED to everyone but the owner and a superuser, and the SPA writes this '
+								. 'schema through the object API (decidiq#1269).',
+							$where,
+							$action
+						)
+					);
+					$this->assertSame(
+						$baseline[$action],
+						$block[$action],
+						sprintf(
+							'%s must grant `%s` exactly as the register row does. A narrower list re-creates '
+								. 'decidiq#1269 for the groups it drops; a wider one grants what the register never did.',
+							$where,
+							$action
+						)
+					);
+				}
+
+				continue;
+			}
+
+			if (array_key_exists($name, self::SERVICE_OWNED_WRITES_STAY_CLOSED) === true) {
+				foreach (self::WRITE_ACTIONS as $action) {
+					$this->assertArrayNotHasKey(
+						$action,
+						$block,
+						sprintf(
+							'%s must NOT declare `%s`: %s owns this write and runs its own per-object guard. '
+								. 'Granting it on the object API lets any member go around that guard.',
+							$where,
+							$action,
+							self::SERVICE_OWNED_WRITES_STAY_CLOSED[$name]
+						)
+					);
+				}
+
+				continue;
+			}
+
+			if ($name === 'EvaluationResponse') {
+				$this->assertSame(
+					['authenticated'],
+					$block['create'] ?? null,
+					'EvaluationResponse may open `create` to authenticated members and NOTHING wider.'
+				);
+				$this->assertArrayNotHasKey(
+					'update',
+					$block,
+					'EvaluationResponse keeps `update` closed; the author owns their own response.'
+				);
+				$this->assertArrayNotHasKey('delete', $block, 'EvaluationResponse keeps `delete` closed outright.');
+				continue;
+			}
+
+			$this->assertContains(
+				$name,
+				self::RETIRED_READ_ONLY,
+				sprintf(
+					'%s declares an authorization block that no class in this test accounts for. A schema block '
+						. 'replaces the register block whole and denies every action it omits, so decide its writes '
+						. 'on purpose and add it to one of the lists above.',
+					$where
+				)
+			);
+			$this->assertContains(
+				$name,
+				$this->deactivatedSchemas(),
+				sprintf('%s is listed as retired, but no fragment sets its x-openregister.active to false.', $where)
+			);
+			foreach (self::WRITE_ACTIONS as $action) {
+				$this->assertArrayNotHasKey(
+					$action,
+					$block,
+					sprintf('%s is retired; nothing may write a new row into it, so it must not declare `%s`.', $where, $action)
+				);
+			}
+		}//end foreach
+
+		// Every listed schema really has a block, so a list entry cannot go stale unnoticed.
+		foreach (array_merge(self::RESTATES_THE_BASELINE_WRITES, array_keys(self::SERVICE_OWNED_WRITES_STAY_CLOSED), self::RETIRED_READ_ONLY, ['EvaluationResponse']) as $listed) {
+			$this->assertArrayHasKey($listed, $blocks, sprintf('`%s` is classified here but declares no block.', $listed));
+		}
+
+		// The count is the positive control: without it the loop above passes
+		// vacuously if the schemas move, are renamed, or stop being found at all.
+		// 14 restate the baseline writes, 4 are service owned, 1 is
+		// EvaluationResponse, 17 are retired. A different number means schemas
+		// gained or lost their own block, which changes which ones the register
+		// baseline governs.
+		$this->assertCount(36, $blocks, 'Expected 36 schema-level authorization blocks.');
+	}//end testEverySchemaBlockDeclaresItsWritesOnPurpose()
+
+	/**
+	 * A renamed schema keeps the READ rule of the one it replaces.
 	 *
 	 * 🔴 A RENAME THAT DROPS THE BLOCK PUBLISHES PERSONAL DATA, SILENTLY.
 	 *
@@ -491,15 +648,19 @@ class RegisterAuthorizationTest extends TestCase {
 	 * list: it simply becomes readable by anonymous visitors, ignoring the
 	 * publication date its own block existed to enforce.
 	 *
-	 * Nevenfunctie and Geschenk each carried a read-only block gating `public` on
-	 * `publicationDate`. AncillaryPosition and DeclaredGift are their renames, so
-	 * they must carry the same block, byte for byte.
+	 * What a rename must carry is the `read` rule, byte for byte. The write
+	 * verbs are a separate decision, pinned by
+	 * testEverySchemaBlockDeclaresItsWritesOnPurpose(): the renamed schemas are
+	 * live and written through the object API, so they restate the register's
+	 * write grants, while their retired predecessors stay read-only. Comparing
+	 * whole blocks here would have forced the live schema to stay unwritable
+	 * just to match a retired one.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/integrity-disclosures-in-plain-words/specs/integrity-disclosures-in-plain-words/spec.md#requirement-existing-disclosures-are-carried-across
 	 */
-	public function testARenamedSchemaKeepsItsPredecessorsAuthorization(): void {
+	public function testARenamedSchemaKeepsItsPredecessorsReadRule(): void {
 		// Every rename this programme has made where the SOURCE carried its own
 		// block. Each new entry here is one more schema that cannot silently
 		// lose its authorization to a rename.
@@ -513,19 +674,7 @@ class RegisterAuthorizationTest extends TestCase {
 			'Bevoegdheidstoedeling' => 'AuthorityDelegation',
 		];
 
-		$blocks = [];
-		$files  = array_merge(
-			[__DIR__ . '/../../lib/Settings/decidesk_register.json'],
-			glob(__DIR__ . '/../../lib/Settings/register.d/*.json') ?: []
-		);
-		foreach ($files as $file) {
-			$decoded = json_decode((string)file_get_contents($file), true);
-			foreach (($decoded['components']['schemas'] ?? []) as $name => $schema) {
-				if (is_array($schema) === true && isset($schema['authorization']) === true) {
-					$blocks[$name] = $schema['authorization'];
-				}
-			}
-		}
+		$blocks = $this->schemaBlocks();
 
 		foreach ($renames as $before => $after) {
 			// Not vacuous: if the predecessor stopped declaring a block, this
@@ -541,18 +690,153 @@ class RegisterAuthorizationTest extends TestCase {
 				$blocks,
 				sprintf(
 					'%s declares no authorization block, so it falls back to the register baseline\'s '
-						. 'public read — publishing what %s deliberately gated on publicationDate.',
+						. 'public read, publishing what %s deliberately gated on publicationDate.',
 					$after,
 					$before
 				)
 			);
 
+			$this->assertArrayHasKey('read', $blocks[$before]['block'], sprintf('%s must declare a read rule.', $before));
 			$this->assertSame(
-				$blocks[$before],
-				$blocks[$after],
-				sprintf('%s must carry %s\'s authorization unchanged; a rename may not widen access.', $after, $before)
+				$blocks[$before]['block']['read'],
+				$blocks[$after]['block']['read'] ?? null,
+				sprintf('%s must carry %s\'s read rule unchanged; a rename may not widen who can read.', $after, $before)
 			);
+		}//end foreach
+	}//end testARenamedSchemaKeepsItsPredecessorsReadRule()
+
+	/**
+	 * The demo register resolves to the same permissions as the real one.
+	 *
+	 * `DemoDataService` imports `decidiq_mock_register.json` with `force: true`
+	 * into the SAME `decidiq` register. A forced import overwrites every schema
+	 * it carries, so a mock schema whose block differs from the real one does
+	 * not stay in the demo: it REPLACES the real block on the instance. Before
+	 * decidiq#1269 the two files also disagreed on the register row, where the
+	 * mock declared no baseline at all.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-007-a-schema-block-that-narrows-reads-restates-the-writes-the-app-needs
+	 */
+	public function testTheMockRegisterResolvesToTheSamePermissions(): void {
+		$path = __DIR__ . '/../../lib/Settings/decidiq_mock_register.json';
+		$mock = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($mock, 'decidiq_mock_register.json must be valid JSON.');
+
+		$this->assertSame(
+			$this->registerRow()['authorization'],
+			$mock['components']['registers']['decidiq']['authorization'] ?? null,
+			'The mock register row must declare the same authorization baseline as decidesk_register.json.'
+		);
+
+		$real      = $this->register['components']['schemas'];
+		$compared  = 0;
+		$mockNames = [];
+		foreach (($mock['components']['schemas'] ?? []) as $name => $schema) {
+			$mockNames[] = $name;
+			$this->assertSame(
+				$real[$name]['authorization'] ?? null,
+				$schema['authorization'] ?? null,
+				sprintf(
+					'Mock schema `%s` must carry the same authorization block as decidesk_register.json. A forced '
+						. 'demo import writes the mock block over the real one.',
+					$name
+				)
+			);
+			if (isset($schema['authorization']) === true) {
+				$compared++;
+			}
 		}
 
-	}//end testARenamedSchemaKeepsItsPredecessorsAuthorization()
+		// Positive control: the mock carries the main file's schemas, and eight of them have a block.
+		$this->assertContains('Decision', $mockNames, 'The mock must carry the Decision schema.');
+		$this->assertSame(8, $compared, 'Expected 8 schema-level blocks in the mock, the same 8 as decidesk_register.json.');
+	}//end testTheMockRegisterResolvesToTheSamePermissions()
+
+	/**
+	 * The flow-owned publication fields declare a property-level update rule.
+	 *
+	 * This replaces `PublicationEligibilityService::guardDirectPublicationWrite()`,
+	 * which was removed in #1268 because it had no production caller. The write it
+	 * claimed to stop is an OpenRegister object update, which never enters decidiq
+	 * PHP, so no imperative guard could ever have run. The declaration below is
+	 * read by `PropertyRbacHandler::getUnauthorizedProperties()` on the OR side,
+	 * which is the only code on that path.
+	 *
+	 * What this pins, and what it does NOT:
+	 *
+	 *   - PINNED: both shipped registers declare an `update` rule naming only
+	 *     `decidiq-publication-flow`, a group with no members. Every group the
+	 *     register grants `update` (decidiq-administrators, decidesk-administrators)
+	 *     is therefore refused a direct write to these two fields.
+	 *   - NOT PINNED, and NOT enforceable here: a Nextcloud superuser bypasses
+	 *     property authorization unconditionally
+	 *     (`PropertyRbacHandler::getUnauthorizedProperties()` returns `[]` for
+	 *     `isAdmin()`). The publish endpoint admits only superusers, so the
+	 *     legitimate flow keeps working for exactly that reason. Closing the
+	 *     superuser gap needs a mechanism OpenRegister does not have yet.
+	 *
+	 * Both files are checked because a forced demo import writes the mock's
+	 * schemas over the real ones (see testTheMockRegisterResolvesToTheSamePermissions),
+	 * so asserting on one would leave the other free to drift.
+	 *
+	 * These rules only bite a principal who may update the Decision at all. Until
+	 * decidiq#1269 nobody but the owner and a superuser could, so the rule was
+	 * inert for exactly the groups it names. The E2E spec
+	 * tests/e2e/workflows/decision-write-authorization.spec.ts proves it now
+	 * refuses a decidiq-administrators member who CAN edit the title.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/authorization-via-or-rbac/spec.md#requirement-req-rbac-006-the-register-declares-an-authorization-baseline-so-an-absent-block-cannot-grant-writes
+	 */
+	public function testFlowOwnedPublicationFieldsRefuseADirectUpdate(): void {
+		$registers = [
+			'decidesk_register.json'    => __DIR__ . '/../../lib/Settings/decidesk_register.json',
+			'decidiq_mock_register.json' => __DIR__ . '/../../lib/Settings/decidiq_mock_register.json',
+		];
+
+		foreach ($registers as $label => $path) {
+			$decoded = json_decode((string)file_get_contents($path), true);
+			$this->assertIsArray($decoded, sprintf('%s must be valid JSON.', $label));
+
+			$properties = $decoded['components']['schemas']['Decision']['properties'] ?? null;
+			$this->assertIsArray($properties, sprintf('%s must declare Decision properties.', $label));
+
+			foreach (['isPublished', 'publishedAt'] as $field) {
+				$this->assertArrayHasKey(
+					$field,
+					$properties,
+					sprintf('%s: Decision must declare the flow-owned field `%s`.', $label, $field)
+				);
+
+				$rules = $properties[$field]['authorization']['update'] ?? null;
+
+				$this->assertIsArray(
+					$rules,
+					sprintf(
+						'%s: `%s` must declare authorization.update. Without it '
+							. 'PropertyRbacHandler treats the field as following object-level rules, '
+							. 'which grant update to both administrator groups.',
+						$label,
+						$field
+					)
+				);
+
+				$this->assertSame(
+					['decidiq-publication-flow'],
+					$rules,
+					sprintf(
+						'%s: `%s` must grant update to `decidiq-publication-flow` and nothing else. '
+							. 'Naming any populated group here reopens the direct write; naming '
+							. '`public` or `authenticated` reopens it to everyone.',
+						$label,
+						$field
+					)
+				);
+			}
+		}
+
+	}//end testFlowOwnedPublicationFieldsRefuseADirectUpdate()
 }//end class

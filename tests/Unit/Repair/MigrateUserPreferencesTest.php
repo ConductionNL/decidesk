@@ -9,8 +9,8 @@
  * throws, nothing is logged, and no other test fails.
  *
  * Two properties are pinned here that a passing migration could otherwise lack:
- *   - the step enumerates keys from the DATA (`getUserKeys`) and NEVER by value
- *     (`getUsersForUserValue`), because this app's `pref_*` key namespace is
+ *   - the step enumerates keys from the DATA (`getKeys`) and NEVER by value
+ *     (`searchUsersByValueString`), because this app's `pref_*` key namespace is
  *     open-ended and a value-enumerating step would migrate nothing while
  *     reporting success;
  *   - the doubles can fail on READ, not only on write.
@@ -33,7 +33,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Tests\Unit\Repair;
 
 use OCA\Decidiq\Repair\MigrateUserPreferences;
-use OCP\IConfig;
+use OCP\Config\IUserConfig;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Migration\IOutput;
@@ -81,7 +81,7 @@ class MigrateUserPreferencesTest extends TestCase {
 	 * @param array<string, string> &$written Receives every write performed.
 	 * @param string[] $failReads Keys whose READ throws.
 	 * @param bool $failWalk Whether the user walk throws.
-	 * @param bool &$byValueUsed Set true if getUsersForUserValue is called.
+	 * @param bool &$byValueUsed Set true if searchUsersByValueString is called.
 	 *
 	 * @return MigrateUserPreferences
 	 */
@@ -93,9 +93,9 @@ class MigrateUserPreferencesTest extends TestCase {
 		bool $failWalk = false,
 		bool &$byValueUsed = false,
 	): MigrateUserPreferences {
-		$config = $this->createMock(originalClassName: IConfig::class);
+		$config = $this->createMock(originalClassName: IUserConfig::class);
 
-		$config->method('getUserKeys')->willReturnCallback(
+		$config->method('getKeys')->willReturnCallback(
 			static function (string $uid, string $app) use ($old): array {
 				if ($app === self::OLD) {
 					return array_keys($old[$uid] ?? []);
@@ -105,7 +105,7 @@ class MigrateUserPreferencesTest extends TestCase {
 			}
 		);
 
-		$config->method('getUserValue')->willReturnCallback(
+		$config->method('getValueString')->willReturnCallback(
 			static function (
 				string $uid,
 				string $app,
@@ -124,16 +124,17 @@ class MigrateUserPreferencesTest extends TestCase {
 			}
 		);
 
-		$config->method('setUserValue')->willReturnCallback(
-			static function (string $uid, string $app, string $key, string $value) use (&$written): void {
+		$config->method('setValueString')->willReturnCallback(
+			static function (string $uid, string $app, string $key, string $value) use (&$written): bool {
 				$written[$uid . '/' . $app . '/' . $key] = $value;
+				return true;
 			}
 		);
 
-		$config->method('getUsersForUserValue')->willReturnCallback(
-			static function () use (&$byValueUsed): array {
+		$config->method('searchUsersByValueString')->willReturnCallback(
+			static function () use (&$byValueUsed): \Generator {
 				$byValueUsed = true;
-				return [];
+				yield from [];
 			}
 		);
 
@@ -207,7 +208,7 @@ class MigrateUserPreferencesTest extends TestCase {
 
 		$step->run($this->createMock(originalClassName: IOutput::class));
 
-		self::assertFalse($byValueUsed, 'getUsersForUserValue() must never be used to enumerate an open-valued key.');
+		self::assertFalse($byValueUsed, 'searchUsersByValueString() must never be used to enumerate an open-valued key.');
 		self::assertSame('an-arbitrary-value', $written['alice/' . self::NEW . '/pref_some-open-valued-key'] ?? null);
 
 	}//end testEnumeratesByStoredKeysAndNeverByValue()

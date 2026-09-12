@@ -40,6 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Service;
 
+use OCA\Decidiq\Support\FleetAppId;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -406,8 +407,13 @@ class EIDASSignatureService implements IEIDASSignatureService {
 		// Resolve openconnector's CallService lazily. If the app is absent
 		// or the binding is missing, throw — the DI factory uses the
 		// LogEIDASSignatureService fallback when openconnector is unwired.
-		$callService = $this->container->get('OCA\OpenConnector\Service\CallService');
-		$sourceMapper = $this->container->get('OCA\OpenConnector\Db\SourceMapper');
+		// Resolved across every namespace integriq has shipped under, still
+		// throwing when nothing resolves so the DI factory keeps falling back to
+		// LogEIDASSignatureService rather than proceeding against nothing.
+		$callService = FleetAppId::getService($this->container, 'integriq', 'Service\CallService')
+			?? throw new RuntimeException('Integriq CallService is not available under any known namespace.');
+		$sourceMapper = FleetAppId::getService($this->container, 'integriq', 'Db\SourceMapper')
+			?? throw new RuntimeException('Integriq SourceMapper is not available under any known namespace.');
 
 		$source = $sourceMapper->findBySlug(slug: self::ESIGN_SOURCE_SLUG);
 		if ($source === null) {
@@ -551,7 +557,8 @@ class EIDASSignatureService implements IEIDASSignatureService {
 	 */
 	private function composeDocudeskSigningRequest(string $minutesId, array $signatories): array {
 		try {
-			$sourceMapper = $this->container->get('OCA\OpenConnector\Db\SourceMapper');
+			$sourceMapper = FleetAppId::getService($this->container, 'integriq', 'Db\SourceMapper')
+				?? throw new RuntimeException('Integriq SourceMapper is not available under any known namespace.');
 			$source = $sourceMapper->findBySlug(slug: self::DOCUDESK_SOURCE_SLUG);
 		} catch (\Throwable) {
 			// Openconnector absent or source not configured — docudesk unavailable.
@@ -572,7 +579,8 @@ class EIDASSignatureService implements IEIDASSignatureService {
 		];
 
 		try {
-			$callService = $this->container->get('OCA\OpenConnector\Service\CallService');
+			$callService = FleetAppId::getService($this->container, 'integriq', 'Service\CallService')
+				?? throw new RuntimeException('Integriq CallService is not available under any known namespace.');
 			$response = $callService->call(
 				source: $source,
 				endpoint: '/signing-requests',

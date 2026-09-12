@@ -69,15 +69,12 @@ class MinutesService {
 	 * and sends Nextcloud notifications to each.
 	 *
 	 * @param string $minutesId The Minutes ID
-	 * @param string $actorId The actor ID (user submitting for approval)
 	 *
 	 * @return int The count of notifications sent
 	 *
 	 * @spec openspec/changes/p2-minutes-and-decisions-core-t3/tasks.md#task-6.1
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $actorId reserved for future audit-log enrichment.
 	 */
-	public function notifyApproversOnSubmit(string $minutesId, string $actorId): int {
+	public function notifyApproversOnSubmit(string $minutesId): int {
 		try {
 			$minutes = $this->context->findMinutes(minutesId: $minutesId);
 			if ($minutes === null) {

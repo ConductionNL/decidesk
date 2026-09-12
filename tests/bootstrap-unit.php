@@ -38,6 +38,12 @@ require_once __DIR__ . '/stubs/DoctrineStubs.php';
 // (which extends OCP\...\Event) is actually loaded.
 $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
 
+// Test-only helper classes that are not themselves tests, so PHPUnit's `*Test.php`
+// suffix never loads them and something has to. `OCA\Decidiq\Tests\` is LONGER
+// than composer's `OCA\Decidiq\` -> `lib/`, and PSR-4 is longest-prefix-wins, so
+// this claims the test namespace without disturbing the app's own.
+$autoloader->addPsr4('OCA\\Decidiq\\Tests\\', __DIR__ . '/');
+
 // THE OpenRegister CONTRACT INTERFACES, OPTED INTO RATHER THAN AUTOLOADED.
 //
 // conduction/hydra-gates claims `OCA\OpenRegister\Contract\` as a RUNTIME psr-4
@@ -57,8 +63,24 @@ $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does NOT
 // work: spl_autoload_register appends relative to registration order, and that
 // order across independently loaded apps is exactly what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
-	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
+//
+// `RegisterSlugResolution` is a CLASS, not an interface, so the guard has to ask
+// both questions. Asking only interface_exists() would answer false for a class
+// that is already loaded and then require its file a second time, and a
+// duplicate declaration is a fatal, not a no-op.
+//
+// These two arrived in `conduction/hydra-gates` v1.18.0. v1.17.0 and earlier
+// ship only the two Object* contracts, so on an older constraint the file is
+// simply absent and the loop leaves the name undefined, exactly as it did
+// before they existed.
+foreach ([
+	'ObjectEntityInterface',
+	'ObjectServiceInterface',
+	'RegisterSlugResolution',
+	'RegisterSlugResolverInterface',
+] as $contract) {
+	$fqcn = '\\OCA\\OpenRegister\\Contract\\' . $contract;
+	if (interface_exists($fqcn) === false && class_exists($fqcn) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {
 			require_once $shipped;
@@ -84,14 +106,99 @@ if (is_dir($ocpDir) === true) {
 	$autoloader->addPsr4('NCU\\', $ncuDir . '/');
 }
 
-// Bootstrap Nextcloud when a full server environment is available.
-// The base.php include is wrapped in a try/catch so that unit tests can
-// run in standalone mode (e.g. a bare container without an installed NC).
-if (file_exists(__DIR__ . '/../../../lib/base.php') === true) {
+/**
+ * Tell whether a Nextcloud root is an INSTALLED instance, not just a source tree.
+ *
+ * `lib/base.php` from a source tree that was never installed still declares
+ * `OC` and builds `\OC::$server` before it throws "Not installed". That server
+ * cannot be undone (`OC::$server` is a typed static), so from then on every
+ * `\OC::$server->get()` in the code under test hits a container that knows
+ * none of this app's registrations and autowires from scratch; constructor
+ * cycles then recurse until memory runs out (19 GB on one openregister test,
+ * 2026-09-08). So the decision has to be made BEFORE base.php is loaded, and
+ * the only cheap signal is the `installed` flag in config/config.php.
+ *
+ * @param string $ncRoot Candidate Nextcloud root.
+ *
+ * @return bool True when config/config.php declares `installed => true`.
+ */
+function decidiq_nc_root_is_installed(string $ncRoot): bool
+{
+	$configFile = $ncRoot . '/config/config.php';
+	if (is_file($configFile) === false || filesize($configFile) === 0) {
+		return false;
+	}
+
+	// The config file is a plain `$CONFIG = [...]` script; including it in a
+	// closure keeps `$CONFIG` out of the global scope.
+	$config = (static function () use ($configFile): array {
+		$CONFIG = [];
+		try {
+			include $configFile;
+		} catch (\Throwable) {
+			return [];
+		}
+
+		if (is_array($CONFIG) === false) {
+			return [];
+		}
+
+		return $CONFIG;
+	})();
+
+	return ($config['installed'] ?? false) === true;
+}
+
+// The Nextcloud root this checkout sits under (apps-extra/decidiq/), or null
+// when there is none or it is only a bare source tree. Decided ONCE, up here,
+// so that lib/base.php is never loaded from a tree that cannot finish booting.
+$decidiqNcRoot = null;
+$decidiqNcCandidate = dirname(__DIR__, 3);
+if (is_file($decidiqNcCandidate . '/lib/base.php') === true) {
+	if (decidiq_nc_root_is_installed($decidiqNcCandidate) === true) {
+		$decidiqNcRoot = $decidiqNcCandidate;
+	} else {
+		fwrite(
+			STDERR,
+			sprintf(
+				"[decidiq/tests/bootstrap-unit] Nextcloud tree at %s is not installed (config/config.php lacks installed => true); "
+				. "skipping lib/base.php and running in pure-unit mode.\n",
+				$decidiqNcCandidate
+			)
+		);
+	}
+}
+
+// Bootstrap Nextcloud only when an INSTALLED instance is present. The old
+// version caught whatever base.php threw and carried on "in standalone mode",
+// which is exactly the half-booted state the helper above exists to prevent.
+if ($decidiqNcRoot !== null) {
 	try {
-		include_once __DIR__ . '/../../../lib/base.php';
+		include_once $decidiqNcRoot . '/lib/base.php';
 	} catch (\Throwable $e) {
-		// NC not fully installed — unit tests continue with vendor stubs only.
+		// The tree IS installed, so the dangerous case this guard exists for
+		// (loading a bare source tree) did not happen. base.php still failed
+		// part-way.
+		//
+		// This does NOT abort. `OC::$server` is a typed static, so a half-built
+		// container cannot be unset, and aborting was tried: it turned all six
+		// PHPUnit legs red on a suite that passes (humaniq, 2026-09-08). The
+		// runaway this guard exists for needs an autowiring lookup to reach the
+		// poisoned container, this app has none in lib, and phpunit.xml's 2G cap
+		// bounds one anyway.
+		//
+		// So: say plainly that the container is unreliable, and let the pure unit
+		// tests run. A container-bound test failing loudly is the intended outcome.
+		fwrite(
+			STDERR,
+			sprintf(
+				"[decidiq/tests/bootstrap-unit] Nextcloud at %s could not finish booting (%s).\n"
+				. "  \\OC::\$server now holds a HALF-BUILT container and cannot be unset. Pure unit tests\n"
+				. "  continue; anything resolving a service from that container is UNVERIFIED by this run.\n",
+				$decidiqNcRoot,
+				$e->getMessage()
+			)
+		);
 	}
 }
 

@@ -9,10 +9,21 @@
 				"version": "0.1.0",
 				"title": "Member onboarding",
 				"description": "Everything one person has to go through to take up a place on a governance body, held as data: who is joining, which body, in which role, the checklist of steps and where each one stands, and the installation once it has happened. Renamed from OnboardingTraject (member-onboarding-in-plain-words). A council installs a new member, a board admits a director, an association welcomes a committee member: it is the same record, and only the word was Dutch. Everything it references (Membership, groups, meetings) is owned elsewhere and linked by UUID; this schema creates none of them. Declarative core only: account provisioning and induction-pack delivery stay imperative side effects elsewhere. The manifest and every widget source reference this schema by its slug 'member-onboarding'.",
-				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. No write action is declared, so create, update and delete stay on the baseline.",
+				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. The write actions ARE declared, copying the register baseline. Leaving them out did not keep them on the baseline, as this note used to claim: OpenRegister uses a schema block in place of the register block, not action by action, so an omitted write was denied to everyone but the owner and a Nextcloud superuser (decidiq#1269).",
 				"authorization": {
 					"read": [
 						"authenticated"
+					],
+					"create": [
+						"authenticated"
+					],
+					"update": [
+						"decidiq-administrators",
+						"decidesk-administrators"
+					],
+					"delete": [
+						"decidiq-administrators",
+						"decidesk-administrators"
 					]
 				},
 				"type": "object",
@@ -347,10 +358,21 @@
 				"version": "0.1.0",
 				"title": "Member offboarding",
 				"description": "Everything one person has to go through to leave a governance body, held as data: who is leaving, which body, which membership ends and when, why it ends, the checklist of steps and where each one stands, and the confirmation. Renamed from OffboardingTraject (member-onboarding-in-plain-words). The checklist always includes end-dating the membership, withdrawing the account's groups and access, a personal-data note pointing at the author export, and the exit confirmation. Declarative core only: revoking access and end-dating the membership stay imperative side effects elsewhere. The manifest and every widget source reference this schema by its slug 'member-offboarding'.",
-				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. No write action is declared, so create, update and delete stay on the baseline.",
+				"_authorizationNote": "NEW BLOCK, NOT INHERITED, and that is deliberate. OnboardingTraject and OffboardingTraject declared no authorization of their own, so their rule came from the decidiq register baseline, which lists `public` among its readers. These records carry a person's name, their account id, when they were installed and why they left, including reasons such as death and relocation. That was readable by anonymous visitors and nothing reported it, the same defect conflict-of-interest-authorization-guard fixed for ConflictOfInterest. ⚠️ `list` IS DELIBERATELY NOT DECLARED, AND AN EARLIER VERSION OF THIS FILE GOT THAT WRONG. It declared `list` alongside `read`, reasoning that `list` is a canonical action in OpenRegister's PermissionHandler. It is, for EVALUATING a permission. The IMPORTER is a different thing, and it rejected the whole schema: measured on a live `occ upgrade`, member-onboarding and member-offboarding were absent from the register (404) for as long as `list` was present, and appeared (200) the moment it was removed, with no error logged either way. That is why no other schema in this tree declares it: 33 declare `read`, one declares `create`, none declares `list`. So `list` falls back to the register baseline, which is the same posture every other sensitive schema here has. The write actions ARE declared, copying the register baseline. Leaving them out did not keep them on the baseline, as this note used to claim: OpenRegister uses a schema block in place of the register block, not action by action, so an omitted write was denied to everyone but the owner and a Nextcloud superuser (decidiq#1269).",
 				"authorization": {
 					"read": [
 						"authenticated"
+					],
+					"create": [
+						"authenticated"
+					],
+					"update": [
+						"decidiq-administrators",
+						"decidesk-administrators"
+					],
+					"delete": [
+						"decidiq-administrators",
+						"decidesk-administrators"
 					]
 				},
 				"type": "object",

@@ -3,6 +3,19 @@
 /**
  * Unit tests for VotingService.
  *
+ * Runs the real voting graph (opener, caster, closer, results) over an
+ * in-memory double of OpenRegister's published ObjectServiceInterface
+ * (ADR-084), the same double VotingServiceCastAsTest uses. Only storage, the
+ * participant resolver, the motion service and ORI publication are doubled.
+ *
+ * This class was unconditionally markTestSkipped() for issue #90 ("real
+ * OpenRegister ObjectService loads instead of the stub"). That cause is gone:
+ * the services take the contract interface, the same class with or without
+ * OpenRegister installed. What the skip had been hiding since was a suite
+ * written against a service that no longer exists: every test configured
+ * `getObject()` to return a raw array and `findObjects()`, which is not on the
+ * contract at all, so not one of them reached the code it names.
+ *
  * @category Test
  * @package  OCA\Decidiq\Tests\Unit\Service
  *
@@ -25,7 +38,9 @@ use OCA\Decidiq\Service\AmendmentOrderService;
 use OCA\Decidiq\Service\MotionService;
 use OCA\Decidiq\Service\ObjectRelationFilter;
 use OCA\Decidiq\Service\OriPublicationService;
+use OCA\Decidiq\Service\ParticipantResolver;
 use OCA\Decidiq\Service\ParticipantUuidLookup;
+use OCA\Decidiq\Service\ProcessTemplateService;
 use OCA\Decidiq\Service\VoteCastingService;
 use OCA\Decidiq\Service\VotingOpenedNotifier;
 use OCA\Decidiq\Service\VotingRoundCloser;
@@ -35,11 +50,12 @@ use OCA\Decidiq\Service\VotingRoundProjection;
 use OCA\Decidiq\Service\VotingRoundResults;
 use OCA\Decidiq\Service\VotingService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\FileService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Tests for VotingService.
@@ -49,140 +65,301 @@ use Psr\Log\LoggerInterface;
 class VotingServiceTest extends TestCase {
 
 	/**
-	 * Service under test.
+	 * Captured saveObject() calls, in order.
 	 *
-	 * @var VotingService
+	 * @var \ArrayObject<int, array{schema: string, object: array<string, mixed>}>
 	 */
-	private VotingService $service;
+	private \ArrayObject $saves;
 
 	/**
-	 * Mock ContainerInterface.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface&MockObject $container;
-
-	/**
-	 * Mock LoggerInterface.
-	 *
-	 * @var LoggerInterface&MockObject
-	 */
-	private LoggerInterface&MockObject $logger;
-
-	/**
-	 * Mock OriPublicationService.
-	 *
-	 * @var OriPublicationService&MockObject
-	 */
-	private OriPublicationService&MockObject $oriService;
-
-	/**
-	 * Mock MotionService.
+	 * Mock MotionService (shared so tests can assert the subject transition).
 	 *
 	 * @var MotionService&MockObject
 	 */
 	private MotionService&MockObject $motionService;
 
 	/**
-	 * Mock ObjectService.
+	 * Build a VotingService over an in-memory object store double.
 	 *
-	 * @var ObjectServiceInterface&MockObject
-	 */
-	private ObjectServiceInterface&MockObject $objectService;
-
-	/**
-	 * Set up test fixtures.
+	 * The store maps object id => ['schema' => ..., 'object' => [...]]. find()
+	 * resolves by id (and schema, when one is passed); findAll() filters the
+	 * currently selected schema on plain field equality, treating
+	 * `_relations.*` keys as presence-only the way OpenRegister does;
+	 * saveObject() records the payload and upserts the store.
 	 *
-	 * @return void
+	 * @param array<string, array{schema: string, object: array<string, mixed>}> $store Seed objects by id
+	 * @param array<int, array<string, mixed>> $meetingParticipants What ParticipantResolver returns for any meeting
+	 *
+	 * @return VotingService
 	 */
-	protected function setUp(): void {
-		parent::setUp();
+	private function buildService(array $store, array $meetingParticipants = []): VotingService {
+		$this->saves = new \ArrayObject();
+		$objectService = $this->makeObjectService(store: new \ArrayObject($store), saves: $this->saves);
 
-		$this->markTestSkipped(
-			'See Codeberg issue #90 (pre-migration, not migrated to GitHub) — '
-			. 'real OpenRegister ObjectService loads instead of the stub when tests run '
-			. 'in an environment with OpenRegister installed, causing signature/return-type mismatches. '
-			. 'Unskip once #90 is resolved.'
-		);
-
-		$this->container = $this->createMock(ContainerInterface::class);
-		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->oriService = $this->createMock(OriPublicationService::class);
 		$this->motionService = $this->createMock(MotionService::class);
 
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		// VoteBallotFactory (behind VoteCastingService) still resolves OpenRegister
+		// through the container, so the same double is served both ways.
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($objectService): object {
+				if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+					return $objectService;
+				}
 
-		$this->objectService->method('setRegister')->willReturnSelf();
-		$this->objectService->method('setSchema')->willReturnSelf();
+				// Notification/activity lookups are fail-soft in the service.
+				throw new \RuntimeException('not wired in test: ' . $id);
+			}
+		);
 
-		$this->container
-			->method('get')
-			->willReturn($this->objectService);
+		$participantResolver = $this->createMock(ParticipantResolver::class);
+		$participantResolver->method('resolveMeetingParticipants')->willReturn($meetingParticipants);
 
-		$participantResolver = $this->createMock(\OCA\Decidiq\Service\ParticipantResolver::class);
-		$participantResolver->method('resolveMeetingParticipants')->willReturn([]);
-
-		$templateService = $this->createMock(\OCA\Decidiq\Service\ProcessTemplateService::class);
+		$templateService = $this->createMock(ProcessTemplateService::class);
 		$templateService->method('resolveVotingRuleForBody')->willReturn(null);
 
 		// VotingService is a thin facade: every operation is delegated to a
 		// single-purpose collaborator, so the graph is built explicitly here
 		// where production relies on Nextcloud's constructor auto-wiring.
+		$logger = new NullLogger();
 		$amendmentOrder = new AmendmentOrderService(
 			motionService: $this->motionService,
-			objectService: $this->objectService,
+			objectService: $objectService,
 		);
 		$relationFilter = new ObjectRelationFilter();
 
-		$this->service = new VotingService(
+		return new VotingService(
 			opener: new VotingRoundOpener(
 				motionService: $this->motionService,
 				participantResolver: $participantResolver,
 				preflight: new VotingRoundPreflight(
-					logger: $this->logger,
+					logger: $logger,
 					motionService: $this->motionService,
 					participantResolver: $participantResolver,
 					templateService: $templateService,
-					objectService: $this->objectService,
+					objectService: $objectService,
 				),
 				notifier: new VotingOpenedNotifier(
-					logger: $this->logger,
+					logger: $logger,
 					participantResolver: $participantResolver,
-					container: $this->container,
+					container: $container,
 				),
-				objectService: $this->objectService,
+				objectService: $objectService,
 			),
 			caster: new VoteCastingService(
-				logger: $this->logger,
+				logger: $logger,
 				participantResolver: $participantResolver,
 				amendmentOrder: $amendmentOrder,
 				relationFilter: $relationFilter,
-				objectService: $this->objectService,
-				container: $this->container,
+				objectService: $objectService,
+				container: $container,
 			),
 			closer: new VotingRoundCloser(
-				logger: $this->logger,
-				oriService: $this->oriService,
+				logger: $logger,
+				oriService: $this->createMock(OriPublicationService::class),
 				motionService: $this->motionService,
 				amendmentOrder: $amendmentOrder,
 				relationFilter: $relationFilter,
-				objectService: $this->objectService,
+				objectService: $objectService,
 				fileService: $this->createMock(FileService::class),
 			),
 			results: new VotingRoundResults(
 				motionService: $this->motionService,
 				participantResolver: $participantResolver,
-				objectService: $this->objectService,
+				objectService: $objectService,
 			),
 			projection: new VotingRoundProjection(
-				objectService: $this->objectService,
+				objectService: $objectService,
 			),
 			participants: new ParticipantUuidLookup(
-				objectService: $this->objectService,
+				objectService: $objectService,
 			),
 		);
 
-	}//end setUp()
+	}//end buildService()
+
+	/**
+	 * Build an in-memory ObjectServiceInterface double over the seeded store.
+	 *
+	 * @param \ArrayObject $store In-memory object store keyed by id
+	 * @param \ArrayObject $saves Captured saveObject() payloads
+	 *
+	 * @return ObjectServiceInterface&MockObject
+	 */
+	private function makeObjectService(\ArrayObject $store, \ArrayObject $saves): ObjectServiceInterface {
+		$schema = '';
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+
+		$objectService->method('setRegister')->willReturnSelf();
+		$objectService->method('setSchema')->willReturnCallback(
+			function (string|int $slug) use (&$schema, $objectService): ObjectServiceInterface {
+				$schema = (string)$slug;
+				return $objectService;
+			}
+		);
+
+		$objectService->method('find')->willReturnCallback(
+			function (
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+			) use ($store): ?ObjectEntity {
+				$row = ($store[(string)$id] ?? null);
+				if ($row === null || ($schema !== null && $row['schema'] !== $schema)) {
+					return null;
+				}
+
+				return $this->entity($row['object']);
+			}
+		);
+
+		$objectService->method('findAll')->willReturnCallback(
+			function (array $config = []) use ($store, &$schema): array {
+				$out = [];
+				foreach ($store as $row) {
+					if ($row['schema'] !== $schema) {
+						continue;
+					}
+
+					foreach (($config['filters'] ?? []) as $key => $value) {
+						if (str_starts_with((string)$key, '_relations.') === true) {
+							continue;
+						}
+
+						if (($row['object'][$key] ?? null) !== $value) {
+							continue 2;
+						}
+					}
+
+					$out[] = $this->entity($row['object']);
+				}
+
+				return $out;
+			}
+		);
+
+		$objectService->method('saveObject')->willReturnCallback(
+			function (
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+			) use ($store, $saves): ObjectEntity {
+				$saves->append(['schema' => (string)$schema, 'object' => $object]);
+				$id = (string)($uuid ?? $object['id'] ?? $object['uuid'] ?? ('new-' . count($saves)));
+				$store[$id] = ['schema' => (string)$schema, 'object' => $object];
+				return $this->entity($object);
+			}
+		);
+
+		return $objectService;
+
+	}//end makeObjectService()
+
+	/**
+	 * Wrap a payload in an ObjectEntity double that serialises to it verbatim.
+	 *
+	 * @param array<string, mixed> $object The payload
+	 *
+	 * @return ObjectEntity
+	 */
+	private function entity(array $object): ObjectEntity {
+		$entity = $this->getMockBuilder(ObjectEntity::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['jsonSerialize', 'getObject'])
+			->getMock();
+		$entity->method('jsonSerialize')->willReturn($object);
+		$entity->method('getObject')->willReturn($object);
+		return $entity;
+
+	}//end entity()
+
+	/**
+	 * Captured saves for one schema, in order.
+	 *
+	 * @param string $schema Schema slug
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function savesFor(string $schema): array {
+		$out = [];
+		foreach ($this->saves as $save) {
+			if ($save['schema'] === $schema) {
+				$out[] = $save['object'];
+			}
+		}
+
+		return $out;
+
+	}//end savesFor()
+
+	/**
+	 * A meeting requiring the given quorum.
+	 *
+	 * @param int $quorumRequired The quorum
+	 *
+	 * @return array<string, array{schema: string, object: array<string, mixed>}>
+	 */
+	private static function meeting(int $quorumRequired): array {
+		return [
+			'meeting-uuid' => [
+				'schema' => 'meeting',
+				'object' => [
+					'id' => 'meeting-uuid',
+					'quorumRequired' => $quorumRequired,
+					'relations' => [['schema' => 'governance-body', 'id' => 'gb-uuid']],
+				],
+			],
+		];
+
+	}//end meeting()
+
+	/**
+	 * An open voting round, plus the given ballots cast in it.
+	 *
+	 * @param array<string, mixed> $roundFields Overrides for the round
+	 * @param array<int, array<string, mixed>> $ballots Vote payloads (id is derived when absent)
+	 *
+	 * @return array<string, array{schema: string, object: array<string, mixed>}>
+	 */
+	private static function roundWithBallots(array $roundFields = [], array $ballots = []): array {
+		$store = [
+			'round-uuid' => [
+				'schema' => 'voting-round',
+				'object' => array_merge(
+					[
+						'id' => 'round-uuid',
+						'openedAt' => '2025-04-14T20:05:00+02:00',
+						'closedAt' => null,
+						'relations' => [],
+						'notes' => [],
+					],
+					$roundFields
+				),
+			],
+		];
+
+		foreach ($ballots as $i => $ballot) {
+			$id = (string)($ballot['id'] ?? ('vote-' . $i));
+			$store[$id] = [
+				'schema' => 'vote',
+				'object' => array_merge(
+					[
+						'id' => $id,
+						'weight' => 1,
+						'relations' => [['schema' => 'voting-round', 'id' => 'round-uuid']],
+					],
+					$ballot
+				),
+			];
+		}
+
+		return $store;
+
+	}//end roundWithBallots()
 
 	/**
 	 * Test that checkQuorum returns true when active participants meet the quorum.
@@ -192,89 +369,74 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCheckQuorumMet(): void {
-		$meeting = [
-			'quorumRequired' => 3,
-			'relations' => [['schema' => 'governance-body', 'id' => 'gb-uuid']],
-		];
+		$service = $this->buildService(
+			self::meeting(3),
+			[
+				['id' => 'p-a', 'displayName' => 'A', 'leftAt' => null],
+				['id' => 'p-b', 'displayName' => 'B', 'leftAt' => null],
+				['id' => 'p-c', 'displayName' => 'C', 'leftAt' => null],
+			]
+		);
 
-		$participants = [
-			'results' => [
-				['displayName' => 'A', 'leftAt' => null],
-				['displayName' => 'B', 'leftAt' => null],
-				['displayName' => 'C', 'leftAt' => null],
-			],
-		];
-
-		$this->objectService->expects($this->once())
-			->method('getObject')
-			->willReturn($meeting);
-
-		$this->objectService->expects($this->once())
-			->method('findObjects')
-			->willReturn($participants);
-
-		self::assertTrue($this->service->checkQuorum('meeting-uuid'));
+		self::assertTrue($service->checkQuorum('meeting-uuid'));
 
 	}//end testCheckQuorumMet()
 
 	/**
 	 * Test that checkQuorum returns false when not enough active participants.
 	 *
+	 * Three participants against a quorum of three, one of whom has left: only
+	 * the `leftAt` filter makes this false, so the assertion pins that filter
+	 * rather than a head count that could never have reached the quorum.
+	 *
 	 * @spec openspec/changes/p2-motion-and-voting/tasks.md#task-2.5
 	 *
 	 * @return void
 	 */
 	public function testCheckQuorumNotMet(): void {
-		$meeting = [
-			'quorumRequired' => 5,
-			'relations' => [['schema' => 'governance-body', 'id' => 'gb-uuid']],
-		];
+		$service = $this->buildService(
+			self::meeting(3),
+			[
+				['id' => 'p-a', 'displayName' => 'A', 'leftAt' => null],
+				['id' => 'p-b', 'displayName' => 'B', 'leftAt' => '2025-04-14T20:00:00+02:00'],
+				['id' => 'p-c', 'displayName' => 'C', 'leftAt' => null],
+			]
+		);
 
-		$participants = [
-			'results' => [
-				['displayName' => 'A', 'leftAt' => null],
-				['displayName' => 'B', 'leftAt' => '2025-04-14T20:00:00+02:00'],
-				['displayName' => 'C', 'leftAt' => null],
-			],
-		];
-
-		$this->objectService->expects($this->once())
-			->method('getObject')
-			->willReturn($meeting);
-
-		$this->objectService->expects($this->once())
-			->method('findObjects')
-			->willReturn($participants);
-
-		self::assertFalse($this->service->checkQuorum('meeting-uuid'));
+		self::assertFalse($service->checkQuorum('meeting-uuid'));
 
 	}//end testCheckQuorumNotMet()
 
 	/**
-	 * Test that openVotingRound throws when quorum is not met.
+	 * Test that openVotingRound throws when quorum is not met, and writes nothing.
 	 *
 	 * @spec openspec/changes/p2-motion-and-voting/tasks.md#task-2.5
 	 *
 	 * @return void
 	 */
 	public function testOpenVotingRoundBlocksOnQuorumFailure(): void {
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('Quorum niet bereikt');
+		// Only 1 active participant against a quorum of 10.
+		$service = $this->buildService(
+			self::meeting(10),
+			[['id' => 'p-a', 'displayName' => 'A', 'leftAt' => null]]
+		);
 
-		$meeting = [
-			'quorumRequired' => 10,
-			'relations' => [['schema' => 'governance-body', 'id' => 'gb-uuid']],
-		];
+		$this->motionService->expects($this->never())->method('transitionLifecycle');
 
-		$this->objectService->expects($this->once())
-			->method('getObject')
-			->willReturn($meeting);
+		// Caught into a variable rather than asserted inside the catch: PHPUnit's
+		// own AssertionFailedError is a RuntimeException, so a self::fail() in the
+		// try would be swallowed by this catch.
+		$refusal = null;
+		try {
+			$service->openVotingRound('motion-uuid', 'meeting-uuid', 'for-against-abstain', false, null);
+		} catch (\RuntimeException $e) {
+			$refusal = $e;
+		}
 
-		// Only 1 active participant — quorum not met.
-		$this->objectService->method('findObjects')
-			->willReturn(['results' => [['displayName' => 'A', 'leftAt' => null]]]);
+		self::assertNotNull($refusal, 'A round must not open without quorum');
+		self::assertSame('Quorum niet bereikt', $refusal->getMessage());
 
-		$this->service->openVotingRound('motion-uuid', 'meeting-uuid', 'for-against-abstain', false, null);
+		self::assertCount(0, $this->saves, 'No voting round may be written when quorum fails');
 
 	}//end testOpenVotingRoundBlocksOnQuorumFailure()
 
@@ -286,39 +448,29 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCastVoteOverwritesDuplicate(): void {
-		$round = [
-			'openedAt' => '2025-04-14T20:05:00+02:00',
-			'closedAt' => null,
-		];
-
-		$existingVote = [
-			'id' => 'existing-vote-uuid',
-			'value' => 'against',
-			'isProxy' => false,
-		];
-
-		$savedVote = ['value' => 'for', 'isProxy' => false, 'castAt' => '2025-04-14T20:08:00+02:00'];
-
-		$this->objectService->expects($this->once())
-			->method('getObject')
-			->willReturn($round);
-
-		// isProxy=false → only one findObjects call for existing vote lookup.
-		$this->objectService->expects($this->once())
-			->method('findObjects')
-			->willReturn(['results' => [$existingVote]]);
-
-		$this->objectService->expects($this->once())
-			->method('saveObject')
-			->with(
-				$this->anything(),
-				$this->anything(),
-				$this->callback(fn ($obj) => ($obj['value'] ?? '') === 'for'),
-				$this->anything(),
+		$service = $this->buildService(
+			self::roundWithBallots(
+				[],
+				[
+					[
+						'id' => 'existing-vote-uuid',
+						'value' => 'against',
+						'isProxy' => false,
+						'relations' => [
+							['schema' => 'voting-round', 'id' => 'round-uuid'],
+							['schema' => 'participant', 'id' => 'participant-uuid'],
+						],
+					],
+				]
 			)
-			->willReturn($savedVote);
+		);
 
-		$result = $this->service->castVote('round-uuid', 'participant-uuid', 'for', false, null);
+		$result = $service->castVote('round-uuid', 'participant-uuid', 'for', false, null);
+
+		$votes = $this->savesFor('vote');
+		self::assertCount(1, $votes);
+		self::assertSame('existing-vote-uuid', $votes[0]['id'], 'The existing ballot is updated, not a second one created');
+		self::assertSame('for', $votes[0]['value']);
 		self::assertSame('for', $result['value']);
 
 	}//end testCastVoteOverwritesDuplicate()
@@ -331,46 +483,53 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCastVoteEnforcesOneProxyPerRound(): void {
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('Er is al een volmacht geregistreerd voor deze deelnemer in deze stemronde');
-
-		// Round must contain a proxy grant so authorization passes before the duplicate check runs.
-		$round = [
-			'openedAt' => '2025-04-14T20:05:00+02:00',
-			'closedAt' => null,
-			'notes' => [
+		// The round carries a proxy grant, so authorization passes and the
+		// duplicate-proxy check is what decides.
+		$service = $this->buildService(
+			self::roundWithBallots(
 				[
-					'title' => 'Proxy',
-					'body' => json_encode([
-						'fromParticipantId' => 'delegator-uuid',
-						'toParticipantId' => 'delegate-uuid',
-						'votingRoundId' => 'round-uuid',
-						'grantedAt' => '2025-04-14T19:00:00+02:00',
-					]),
+					'notes' => [
+						[
+							'title' => 'Proxy',
+							'body' => json_encode(
+								[
+									'fromParticipantId' => 'delegator-uuid',
+									'toParticipantId' => 'delegate-uuid',
+									'votingRoundId' => 'round-uuid',
+									'grantedAt' => '2025-04-14T19:00:00+02:00',
+								]
+							),
+						],
+					],
 				],
-			],
-		];
+				[
+					[
+						'id' => 'proxy-vote-uuid',
+						'value' => 'for',
+						'isProxy' => true,
+						'relations' => [
+							['schema' => 'voting-round', 'id' => 'round-uuid'],
+							['schema' => 'participant',  'id' => 'delegator-uuid', 'type' => 'delegator'],
+						],
+					],
+				]
+			)
+		);
 
-		$existingProxyVote = [
-			'id' => 'proxy-vote-uuid',
-			'value' => 'for',
-			'isProxy' => true,
-			'relations' => [
-				['schema' => 'voting-round', 'id' => 'round-uuid'],
-				['schema' => 'participant',  'id' => 'delegator-uuid', 'type' => 'delegator'],
-			],
-		];
+		$refusal = null;
+		try {
+			$service->castVote('round-uuid', 'delegate-uuid', 'for', true, 'delegator-uuid');
+		} catch (\RuntimeException $e) {
+			$refusal = $e;
+		}
 
-		$this->objectService->expects($this->once())
-			->method('getObject')
-			->willReturn($round);
+		self::assertNotNull($refusal, 'A second proxy vote for the same delegator must be refused');
+		self::assertSame(
+			'Er is al een volmacht geregistreerd voor deze deelnemer in deze stemronde',
+			$refusal->getMessage()
+		);
 
-		// findObjects call is for the duplicate proxy check — returns an existing proxy.
-		$this->objectService->expects($this->once())
-			->method('findObjects')
-			->willReturn(['results' => [$existingProxyVote]]);
-
-		$this->service->castVote('round-uuid', 'delegate-uuid', 'for', true, 'delegator-uuid');
+		self::assertCount(0, $this->savesFor('vote'), 'The refused proxy vote is not written');
 
 	}//end testCastVoteEnforcesOneProxyPerRound()
 
@@ -382,25 +541,27 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTallyResultsAdopted(): void {
-		$votes = [
-			'results' => [
-				['value' => 'for',     'weight' => 1],
-				['value' => 'for',     'weight' => 1],
-				['value' => 'against', 'weight' => 1],
-			],
-		];
+		$service = $this->buildService(
+			self::roundWithBallots(
+				[],
+				[
+					['value' => 'for'],
+					['value' => 'for'],
+					['value' => 'against'],
+				]
+			)
+		);
 
-		$round = ['openedAt' => '2025-04-14T20:05:00+02:00'];
-
-		$this->objectService->method('findObjects')->willReturn($votes);
-		$this->objectService->method('getObject')->willReturn($round);
-		$this->objectService->method('saveObject')->willReturn($round);
-
-		$result = $this->service->tallyResults('round-uuid');
+		$result = $service->tallyResults('round-uuid');
 
 		self::assertSame('adopted', $result['result']);
 		self::assertSame(2, $result['votesFor']);
 		self::assertSame(1, $result['votesAgainst']);
+
+		// The tally is persisted on the round for the audit trail.
+		$rounds = $this->savesFor('voting-round');
+		self::assertCount(1, $rounds);
+		self::assertSame('adopted', $rounds[0]['result']);
 
 	}//end testTallyResultsAdopted()
 
@@ -412,23 +573,22 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTallyResultsRejected(): void {
-		$votes = [
-			'results' => [
-				['value' => 'for',     'weight' => 1],
-				['value' => 'against', 'weight' => 1],
-				['value' => 'against', 'weight' => 1],
-			],
-		];
+		$service = $this->buildService(
+			self::roundWithBallots(
+				[],
+				[
+					['value' => 'for'],
+					['value' => 'against'],
+					['value' => 'against'],
+				]
+			)
+		);
 
-		$round = ['openedAt' => '2025-04-14T20:05:00+02:00'];
-
-		$this->objectService->method('findObjects')->willReturn($votes);
-		$this->objectService->method('getObject')->willReturn($round);
-		$this->objectService->method('saveObject')->willReturn($round);
-
-		$result = $this->service->tallyResults('round-uuid');
+		$result = $service->tallyResults('round-uuid');
 
 		self::assertSame('rejected', $result['result']);
+		self::assertSame(1, $result['votesFor']);
+		self::assertSame(2, $result['votesAgainst']);
 
 	}//end testTallyResultsRejected()
 
@@ -444,11 +604,12 @@ class VotingServiceTest extends TestCase {
 	 * `rejected` (default) the result MUST be "rejected" … with `chair-decides`
 	 * or `revote` the result MUST be "tied"*).
 	 *
-	 * It was never caught because this whole class is markTestSkipped() in
-	 * setUp (issue #90) — a skip is not a pass. The same wrong expectation was
+	 * It was never caught because this whole class was markTestSkipped() in
+	 * setUp (issue #90), and a skip is not a pass. The same wrong expectation was
 	 * copied into tests/e2e/workflows/voting-quorum-workflow.spec.ts, where it
 	 * DOES run, and it failed every full-scope run while the production
-	 * calculator was correct throughout.
+	 * calculator was correct throughout. The rule was added in c9071f14; this
+	 * class now runs, so the corrected expectation is finally executed.
 	 *
 	 * @spec openspec/specs/voting-system/spec.md
 	 * @spec openspec/changes/p2-motion-and-voting/tasks.md#task-2.5
@@ -456,70 +617,52 @@ class VotingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTallyResultsTied(): void {
-		$votes = [
-			'results' => [
-				['value' => 'for',     'weight' => 1],
-				['value' => 'against', 'weight' => 1],
-			],
+		$ballots = [
+			['value' => 'for'],
+			['value' => 'against'],
 		];
 
-		$round = [
-			'openedAt' => '2025-04-14T20:05:00+02:00',
-			'tieBreakRule' => 'revote',
-		];
+		$service = $this->buildService(self::roundWithBallots(['tieBreakRule' => 'revote'], $ballots));
+		self::assertSame('tied', $service->tallyResults('round-uuid')['result']);
 
-		$this->objectService->method('findObjects')->willReturn($votes);
-		$this->objectService->method('getObject')->willReturn($round);
-		$this->objectService->method('saveObject')->willReturn($round);
-
-		$result = $this->service->tallyResults('round-uuid');
-
-		self::assertSame('tied', $result['result']);
+		// The same 1-1 tie with no stored rule takes the spec default and fails.
+		$service = $this->buildService(self::roundWithBallots([], $ballots));
+		self::assertSame('rejected', $service->tallyResults('round-uuid')['result']);
 
 	}//end testTallyResultsTied()
 
 	/**
 	 * Test that closeVotingRound closes the round and triggers motion lifecycle update.
 	 *
+	 * ADR-005: a closed round produces an OUTCOME, not a lifecycle state. The
+	 * motion enters `decided` whether the vote carried or not, and the result
+	 * travels as the `outcome` argument.
+	 *
 	 * @spec openspec/changes/p2-motion-and-voting/tasks.md#task-2.5
+	 * @spec openspec/specs/motion-amendment/spec.md
 	 *
 	 * @return void
 	 */
 	public function testCloseVotingRoundTransitionsLifecycle(): void {
-		$round = [
-			'openedAt' => '2025-04-14T20:05:00+02:00',
-			'closedAt' => null,
-			'relations' => [['schema' => 'motion', 'id' => 'motion-uuid']],
-		];
+		$service = $this->buildService(
+			self::roundWithBallots(
+				['relations' => [['schema' => 'motion', 'id' => 'motion-uuid']]],
+				[['value' => 'against']]
+			)
+		);
 
-		$motion = ['lifecycle' => 'voting', 'title' => 'Test Motion'];
+		$this->motionService->expects($this->once())
+			->method('transitionLifecycle')
+			->with('motion-uuid', 'motion', 'decided', 'system', 'rejected');
 
-		// Return round for tally + close + getObject, motion for lifecycle update.
-		$this->objectService->method('getObject')
-			->willReturnCallback(function () use ($round, $motion) {
-				static $calls = 0;
-				$calls++;
-				// Third getObject call (after tally and close) fetches the motion.
-				if ($calls === 3) {
-					return $motion;
-				}
-				return $round;
-			});
+		$closed = $service->closeVotingRound('round-uuid');
 
-		$this->objectService->method('findObjects')
-			->willReturn(['results' => [['value' => 'against', 'weight' => 1]]]);
-
-		$this->objectService->method('saveObject')->willReturn($round);
-
-		$this->oriService->method('publish');
-
-		// Should complete without throwing.
-		$this->service->closeVotingRound('round-uuid');
-		$this->addToAssertionCount(1);
+		self::assertNotNull($closed['closedAt'] ?? null, 'The round is stamped closed');
+		self::assertSame('rejected', $closed['result']);
 
 	}//end testCloseVotingRoundTransitionsLifecycle()
 
 	// The proxy (volmacht) delegation rules moved to ProxyDelegationService
-	// together with grantProxy()/revokeProxy(); they are covered — and, unlike
-	// this whole class, actually EXECUTED — by ProxyDelegationServiceTest.
+	// together with grantProxy()/revokeProxy(); they are covered by
+	// ProxyDelegationServiceTest.
 }//end class

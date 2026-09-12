@@ -237,7 +237,7 @@ class ParticipantToPersonMembershipResolver {
 			return null;
 		}
 
-		foreach ((array)$rows as $entity) {
+		foreach ($rows as $entity) {
 			$person = $this->toArray(entity: $entity);
 			if ($person !== null) {
 				return $person;
@@ -393,7 +393,7 @@ class ParticipantToPersonMembershipResolver {
 			return null;
 		}
 
-		foreach ((array)$rows as $entity) {
+		foreach ($rows as $entity) {
 			$membership = $this->toArray(entity: $entity);
 			if ($membership !== null) {
 				return $membership;

@@ -110,7 +110,7 @@ class PublicationServiceTest extends TestCase {
 		$configService = new PublicationConfigService($appConfig);
 
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('isInstalled')->willReturnCallback(
+		$appManager->method('isEnabledForAnyone')->willReturnCallback(
 			static function (string $appId) use ($openCatalogi): bool {
 				return ($appId === 'opencatalogi') ? $openCatalogi : false;
 			}

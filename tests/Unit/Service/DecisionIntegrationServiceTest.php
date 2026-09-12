@@ -43,6 +43,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Decidiq\Service\DecisionIntegrationService
  * @uses \OCA\Decidiq\Service\DecisionTypeRegistry
  * @uses \OCA\Decidiq\Service\DelegatedDecisionDefaults
+ * @uses \OCA\Decidiq\Support\FleetAppId
  *
  * @spec openspec/changes/decidesk-contract-decision-hub/tasks.md#phase-5
  */

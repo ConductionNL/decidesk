@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Decidiq\Service;
 
+use OCA\Decidiq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -162,8 +163,8 @@ class DecisionIntegrationService {
 			static fn (string $value): bool => ($value !== '')
 		);
 
-		$sourceApp = (string)($provenance['sourceApp'] ?? '');
-		$subjectId = (string)($provenance['subjectId'] ?? '');
+		$sourceApp = ($provenance['sourceApp'] ?? '');
+		$subjectId = ($provenance['subjectId'] ?? '');
 
 		// Idempotency: search for an existing decision with the same provenance tuple.
 		if ($sourceApp !== '' && $subjectId !== '') {
@@ -437,7 +438,7 @@ class DecisionIntegrationService {
 	 * @param string $callbackUrl Registry-validated callback URL
 	 * @param string $actorId Nextcloud UID of the subscriber
 	 *
-	 * @return array{success: bool, subscriptionId?: string, code?: string, message?: string}
+	 * @return array{success: bool, subscriptionId?: string, decisionId?: string, callbackUrl?: string, code?: string, message?: string}
 	 *
 	 * @spec openspec/changes/decidesk-contract-decision-hub/tasks.md#phase-2
 	 * @spec openspec/changes/signature-and-outcome-authorization-guard/specs/signature-and-outcome-authorization/spec.md#requirement-req-dcdh-102-only-the-raising-consumer-or-an-admin-may-attach-an-outcome-callback-to-a-decision
@@ -530,7 +531,7 @@ class DecisionIntegrationService {
 			return false;
 		}
 
-		$host = (string)($parsed['host'] ?? '');
+		$host = ($parsed['host'] ?? '');
 		if ($host === '') {
 			return false;
 		}
@@ -543,8 +544,8 @@ class DecisionIntegrationService {
 		// Try to ask the openconnector/openregister registry whether this URL
 		// is a known consumer. Degrade gracefully if registry is absent.
 		try {
-			$registry = $this->container->get('OCA\\OpenConnector\\Service\\IntegrationService');
-			if (method_exists($registry, 'isRegisteredConsumer') === true) {
+			$registry = FleetAppId::getService($this->container, 'integriq', 'Service\\IntegrationService');
+			if ($registry !== null && method_exists($registry, 'isRegisteredConsumer') === true) {
 				// Positional, not named: the registry is resolved from a class-name
 				// string at runtime, so its parameter names are not part of any
 				// contract Decidiq can rely on.

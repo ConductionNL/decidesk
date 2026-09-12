@@ -70,7 +70,7 @@ class OpenCatalogiPublisher {
 	 * @return string The catalog publication reference, or '' on failure/degrade.
 	 */
 	public function publish(string $catalogId, string $payloadId, array $payload): string {
-		if ($this->appManager->isInstalled('opencatalogi') === false) {
+		if ($this->appManager->isEnabledForAnyone('opencatalogi') === false) {
 			return '';
 		}
 
@@ -140,21 +140,18 @@ class OpenCatalogiPublisher {
 	/**
 	 * Retract a previously-created catalog publication.
 	 *
-	 * @param string $catalogId Target catalog id (informational).
 	 * @param string $catalogPublication The catalog publication reference.
 	 *
 	 * @spec openspec/specs/public-publication/spec.md
 	 *
 	 * @return bool True when retraction succeeded; false to mark pending + warn.
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $catalogId kept for symmetry/logging.
 	 */
-	public function retract(string $catalogId, string $catalogPublication): bool {
+	public function retract(string $catalogPublication): bool {
 		if ($catalogPublication === '') {
 			return true;
 		}
 
-		if ($this->appManager->isInstalled('opencatalogi') === false) {
+		if ($this->appManager->isEnabledForAnyone('opencatalogi') === false) {
 			return false;
 		}
 

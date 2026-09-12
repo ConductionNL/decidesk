@@ -240,7 +240,7 @@ class MinutesDraftComposer {
 				continue;
 			}
 
-			$matched = (mb_strtolower($title) !== '' && str_contains($lowerSummary, mb_strtolower($title)) === true);
+			$matched = (str_contains($lowerSummary, mb_strtolower($title)) === true);
 			$linkedId = '';
 			if ($matched === true) {
 				$linkedId = (string)($data['id'] ?? ($data['uuid'] ?? ''));

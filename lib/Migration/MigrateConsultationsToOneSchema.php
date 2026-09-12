@@ -574,7 +574,7 @@ class MigrateConsultationsToOneSchema implements IRepairStep {
 	private function mapAnswer(array $source, array $mapping, string $origin, string $consultation): array {
 		$payload = [
 			'consultation' => $consultation,
-			'status' => (string)(($mapping['status'] ?? null) ?? ($source['status'] ?? 'submitted')),
+			'status' => (string)($mapping['status'] ?? $source['status'] ?? 'submitted'),
 			self::ORIGIN_KEY => $origin,
 		];
 

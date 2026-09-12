@@ -138,9 +138,10 @@ class BoardEvaluationResponseService {
 	 *
 	 * @param string $evaluationId UUID of the BoardEvaluation
 	 * @param string $participantId UUID of the responding participant (never persisted on the response)
-	 * @param array<int, array<string,mixed>> $answers Each: {questionId, dimension, likertValue?, freeText?}
+	 * @param array<int, array<string,mixed>> $answers Each with questionId, dimension, and optionally likertValue and freeText.
 	 *
-	 * @return array<string, mixed> {success: bool, message?: string, response?: array}
+	 * @return array<string, mixed> Keys: success (bool), and optionally message (string)
+	 *                              and response (array).
 	 *
 	 * @spec openspec/specs/board-self-evaluation/spec.md#requirement-req-eval-003-responses-are-anonymous-and-untraceable-to-the-member
 	 */

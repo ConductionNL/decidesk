@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Decidiq\Tests\Unit\Service;
 
 use OCA\Decidiq\Service\VotingBehaviourService;
+use OCA\Decidiq\Tests\Unit\Support\FakeSlugResolver;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -118,7 +119,7 @@ class VotingBehaviourServiceTest extends TestCase {
 	 */
 	public function testEmptyBodyYieldsZeroedStats(): void {
 		$this->respondPerSchema([]);
-		$service = new VotingBehaviourService($this->objectService);
+		$service = new VotingBehaviourService($this->objectService, new FakeSlugResolver(['decidiq']));
 
 		$stats = $service->getStats('participant-1', 'body-1');
 
@@ -157,7 +158,7 @@ class VotingBehaviourServiceTest extends TestCase {
 				'vote' => [$this->makeEntity(['value' => 'for'])],
 			]
 		);
-		$service = new VotingBehaviourService($this->objectService);
+		$service = new VotingBehaviourService($this->objectService, new FakeSlugResolver(['decidiq']));
 
 		$stats = $service->getStats('participant-1', 'body-1');
 
@@ -196,7 +197,7 @@ class VotingBehaviourServiceTest extends TestCase {
 				],
 			]
 		);
-		$service = new VotingBehaviourService($this->objectService);
+		$service = new VotingBehaviourService($this->objectService, new FakeSlugResolver(['decidiq']));
 
 		$stats = $service->getStats('participant-1', 'body-1');
 
@@ -230,7 +231,7 @@ class VotingBehaviourServiceTest extends TestCase {
 				'vote' => [],
 			]
 		);
-		$service = new VotingBehaviourService($this->objectService);
+		$service = new VotingBehaviourService($this->objectService, new FakeSlugResolver(['decidiq']));
 
 		$stats = $service->getStats('participant-1', 'body-1');
 
@@ -258,7 +259,7 @@ class VotingBehaviourServiceTest extends TestCase {
 				'vote' => [$this->makeEntity(['value' => 'for'])],
 			]
 		);
-		$service = new VotingBehaviourService($this->objectService);
+		$service = new VotingBehaviourService($this->objectService, new FakeSlugResolver(['decidiq']));
 
 		$stats = $service->getStats('participant-1', 'body-1');
 

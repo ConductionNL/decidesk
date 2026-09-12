@@ -153,7 +153,7 @@ class ApprovalRouteController extends Controller {
 		// A final signature given over THIS surface concludes the route just as
 		// surely as one arriving over the cross-app seam, and the producer that
 		// delegated its runtime here is waiting on the announcement.
-		$this->announcer->announceIfConcluded(subject: (string)$action['subject']);
+		$this->announcer->announceIfConcluded(subject: $action['subject']);
 
 		return new JSONResponse($recorded, Http::STATUS_CREATED);
 	}//end record()

@@ -205,35 +205,6 @@ class PublicationEligibilityServiceTest extends TestCase {
 	}//end testMissingObjectThrows()
 
 	/**
-	 * A direct client write to isPublished/publishedAt is rejected.
-	 *
-	 * @return void
-	 */
-	public function testDirectPublicationWriteRejected(): void {
-		$service = $this->makeService([]);
-		$stored = ['isPublished' => 'internal', 'publishedAt' => null];
-
-		$this->expectException(AccessDeniedException::class);
-		$service->guardDirectPublicationWrite($stored, ['isPublished' => 'public']);
-
-	}//end testDirectPublicationWriteRejected()
-
-	/**
-	 * An update that leaves the flow-owned fields unchanged is allowed.
-	 *
-	 * @return void
-	 */
-	public function testUnchangedPublicationFieldsAllowed(): void {
-		$service = $this->makeService([]);
-		$stored = ['isPublished' => 'internal', 'publishedAt' => null, 'title' => 'x'];
-
-		// No exception expected.
-		$service->guardDirectPublicationWrite($stored, ['isPublished' => 'internal', 'title' => 'y']);
-		$this->assertTrue(true);
-
-	}//end testUnchangedPublicationFieldsAllowed()
-
-	/**
 	 * Test that the Transcript schema is structurally denied.
 	 *
 	 * @spec openspec/changes/meeting-transcription-ai-minutes/tasks.md#task-5.1

@@ -17,7 +17,28 @@
         "slug": "decidiq",
         "title": "Decidiq Register (demo)",
         "version": "0.8.0",
-        "description": "Demo data for Decidiq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
+        "description": "Demo data for Decidiq Register. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py.",
+        "authorization": {
+          "read": [
+            "authenticated",
+            "public"
+          ],
+          "list": [
+            "authenticated",
+            "public"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ],
+          "delete": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ]
+        }
       }
     },
     "schemas": {
@@ -320,6 +341,17 @@
               }
             },
             "authenticated"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ],
+          "delete": [
+            "decidiq-administrators",
+            "decidesk-administrators"
           ]
         },
         "required": [
@@ -1283,7 +1315,7 @@
               "nl": "Besluit gepubliceerd: {{title}}",
               "en": "Decision published: {{title}}"
             },
-            "_note": "Publication is the one Decision event that had NO declarative rule, while an imperative DecisionNotificationService::notifyOnPublish() sat beside it with zero callers, no tests and no DI registration — so nobody was ever notified that a decision had become public. ADR-031 keeps notifications declarative (gate-18 flagged the imperative class by name), so the rule lands here and the dead service is removed rather than wired up. isPublished is FLOW-OWNED: it only reaches 'public' through the guarded publication flow (PublicationEligibilityService::guardDirectPublicationWrite rejects a direct object write), so this trigger cannot be fired by an ordinary object update. Recipients mirror decisionProposed/decisionRecorded rather than inventing a third shape."
+            "_note": "Publication is the one Decision event that had NO declarative rule, while an imperative DecisionNotificationService::notifyOnPublish() sat beside it with zero callers, no tests and no DI registration — so nobody was ever notified that a decision had become public. ADR-031 keeps notifications declarative (gate-18 flagged the imperative class by name), so the rule lands here and the dead service is removed rather than wired up. isPublished is flow owned: the property authorization block on isPublished refuses a direct object update from the administrator groups, so an ordinary object update cannot fire this trigger. A Nextcloud superuser can still write the field directly, because property authorization exempts superusers by design. Recipients mirror decisionProposed/decisionRecorded rather than inventing a third shape."
           },
           "voteRequested": {
             "trigger": {
@@ -1332,7 +1364,7 @@
         "icon": "Gavel",
         "version": "0.12.0",
         "title": "Decision",
-        "_authorizationNote": "decision declared no schema-level authorization block, so its read rule came from the decidesk register baseline rather than from anything this schema states. IntegrationController::getOutcome()'s docblock asserted that 'per-object read access is enforced by OpenRegister ObjectService RBAC'; that claim was unfounded precisely because this block was absent. This states the intended anonymous rule explicitly — only Decisions the app itself has published (isPublished === 'public') — leaving all others to authenticated callers, and mirrors ParticipatoryBudget / PublicConsultation / BoardEvaluation in this same file. Defence in depth only: the per-object controller guards added in signature-and-outcome-authorization-guard do not depend on it, and anonymous reads of this instance's object API return nothing regardless (measured 2026-08-20: schemas that DO grant 'public' read also return 0 anonymously). ONLY 'read' is declared: OpenRegister's action vocabulary is CRUD (create/read/update/delete) and CLOSED by default — 'list' is NOT an action, and adding it makes validateAuthorization() reject the schema, which the importer then silently SKIPS on an HTTP 200 'success'. Listing is governed by the read rule. create/update/delete are deliberately omitted — an omitted action is closed to everyone except the object owner and admin.",
+        "_authorizationNote": "decision declared no schema-level authorization block, so its read rule came from the decidesk register baseline rather than from anything this schema states. IntegrationController::getOutcome()'s docblock asserted that 'per-object read access is enforced by OpenRegister ObjectService RBAC'; that claim was unfounded precisely because this block was absent. This states the intended anonymous rule explicitly — only Decisions the app itself has published (isPublished === 'public') — leaving all others to authenticated callers, and mirrors ParticipatoryBudget / PublicConsultation / BoardEvaluation in this same file. Defence in depth only: the per-object controller guards added in signature-and-outcome-authorization-guard do not depend on it, and anonymous reads of this instance's object API return nothing regardless (measured 2026-08-20: schemas that DO grant 'public' read also return 0 anonymously). ONLY 'read' is declared: OpenRegister's action vocabulary is CRUD (create/read/update/delete) and CLOSED by default — 'list' is NOT an action, and adding it makes validateAuthorization() reject the schema, which the importer then silently SKIPS on an HTTP 200 'success'. Listing is governed by the read rule. create, update and delete ARE declared, and copy the register baseline: create for authenticated, update and delete for decidiq-administrators and decidesk-administrators. They were left out until decidiq#1269 on the belief that an omitted action falls through to the register. It does not. PermissionHandler::resolveAuthorizationRaw() reads the register block only when the schema block is empty, so this block replaces the register block whole, and hasGroupPermission() denies any action a non-empty block leaves out. With the writes left out, a decidiq-administrators member got 403 on every update and nobody but a Nextcloud superuser could create a Decision. The flow-owned isPublished and publishedAt keep their own property rule, which OpenRegister checks only after this object-level update grant has passed.",
         "authorization": {
           "read": [
             {
@@ -1342,6 +1374,17 @@
               }
             },
             "authenticated"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ],
+          "delete": [
+            "decidiq-administrators",
+            "decidesk-administrators"
           ]
         },
         "description": "The universal governance-decision supertype (ADR-005). A single schema for every decision outcome: motion, amendment, resolution, contract, appointment, management point, policy and generic meeting outcome, distinguished by the required decisionType discriminator. Type-specific fields are folded in and revealed via progressive disclosure keyed on decisionType (ADR-006).",
@@ -1403,7 +1446,12 @@
           "isPublished": {
             "title": "Publication state",
             "type": "string",
-            "description": "Publication state controlling citizen visibility. FLOW-OWNED (publish-decisions-via-opencatalogi): this field is a DERIVED OUTPUT of the public-publication flow, set to 'public' on publish, reset to 'internal' on withdraw, and is REJECTED when written directly through an OR object update outside that flow (PublicationEligibilityService:guardDirectPublicationWrite). 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
+            "authorization": {
+              "update": [
+                "decidiq-publication-flow"
+              ]
+            },
+            "description": "Publication state controlling citizen visibility. Flow owned by publish-decisions-via-opencatalogi. The flow sets 'public' on publish and 'internal' on withdraw. The authorization block on this property refuses a direct object update from decidiq-administrators and decidesk-administrators, the only groups the register grants update. The group decidiq-publication-flow has no members by design. It names the flow, not a team. Nextcloud superusers bypass property authorization by design (OpenRegister PropertyRbacHandler::getUnauthorizedProperties), so this field is NOT protected against them. That is also why the flow itself still works: the publish endpoint admits only superusers. 'internal' = staff-only; 'public' = published via the OR published-predicate / OpenCatalogi surface; 'confidential' = restricted access.",
             "enum": [
               "internal",
               "public",
@@ -1416,7 +1464,12 @@
             "title": "Published at",
             "type": "string",
             "format": "date-time",
-            "description": "Publication timestamp. FLOW-OWNED (publish-decisions-via-opencatalogi): stamped by the publication flow on publish and cleared on withdraw; rejected on direct client writes alongside isPublished."
+            "authorization": {
+              "update": [
+                "decidiq-publication-flow"
+              ]
+            },
+            "description": "Publication timestamp. Flow owned by publish-decisions-via-opencatalogi. The flow stamps it on publish and clears it on withdraw. The authorization block on this property refuses a direct object update on the same terms as isPublished, including the superuser exemption."
           },
           "legalBasis": {
             "title": "Legal basis",
@@ -4244,6 +4297,17 @@
               }
             },
             "authenticated"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ],
+          "delete": [
+            "decidiq-administrators",
+            "decidesk-administrators"
           ]
         },
         "required": [
@@ -4552,6 +4616,17 @@
               }
             },
             "authenticated"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "decidiq-administrators",
+            "decidesk-administrators"
+          ],
+          "delete": [
+            "decidiq-administrators",
+            "decidesk-administrators"
           ]
         },
         "required": [

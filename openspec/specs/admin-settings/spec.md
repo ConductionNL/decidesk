@@ -124,7 +124,7 @@ The system MUST support importing members from Nextcloud Groups, Nextcloud Conta
 - **AND** a `Membership` object is created linking that `Person` to the target `GovernanceBody` with the assigned `role`
 - **AND** no new `Participant` object is created
 
-@e2e exclude tests/e2e/spec-coverage/admin-settings.spec.ts's import tests (`import-members-from-a-nextcloud-group`, `import-members-from-csv`) only open the dialog and preview rows, they never submit an import; tests/Unit/Service/MemberImportServiceTest.php covers the group/CSV listing and email-matching helpers but not the Person+Membership write path itself — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/admin-settings.spec.ts's import tests (`import-members-from-a-nextcloud-group`, `import-members-from-csv`) only open the dialog and preview rows, they never submit an import; tests/Unit/Service/MemberImportServiceTest.php covers the group/CSV listing and email-matching helpers but not the Person+Membership write path itself — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 #### Scenario: Members tab lists active memberships, not Participant rows
 
@@ -133,7 +133,7 @@ The system MUST support importing members from Nextcloud Groups, Nextcloud Conta
 - **THEN** the list is populated by querying `membership` filtered on `governanceBody` and `endDate: null`, joined to each `Membership`'s `Person` for display name
 - **AND** "Remove from body" sets the `Membership`'s `endDate` to the current date (Popolo departure semantics, matching the existing `member-onboarding` offboarding pattern) rather than nulling a `governanceBody` field on a `Participant` row
 
-@e2e exclude tests/e2e/spec-coverage/admin-settings.spec.ts's Members-tab test ("Members tab lists body members and offers the Change role action") asserts the tab renders and lists rows, but does not assert the underlying query is `membership` filtered on `endDate: null` (vs. a `Participant` query), nor drive the "Remove from body" soft-departure action — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/e2e/spec-coverage/admin-settings.spec.ts's Members-tab test ("Members tab lists body members and offers the Change role action") asserts the tab renders and lists rows, but does not assert the underlying query is `membership` filtered on `endDate: null` (vs. a `Participant` query), nor drive the "Remove from body" soft-departure action — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 ### Requirement: REQ-ADM-MODE-001 Organisatie-modus tenant setting
 The system MUST expose an `organisatie_modus` setting whose value is one of
@@ -149,7 +149,7 @@ parallel entities).
 #### Scenario: Default mode is gov
 
 @e2e openspec/specs/admin-settings/spec.md#default-mode-is-gov
-@e2e exclude tests/Unit/Service/SettingsServiceTest.php's getSettings tests mock `IAppConfig::getValueString` with a blanket return value for every key, so they never independently exercise the `organisatie_modus` default-to-`"gov"` fallback branch; no e2e test asserts a fresh-install default either — genuine coverage gap tracked as e2e debt.
+@e2e exclude tests/Unit/Service/SettingsServiceTest.php's getSettings tests mock `IAppConfig::getValueString` with a blanket return value for every key, so they never independently exercise the `organisatie_modus` default-to-`"gov"` fallback branch; no e2e test asserts a fresh-install default either — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 - GIVEN a fresh install where `organisatie_modus` has never been set
 - WHEN `getSettings()` is called
@@ -168,7 +168,7 @@ parallel entities).
 #### Scenario: Mode does not create parallel entities
 
 @e2e openspec/specs/admin-settings/spec.md#mode-does-not-create-parallel-entities
-@e2e exclude a cross-mode invariant assertion (schema set + nav structure unchanged across all five `organisatie_modus` values) — no e2e test drives all five modes and diffs the schema/nav shape between them; the label-only change for one mode (`corp`) is covered by the `admin-selects-a-tenant-mode` scenario/test, but the full invariant across every mode is untested — genuine coverage gap tracked as e2e debt.
+@e2e exclude a cross-mode invariant assertion (schema set + nav structure unchanged across all five `organisatie_modus` values) — no e2e test drives all five modes and diffs the schema/nav shape between them; the label-only change for one mode (`corp`) is covered by the `admin-selects-a-tenant-mode` scenario/test, but the full invariant across every mode is untested — genuine coverage gap tracked as e2e debt in ConductionNL/decidiq#1277.
 
 - GIVEN any `organisatie_modus` value
 - WHEN the app boots with that mode

@@ -9,8 +9,7 @@
  * NC header), then asserts the real cn-index-page surface (heading,
  * Cards/Table view toggle, primary CTA) and the create modal.
  *
- * @e2e openspec/specs/engagement-management/spec.md#view-the-engagement-list
- * @e2e openspec/specs/engagement-management/spec.md#create-an-engagement-entry
+ * @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
  */
 import type { Page } from '@playwright/test'
 
@@ -51,7 +50,7 @@ async function appNavClick(
 	await dismissSupportDialog(page)
 }
 
-// @e2e openspec/specs/engagement-management/spec.md#view-the-engagement-list
+// @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
 test('Engagement: app-scoped nav lands on the index with its real content', async ({
 	page,
 }) => {
@@ -67,7 +66,9 @@ test('Engagement: app-scoped nav lands on the index with its real content', asyn
 	await expect(page.getByTestId('cn-cta-primary').first()).toBeVisible()
 })
 
-// @e2e openspec/specs/engagement-management/spec.md#create-an-engagement-entry
+// No e2e citation on purpose. No spec describes creating an EngagementRecord
+// from this index: p4-collaboration REQ-PE-001 captures speech through the
+// meeting's SpeechCaptureDialog. The gap is tracked in decidiq#1277.
 test('Engagement: primary CTA opens a real create form dialog', async ({ page }) => {
 	await appNavClick(page, 'Engagement', '/engagement')
 	await page.getByTestId('cn-cta-primary').first().click()
@@ -84,7 +85,7 @@ test('Engagement: primary CTA opens a real create form dialog', async ({ page })
 	await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5_000 })
 })
 
-// @e2e openspec/specs/engagement-management/spec.md#view-the-engagement-list
+// @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
 test('Engagement: no decidiq-origin console error or 500 on load', async ({
 	page,
 }) => {

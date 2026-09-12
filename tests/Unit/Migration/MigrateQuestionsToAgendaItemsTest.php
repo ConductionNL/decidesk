@@ -195,6 +195,47 @@ class MigrateQuestionsToAgendaItemsTest extends TestCase {
 	}//end testARowWithNoIdentifierIsSkipped()
 
 	/**
+	 * A row naming neither a subject nor a number saves as "Untitled", quietly.
+	 *
+	 * The number fallback used to read `($a ?? $b) ?? ''`. The outer `??` sits
+	 * on an expression, not a variable, so it guards nothing: when neither key
+	 * exists PHP evaluates `$source['requestNumber']` bare and raises an
+	 * "Undefined array key" warning on every such row of the upgrade.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-as-agenda-items/specs/questions-as-agenda-items/spec.md#requirement-existing-questions-are-carried-across
+	 */
+	public function testAnUntitledRowSavesWithoutAWarning(): void {
+		$this->settingsService->method('isOpenRegisterAvailable')->willReturn(true);
+
+		$service = $this->makeObjectService(
+			questions: [['id' => 'mv-untitled', 'governanceBody' => 'raad']],
+		);
+		$this->container->method('get')->willReturn($service);
+
+		$warnings = [];
+		set_error_handler(
+			static function (int $errno, string $errstr) use (&$warnings): bool {
+				$warnings[] = $errstr;
+				return true;
+			},
+			E_WARNING
+		);
+		try {
+			$this->migration->run(output: $this->output);
+		} finally {
+			restore_error_handler();
+		}
+
+		self::assertSame(expected: [], actual: $warnings);
+		$items = $service->savedFor('agenda-item');
+		self::assertCount(expectedCount: 1, haystack: $items);
+		self::assertSame(expected: 'Untitled', actual: $items[0]['title']);
+
+	}//end testAnUntitledRowSavesWithoutAWarning()
+
+	/**
 	 * The question-hour configuration lands on the types, not on a new schema.
 	 *
 	 * 🔑 THE THRESHOLD IS NOT UNIVERSAL. A submission window applies to every

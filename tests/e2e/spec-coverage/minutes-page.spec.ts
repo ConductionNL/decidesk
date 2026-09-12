@@ -11,8 +11,9 @@
  * real index surface: heading, object-list table, the "Add Minutes"
  * primary CTA, and that opening the create dialog renders a real form.
  *
- * @e2e openspec/specs/minutes-management/spec.md#view-the-minutes-list
- * @e2e openspec/specs/minutes-management/spec.md#create-minutes-for-a-meeting
+ * @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
+ * @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ml-001
+ * @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ml-002
  */
 import type { Page } from '@playwright/test'
 
@@ -54,7 +55,8 @@ async function appNavClick(
 	await dismissSupportDialog(page)
 }
 
-// @e2e openspec/specs/minutes-management/spec.md#view-the-minutes-list
+// @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
+// @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ml-001
 test('Minutes: app-scoped nav lands on the Minutes index with its real content', async ({
 	page,
 }) => {
@@ -71,7 +73,7 @@ test('Minutes: app-scoped nav lands on the Minutes index with its real content',
 	await expect(page.getByRole('button', { name: 'Add Minutes' })).toBeVisible()
 })
 
-// @e2e openspec/specs/minutes-management/spec.md#create-minutes-for-a-meeting
+// @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ml-002
 test('Minutes: Add Minutes opens a real create form dialog', async ({ page }) => {
 	await appNavClick(page, 'Minutes', '/minutes')
 	await page.getByRole('button', { name: 'Add Minutes' }).click()
@@ -88,7 +90,8 @@ test('Minutes: Add Minutes opens a real create form dialog', async ({ page }) =>
 	await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5_000 })
 })
 
-// @e2e openspec/specs/minutes-management/spec.md#view-the-minutes-list
+// @e2e openspec/specs/app-navigation/spec.md#demoted-surface-remains-reachable-by-deep-link
+// @e2e openspec/specs/p2-minutes-and-decisions/spec.md#req-ml-001
 test('Minutes: no decidiq-origin console error or 500 on load', async ({ page }) => {
 	const appErrors: string[] = []
 	page.on('console', (m) => {

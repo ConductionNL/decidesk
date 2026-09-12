@@ -116,12 +116,10 @@ class BoardEvaluationScoreService {
 	 * @param int $invitedMemberCount Number of invited members (roster size)
 	 * @param int $minRespondents Minimum respondents required to expose breakdowns
 	 *
-	 * @return array<string, mixed> {
-	 *                              overallScore: float|null, respondentCount: int, invitedMemberCount: int,
-	 *                              minRespondentThreshold: int, thresholdMet: bool, suppressed: bool,
-	 *                              dimensionScores: array<string,float>|null, themes: array<string,array<int,array{word:string,count:int}>>|null,
-	 *                              computedAt: string
-	 *                              }
+	 * @return array<string, mixed> Keys: overallScore (float|null), respondentCount,
+	 *                              invitedMemberCount, minRespondentThreshold (int), thresholdMet,
+	 *                              suppressed (bool), dimensionScores (float per dimension, or null),
+	 *                              themes (word counts per dimension, or null), computedAt (string).
 	 *
 	 * @spec openspec/specs/board-self-evaluation/spec.md#requirement-req-eval-004-per-dimension-and-overall-board-effectiveness-scores
 	 */
@@ -169,7 +167,8 @@ class BoardEvaluationScoreService {
 	 *
 	 * @param string $evaluationId UUID of the BoardEvaluation
 	 *
-	 * @return array<string, mixed> {success: bool, message?: string, evaluation?: array}
+	 * @return array<string, mixed> Keys: success (bool), and optionally message (string)
+	 *                              and evaluation (array).
 	 *
 	 * @spec openspec/specs/board-self-evaluation/spec.md#requirement-req-eval-004-per-dimension-and-overall-board-effectiveness-scores
 	 */

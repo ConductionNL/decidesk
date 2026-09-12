@@ -28,8 +28,8 @@ use OCA\Decidiq\AppInfo\Registrar\CrossAppEventRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\DomainServiceRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\IntegrationLeafRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\ObjectListenerRegistrar;
+use OCA\Decidiq\AppInfo\Registrar\OpenRegisterContractRegistrar;
 use OCA\Decidiq\AppInfo\Registrar\PlatformIntegrationRegistrar;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -52,6 +52,7 @@ use OCP\Util;
  *   - {@see PlatformIntegrationRegistrar} search, object-write guards, dashboard widget.
  *   - {@see IntegrationLeafRegistrar}    server-side half of the OR integration leaves (ADR-066).
  *   - {@see ObjectListenerRegistrar}     boot()-time filtered object-lifecycle subscriptions.
+ *   - {@see OpenRegisterContractRegistrar} OpenRegister's published contract bindings (ADR-084).
  *
  * Decidiq's services, controllers and background jobs that are NOT listed in a
  * registrar are resolved by Nextcloud's autowiring container from their
@@ -87,21 +88,12 @@ class Application extends App implements IBootstrap {
 	 */
 	public function register(IRegistrationContext $context): void {
 
-		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
-		// concrete class, so this app's unit tests can mock a type they are able to
-		// load. Nextcloud autowires concrete classes across apps but not interfaces,
-		// so the binding has to be stated — and the composition root is where this
-		// app says how it is wired.
-		//
-		// An ALIAS, not a factory: it resolves when something actually asks for the
-		// interface, so an instance without OpenRegister fails at the route that
-		// needed the data rather than at registration. Both names are strings and
-		// neither triggers an autoload, which is what keeps ADR-083 rule 3's promise
-		// that the start screen still boots.
-		$context->registerServiceAlias(
-			ObjectServiceInterface::class,
-			'OCA\OpenRegister\Service\ObjectService'
-		);
+		// OpenRegister's published contracts (ADR-084): ObjectServiceInterface and
+		// RegisterSlugResolverInterface, both bound as lazy aliases so an instance
+		// without OpenRegister fails at the route that needed the data rather than
+		// at registration.
+		(new OpenRegisterContractRegistrar())->register(context: $context);
+
 		// AppHost adoption (ADR-040 / ADR-022): re-point the mechanical
 		// dashboard + observability + deep-link plumbing at the OpenRegister
 		// AppHost generics, keeping decidiq's URLs unchanged. Decidiq's
@@ -142,15 +134,17 @@ class Application extends App implements IBootstrap {
 		// them.
 		// @spec openspec/changes/migrate-comments-to-talk-leaf/tasks.md#task-2.1.
 		// @spec openspec/specs/user-settings/spec.md
+		// Both registrars below carry the bindings described above.
 		(new CrossAppEventRegistrar())->register(context: $context);
 		(new DomainServiceRegistrar())->register(context: $context);
 
+		// @spec openspec/specs/decision-management/spec.md
 		// Board portal Phase 2 services (audit log, conflict of interest,
 		// quorum verification and their controllers) are autowired.
 		// board-meeting-resolutions is archived (openspec/changes/archive/
 		// 2026-06-12-board-meeting-resolutions), so its tasks.md is not a live
-		// target. @spec points at the CANONICAL spec that survived the change.
-		// @spec openspec/specs/decision-management/spec.md
+		// target. The @spec above points at the CANONICAL spec that survived
+		// the change.
 		(new PlatformIntegrationRegistrar())->register(context: $context);
 
 		// Server-side half of the `decidesk-decisions` integration leaf (ADR-066).
@@ -164,9 +158,10 @@ class Application extends App implements IBootstrap {
 		// the prefix and is why the MCP tool ids had to move. Usability is derived
 		// from the descriptor's `requiredApp`, which is Application::APP_ID and so
 		// tracks the rename on its own. The id is also named verbatim in the
-		// REQ-DCDH-008 requirement heading that the @spec anchor below
-		// dereferences, so moving it would break the anchor for no gain.
+		// REQ-DCDH-008 requirement heading that the @spec anchor on the next
+		// line dereferences, so moving it would break the anchor for no gain.
 		// @spec openspec/specs/decidesk-contract-decision-hub/spec.md#requirement-req-dcdh-008-the-decidesk-decisions-leaf-is-declared-on-both-layers
+		// IntegrationLeafRegistrar owns that server-side registration.
 		(new IntegrationLeafRegistrar())->register(context: $context);
 
 	}//end register()
@@ -202,14 +197,19 @@ class Application extends App implements IBootstrap {
 		// case) without the full decidiq app bundle being present.
 		Util::addInitScript(self::APP_ID, 'decidiq-integration-init');
 
-		$serverContainer = $context->getServerContainer();
-
 		// Object-lifecycle subscriptions MUST be made from boot(), never from
 		// register(): OpenRegister's classes are only autoloadable to apps
 		// registered after it, so the registrar's class_exists() guard would
 		// resolve differently purely by app load order during register().
-		$serverContainer->get(ObjectListenerRegistrar::class)->register(
-			dispatcher: $serverContainer->get(IEventDispatcher::class)
+		//
+		// injectFn() rather than getServerContainer()->get(): IServerContainer
+		// and IAppContainer are both deprecated since NC 20, and injectFn() is
+		// the boot-time API that resolves the parameters from this app's
+		// container (which falls back to the server for OCP services).
+		$context->injectFn(
+			static function (ObjectListenerRegistrar $registrar, IEventDispatcher $dispatcher): void {
+				$registrar->register(dispatcher: $dispatcher);
+			}
 		);
 
 	}//end boot()
